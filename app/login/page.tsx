@@ -141,7 +141,7 @@ function LoginForm() {
 
       if (res.ok && data.access_token) {
         // Save tokens — localStorage for access, sessionStorage-safe approach
-        localStorage.setItem("access_token",  data.access_token);
+        localStorage.setItem("generar_token", data.access_token);
         localStorage.setItem("refresh_token", data.refresh_token);
         router.push("/dashboard");
       } else {
