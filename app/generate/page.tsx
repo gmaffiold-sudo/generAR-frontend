@@ -1,521 +1,259 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 const API = "https://hse-risk-analyzer-production.up.railway.app";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-interface RiesgoItem {
-  Fuente:       string;
-  Detalle:      string;
-  Peligro:      string;
-  Consecuencia: string;
-  Controles:    string;
-  Responsable:  string;
+const MATRIZ_RAM: Record<number, Record<string, string>> = {
+  5: { A: "M",  B: "M",  C: "H",  D: "H",  E: "VH" },
+  4: { A: "L",  B: "M",  C: "M",  D: "H",  E: "H"  },
+  3: { A: "N",  B: "L",  C: "M",  D: "M",  E: "H"  },
+  2: { A: "N",  B: "N",  C: "L",  D: "M",  E: "M"  },
+  1: { A: "N",  B: "N",  C: "N",  D: "L",  E: "L"  },
+  0: { A: "N",  B: "N",  C: "N",  D: "N",  E: "N"  },
+};
+const PROB_ORDEN = ["A","B","C","D","E"];
+const RIESGO_COLOR: Record<string,{bg:string;color:string;label:string}> = {
+  N:  {bg:"#E8F5E9",color:"#2E7D32",label:"Negligible"},
+  L:  {bg:"#E3F2FD",color:"#1565C0",label:"Low"},
+  M:  {bg:"#FFF9C4",color:"#F57F17",label:"Medium"},
+  H:  {bg:"#FFE0B2",color:"#E65100",label:"High"},
+  VH: {bg:"#FFCDD2",color:"#C62828",label:"Very High"},
+};
+
+function calcularRiesgo(g:number,p:string){return MATRIZ_RAM[g]?.[p]??"N";}
+function bajarProbabilidad(p:string){const i=PROB_ORDEN.indexOf(p);return PROB_ORDEN[Math.max(0,i-1)];}
+
+interface RiesgoItem{Fuente:string;Detalle:string;Peligro:string;Consecuencia:string;Controles:string;Responsable:string;}
+interface ARResponse{message:string;registro_id:string;titulo_actividad:string;creditos_usados:number;creditos_restantes:number;fecha:string;riesgo_inherente:string;riesgo_residual:string;analisis:RiesgoItem[];excel_base64:string;}
+
+function getToken(){return typeof window!=="undefined"?localStorage.getItem("generar_token"):null;}
+function today(){return new Date().toISOString().split("T")[0];}
+function addDays(d:string,n:number){const dt=new Date(d);dt.setDate(dt.getDate()+n);return dt.toISOString().split("T")[0];}
+function daysBetween(a:string,b:string){return Math.round((new Date(b).getTime()-new Date(a).getTime())/86400000);}
+async function fileToBase64(file:File):Promise<string>{return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res((r.result as string).split(",")[1]);r.onerror=()=>rej(new Error("Error"));r.readAsDataURL(file);});}
+
+function SectionCard({title,icon,children}:{title:string;icon:string;children:React.ReactNode}){
+  return(
+    <div style={{background:"#fff",borderRadius:16,border:"1.5px solid rgba(27,58,92,0.08)",boxShadow:"0 2px 16px rgba(27,58,92,0.05)",overflow:"hidden",marginBottom:20}}>
+      <div style={{display:"flex",alignItems:"center",gap:10,padding:"16px 28px",borderBottom:"1px solid rgba(27,58,92,0.07)",background:"linear-gradient(135deg,rgba(27,58,92,0.03),rgba(46,134,171,0.04))"}}>
+        <span style={{fontSize:18}}>{icon}</span>
+        <h2 style={{fontFamily:"'DM Serif Display', serif",fontSize:17,fontWeight:400,color:"#1B3A5C"}}>{title}</h2>
+      </div>
+      <div style={{padding:"22px 28px"}}>{children}</div>
+    </div>
+  );
 }
 
-interface ARResponse {
-  message:            string;
-  registro_id:        string;
-  titulo_actividad:   string;
-  creditos_usados:    number;
-  creditos_restantes: number;
-  fecha:              string;
-  analisis:           RiesgoItem[];
+function Field({label,required,error,hint,children}:{label:string;required?:boolean;error?:string;hint?:string;children:React.ReactNode}){
+  return(
+    <div style={{marginBottom:16}}>
+      <label style={{display:"block",fontFamily:"'Plus Jakarta Sans', sans-serif",fontSize:11,fontWeight:700,color:error?"#C62828":"#1B3A5C",letterSpacing:"0.07em",textTransform:"uppercase" as const,marginBottom:5}}>
+        {label}{required&&<span style={{color:"#2E86AB",marginLeft:3}}>*</span>}
+      </label>
+      {children}
+      {hint&&<p style={{fontFamily:"'Plus Jakarta Sans', sans-serif",fontSize:11,color:"#7A8EA0",marginTop:4}}>{hint}</p>}
+      {error&&<p style={{fontFamily:"'Plus Jakarta Sans', sans-serif",fontSize:11,color:"#C62828",marginTop:4}}>⚠ {error}</p>}
+    </div>
+  );
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-function getToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem("generar_token");
+function TI({value,onChange,type="text",placeholder,error,disabled}:{value:string;onChange:(v:string)=>void;type?:string;placeholder?:string;error?:boolean;disabled?:boolean}){
+  const[f,setF]=useState(false);
+  return(
+    <input type={type} value={value} placeholder={placeholder} disabled={disabled}
+      onChange={e=>onChange(e.target.value)} onFocus={()=>setF(true)} onBlur={()=>setF(false)}
+      style={{width:"100%",padding:"10px 12px",borderRadius:9,outline:"none",
+        border:error?"1.5px solid #C62828":f?"1.5px solid #2E86AB":"1.5px solid rgba(27,58,92,0.15)",
+        fontFamily:"'Plus Jakarta Sans', sans-serif",fontSize:14,color:"#1B3A5C",
+        background:disabled?"rgba(27,58,92,0.03)":f?"#fff":"rgba(245,248,251,0.8)",
+        boxShadow:f?"0 0 0 3px rgba(46,134,171,0.10)":"none",
+        transition:"all 0.18s ease",boxSizing:"border-box" as const}}/>
+  );
 }
 
-// ─── Excel export via SheetJS CDN ─────────────────────────────────────────────
-async function downloadExcel(titulo: string, analisis: RiesgoItem[]) {
-  // Dynamically load SheetJS from CDN
-  await new Promise<void>((resolve, reject) => {
-    if ((window as any).XLSX) { resolve(); return; }
-    const script = document.createElement("script");
-    script.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
-    script.onload  = () => resolve();
-    script.onerror = () => reject(new Error("No se pudo cargar SheetJS"));
-    document.head.appendChild(script);
-  });
-
-  const XLSX = (window as any).XLSX;
-
-  // Build worksheet data
-  const headers = ["Fuente", "Detalle", "Peligro", "Consecuencia", "Controles", "Responsable"];
-  const rows = analisis.map(r => [
-    r.Fuente, r.Detalle, r.Peligro, r.Consecuencia, r.Controles, r.Responsable,
-  ]);
-
-  const wsData = [
-    [`ANÁLISIS DE RIESGOS HSE — ${titulo.toUpperCase()}`],
-    [`Generado por GenerAR (generar.co) — ${new Date().toLocaleDateString("es-CO")}`],
-    [],
-    headers,
-    ...rows,
-  ];
-
-  const ws = XLSX.utils.aoa_to_sheet(wsData);
-
-  // Column widths
-  ws["!cols"] = [
-    { wch: 22 }, { wch: 40 }, { wch: 20 },
-    { wch: 35 }, { wch: 40 }, { wch: 22 },
-  ];
-
-  // Merge title row
-  ws["!merges"] = [
-    { s: { r: 0, c: 0 }, e: { r: 0, c: 5 } },
-    { s: { r: 1, c: 0 }, e: { r: 1, c: 5 } },
-  ];
-
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Análisis de Riesgos");
-
-  const fileName = `AR_${titulo.replace(/\s+/g, "_").slice(0, 40)}_${Date.now()}.xlsx`;
-  XLSX.writeFile(wb, fileName);
+function SI({value,onChange,options}:{value:string;onChange:(v:string)=>void;options:{value:string;label:string}[]}){
+  const[f,setF]=useState(false);
+  return(
+    <select value={value} onChange={e=>onChange(e.target.value)} onFocus={()=>setF(true)} onBlur={()=>setF(false)}
+      style={{width:"100%",padding:"10px 32px 10px 12px",borderRadius:9,outline:"none",
+        border:f?"1.5px solid #2E86AB":"1.5px solid rgba(27,58,92,0.15)",
+        fontFamily:"'Plus Jakarta Sans', sans-serif",fontSize:14,color:"#1B3A5C",
+        background:"#fff",boxShadow:f?"0 0 0 3px rgba(46,134,171,0.10)":"none",
+        transition:"all 0.18s ease",cursor:"pointer",appearance:"none" as const,boxSizing:"border-box" as const}}>
+      {options.map(o=><option key={o.value} value={o.value}>{o.label}</option>)}
+    </select>
+  );
 }
 
-// ─── Navbar ───────────────────────────────────────────────────────────────────
-function GenerateNav() {
-  const router = useRouter();
-  const [hovered, setHovered] = useState(false);
+function TA({value,onChange,placeholder,rows=3,error}:{value:string;onChange:(v:string)=>void;placeholder?:string;rows?:number;error?:boolean}){
+  const[f,setF]=useState(false);
+  return(
+    <textarea value={value} placeholder={placeholder} rows={rows}
+      onChange={e=>onChange(e.target.value)} onFocus={()=>setF(true)} onBlur={()=>setF(false)}
+      style={{width:"100%",padding:"10px 12px",borderRadius:9,outline:"none",
+        border:error?"1.5px solid #C62828":f?"1.5px solid #2E86AB":"1.5px solid rgba(27,58,92,0.15)",
+        fontFamily:"'Plus Jakarta Sans', sans-serif",fontSize:14,color:"#1B3A5C",
+        background:f?"#fff":"rgba(245,248,251,0.8)",
+        boxShadow:f?"0 0 0 3px rgba(46,134,171,0.10)":"none",
+        transition:"all 0.18s ease",resize:"vertical" as const,boxSizing:"border-box" as const}}/>
+  );
+}
 
-  return (
-    <nav style={{
-      background:   "#fff",
-      borderBottom: "1px solid rgba(27,58,92,0.08)",
-      boxShadow:    "0 1px 16px rgba(27,58,92,0.06)",
-      position:     "sticky", top: 0, zIndex: 100,
-    }}>
-      <div style={{
-        maxWidth: 1000, margin: "0 auto",
-        padding: "0 24px", height: 64,
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-      }}>
-        <a href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 9 }}>
-          <div style={{
-            width: 34, height: 34, borderRadius: 9,
-            background: "linear-gradient(135deg, #1B3A5C, #2E86AB)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 2px 10px rgba(46,134,171,0.30)",
-          }}>
-            <span style={{ color: "#fff", fontSize: 15, fontWeight: 800, fontFamily: "'DM Serif Display', serif" }}>G</span>
+function RadioGroup({value,onChange,options}:{value:string;onChange:(v:string)=>void;options:{value:string;label:string}[]}){
+  return(
+    <div style={{display:"flex",gap:10,flexWrap:"wrap" as const}}>
+      {options.map(opt=>(
+        <label key={opt.value} style={{display:"flex",alignItems:"center",gap:8,padding:"10px 18px",borderRadius:10,cursor:"pointer",border:value===opt.value?"1.5px solid #2E86AB":"1.5px solid rgba(27,58,92,0.15)",background:value===opt.value?"rgba(46,134,171,0.07)":"#fff",transition:"all 0.18s ease"}}>
+          <div style={{width:16,height:16,borderRadius:"50%",flexShrink:0,border:value===opt.value?"5px solid #2E86AB":"2px solid rgba(27,58,92,0.25)",transition:"all 0.18s ease"}}/>
+          <input type="radio" value={opt.value} checked={value===opt.value} onChange={()=>onChange(opt.value)} style={{display:"none"}}/>
+          <span style={{fontFamily:"'Plus Jakarta Sans', sans-serif",fontSize:14,fontWeight:value===opt.value?700:500,color:value===opt.value?"#1B3A5C":"#5A7080"}}>{opt.label}</span>
+        </label>
+      ))}
+    </div>
+  );
+}
+
+function G2({children}:{children:React.ReactNode}){return <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 18px"}}>{children}</div>;}
+function G3({children}:{children:React.ReactNode}){return <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"0 18px"}}>{children}</div>;}
+
+function RamBadge({code,label}:{code:string;label:string}){
+  const c=RIESGO_COLOR[code]??{bg:"#F5F5F5",color:"#666",label:code};
+  return(
+    <div style={{display:"flex",flexDirection:"column" as const,alignItems:"center",gap:6,flex:1}}>
+      <span style={{fontFamily:"'Plus Jakarta Sans', sans-serif",fontSize:10,fontWeight:700,color:"#7A8EA0",letterSpacing:"0.08em",textTransform:"uppercase" as const}}>{label}</span>
+      <div style={{width:"100%",padding:"14px 8px",borderRadius:12,background:c.bg,border:`2px solid ${c.color}30`,display:"flex",flexDirection:"column" as const,alignItems:"center",gap:2}}>
+        <span style={{fontFamily:"'DM Serif Display', serif",fontSize:36,fontWeight:400,color:c.color,lineHeight:1}}>{code}</span>
+        <span style={{fontFamily:"'Plus Jakarta Sans', sans-serif",fontSize:11,fontWeight:700,color:c.color,opacity:0.8}}>{c.label}</span>
+      </div>
+    </div>
+  );
+}
+
+function Nav(){
+  const router=useRouter();
+  const[h,setH]=useState(false);
+  return(
+    <nav style={{background:"#fff",borderBottom:"1px solid rgba(27,58,92,0.08)",boxShadow:"0 1px 16px rgba(27,58,92,0.06)",position:"sticky" as const,top:0,zIndex:100}}>
+      <div style={{maxWidth:1000,margin:"0 auto",padding:"0 24px",height:64,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <a href="/" style={{textDecoration:"none",display:"flex",alignItems:"center",gap:9}}>
+          <div style={{width:34,height:34,borderRadius:9,background:"linear-gradient(135deg,#1B3A5C,#2E86AB)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 2px 10px rgba(46,134,171,0.30)"}}>
+            <span style={{color:"#fff",fontSize:15,fontWeight:800,fontFamily:"'DM Serif Display', serif"}}>G</span>
           </div>
-          <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, fontWeight: 700, color: "#1B3A5C" }}>
-            Gener<span style={{ color: "#2E86AB" }}>AR</span>
-          </span>
+          <span style={{fontFamily:"'DM Serif Display', serif",fontSize:20,fontWeight:700,color:"#1B3A5C"}}>Gener<span style={{color:"#2E86AB"}}>AR</span></span>
         </a>
-
-        <button
-          onClick={() => router.push("/dashboard")}
-          onMouseEnter={() => setHovered(true)}
-          onMouseLeave={() => setHovered(false)}
-          style={{
-            display:     "flex", alignItems: "center", gap: 7,
-            padding:     "8px 18px", borderRadius: 8,
-            border:      "1.5px solid rgba(27,58,92,0.15)",
-            background:  hovered ? "rgba(27,58,92,0.04)" : "#fff",
-            color:       "#1B3A5C",
-            fontFamily:  "'Plus Jakarta Sans', sans-serif",
-            fontSize:    13, fontWeight: 600,
-            cursor:      "pointer", transition: "all 0.2s ease",
-          }}
-        >
-          <span style={{ fontSize: 15 }}>←</span> Volver al dashboard
+        <button onClick={()=>router.push("/dashboard")} onMouseEnter={()=>setH(true)} onMouseLeave={()=>setH(false)}
+          style={{display:"flex",alignItems:"center",gap:7,padding:"8px 18px",borderRadius:8,cursor:"pointer",border:"1.5px solid rgba(27,58,92,0.15)",background:h?"rgba(27,58,92,0.04)":"#fff",color:"#1B3A5C",fontFamily:"'Plus Jakarta Sans', sans-serif",fontSize:13,fontWeight:600,transition:"all 0.2s ease"}}>
+          ← Volver al dashboard
         </button>
       </div>
     </nav>
   );
 }
 
-// ─── Step indicator ───────────────────────────────────────────────────────────
-function StepBadge({ n, label, active }: { n: number; label: string; active: boolean }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10, opacity: active ? 1 : 0.4, transition: "opacity 0.3s" }}>
-      <div style={{
-        width: 28, height: 28, borderRadius: "50%",
-        background: active ? "linear-gradient(135deg, #1B3A5C, #2E86AB)" : "rgba(27,58,92,0.12)",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        fontSize: 12, fontWeight: 800, color: active ? "#fff" : "#7A8EA0",
-        flexShrink: 0,
-        boxShadow: active ? "0 2px 10px rgba(46,134,171,0.30)" : "none",
-        transition: "all 0.3s",
-      }}>{n}</div>
-      <span style={{
-        fontFamily: "'Plus Jakarta Sans', sans-serif",
-        fontSize: 13, fontWeight: 600,
-        color: active ? "#1B3A5C" : "#7A8EA0",
-      }}>{label}</span>
-    </div>
+function BtnA({primary,loading,onClick,icon,children}:{primary:boolean;loading:boolean;onClick:()=>void;icon:string;children:React.ReactNode}){
+  const[h,setH]=useState(false);
+  return(
+    <button onClick={onClick} disabled={loading} onMouseEnter={()=>setH(true)} onMouseLeave={()=>setH(false)}
+      style={{display:"flex",alignItems:"center",justifyContent:"center",gap:7,padding:"11px 18px",borderRadius:9,border:primary?"none":"1px solid rgba(255,255,255,0.20)",cursor:loading?"not-allowed":"pointer",
+        background:primary?(loading?"rgba(255,255,255,0.30)":h?"#fff":"rgba(255,255,255,0.92)"):(h?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.08)"),
+        color:primary?"#1B3A5C":"#fff",fontFamily:"'Plus Jakarta Sans', sans-serif",fontSize:13,fontWeight:700,transition:"all 0.2s ease",
+        transform:h&&!loading?"translateY(-1px)":"translateY(0)"} as React.CSSProperties}>
+      {loading?<span style={{width:14,height:14,border:"2px solid rgba(27,58,92,0.3)",borderTopColor:"#1B3A5C",borderRadius:"50%",display:"inline-block",animation:"spin 0.7s linear infinite"}}/>:<span>{icon}</span>}
+      {children}
+    </button>
   );
 }
 
-// ─── Form Section ─────────────────────────────────────────────────────────────
-function FormSection({
-  onResult,
-}: {
-  onResult: (data: ARResponse, titulo: string) => void;
-}) {
-  const [titulo,   setTitulo]   = useState("");
-  const [pasos,    setPasos]    = useState(["", "", ""]);
-  const [equipo,   setEquipo]   = useState("");
-  const [loading,  setLoading]  = useState(false);
-  const [errors,   setErrors]   = useState<Record<string, string>>({});
-  const [apiError, setApiError] = useState("");
-
-  const addPaso = () => setPasos(p => [...p, ""]);
-  const removePaso = (i: number) => setPasos(p => p.filter((_, idx) => idx !== i));
-  const updatePaso = (i: number, val: string) => {
-    setPasos(p => { const n = [...p]; n[i] = val; return n; });
-    if (errors[`paso_${i}`]) setErrors(e => { const n = { ...e }; delete n[`paso_${i}`]; return n; });
+function Results({result,onReset}:{result:ARResponse;onReset:()=>void}){
+  const[dl,setDl]=useState(false);
+  const COLS=["Fuente","Detalle","Peligro","Consecuencia","Controles","Responsable"] as const;
+  const pc=(p:string)=>{
+    const t=p.toLowerCase();
+    if(t.includes("eléctric"))return{bg:"rgba(244,162,97,0.12)",color:"#B8620A"};
+    if(t.includes("mecánic"))return{bg:"rgba(224,82,82,0.10)",color:"#B83232"};
+    if(t.includes("químic"))return{bg:"rgba(155,89,182,0.10)",color:"#7B4A8C"};
+    if(t.includes("ergonóm"))return{bg:"rgba(46,134,171,0.10)",color:"#1B6A8C"};
+    if(t.includes("locativ"))return{bg:"rgba(39,174,96,0.10)",color:"#1A7A44"};
+    if(t.includes("alturas"))return{bg:"rgba(255,152,0,0.12)",color:"#E65100"};
+    if(t.includes("confinado"))return{bg:"rgba(103,58,183,0.10)",color:"#4527A0"};
+    return{bg:"rgba(27,58,92,0.07)",color:"#1B3A5C"};
   };
-
-  const validate = () => {
-    const errs: Record<string, string> = {};
-    if (!titulo.trim())        errs.titulo = "El título es obligatorio.";
-    if (titulo.trim().length < 5) errs.titulo = "Mínimo 5 caracteres.";
-    const pasosLimpios = pasos.filter(p => p.trim());
-    if (pasosLimpios.length < 3) errs.pasos = "Ingresa al menos 3 pasos.";
-    pasos.forEach((p, i) => { if (!p.trim()) errs[`paso_${i}`] = "Este paso está vacío."; });
-    if (!equipo.trim())        errs.equipo = "El equipo es obligatorio.";
-    return errs;
+  const dl_excel=async()=>{
+    setDl(true);
+    try{
+      const bytes=Uint8Array.from(atob(result.excel_base64),c=>c.charCodeAt(0));
+      const blob=new Blob([bytes],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+      const url=URL.createObjectURL(blob);const a=document.createElement("a");
+      a.href=url;a.download=`AR_${result.titulo_actividad.replace(/\s+/g,"_").slice(0,40)}_${Date.now()}.xlsx`;
+      a.click();URL.revokeObjectURL(url);
+    }catch{alert("Error al descargar.");}
+    finally{setDl(false);}
   };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const errs = validate();
-    if (Object.keys(errs).length > 0) { setErrors(errs); return; }
-
-    setLoading(true);
-    setApiError("");
-
-    try {
-      const token = getToken();
-      const res = await fetch(`${API}/ar/generate`, {
-        method:  "POST",
-        headers: {
-          "Content-Type":  "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          titulo_actividad: titulo.trim(),
-          pasos:            pasos.filter(p => p.trim()),
-          equipo:           equipo.trim(),
-        }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        onResult(data, titulo.trim());
-      } else if (res.status === 401) {
-        localStorage.removeItem("generar_token");
-        window.location.href = "/login";
-      } else {
-        const msg = data?.detail || "Error al generar el análisis.";
-        setApiError(typeof msg === "string" ? msg : JSON.stringify(msg));
-      }
-    } catch {
-      setApiError("No se pudo conectar con el servidor. Verifica tu conexión.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} noValidate>
-
-      {/* API Error */}
-      {apiError && (
-        <div style={{
-          background: "rgba(224,82,82,0.06)",
-          border: "1.5px solid rgba(224,82,82,0.25)",
-          borderRadius: 12, padding: "14px 18px", marginBottom: 28,
-          display: "flex", alignItems: "flex-start", gap: 10,
-        }}>
-          <span style={{ fontSize: 16, flexShrink: 0 }}>⚠️</span>
-          <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, color: "#C04040", lineHeight: 1.5 }}>{apiError}</p>
-        </div>
-      )}
-
-      {/* Título */}
-      <div style={{ marginBottom: 28 }}>
-        <label style={labelStyle(!!errors.titulo)}>
-          Título de la actividad <Required />
-        </label>
-        <input
-          type="text"
-          value={titulo}
-          placeholder="Ej: Cambio de luminarias en altura, Excavación manual, Soldadura en espacio confinado"
-          onChange={e => { setTitulo(e.target.value); if (errors.titulo) setErrors(er => ({ ...er, titulo: "" })); }}
-          style={inputStyle(!!errors.titulo, false)}
-          onFocus={e => e.target.style.boxShadow = "0 0 0 3px rgba(46,134,171,0.12)"}
-          onBlur={e  => e.target.style.boxShadow = "none"}
-        />
-        {errors.titulo && <FieldError msg={errors.titulo} />}
-      </div>
-
-      {/* Pasos */}
-      <div style={{ marginBottom: 28 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-          <label style={labelStyle(!!errors.pasos)}>
-            Pasos de la actividad <Required />
-            <span style={{ fontWeight: 400, color: "#7A8EA0", marginLeft: 6 }}>(mínimo 3)</span>
-          </label>
-        </div>
-
-        {errors.pasos && <FieldError msg={errors.pasos} />}
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {pasos.map((paso, i) => (
-            <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-              <div style={{
-                width: 28, height: 28, borderRadius: "50%", flexShrink: 0, marginTop: 10,
-                background: "linear-gradient(135deg, rgba(27,58,92,0.08), rgba(46,134,171,0.12))",
-                border: "1px solid rgba(46,134,171,0.15)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 11, fontWeight: 800, color: "#2E86AB",
-              }}>{i + 1}</div>
-
-              <div style={{ flex: 1 }}>
-                <input
-                  type="text"
-                  value={paso}
-                  placeholder={`Describe el paso ${i + 1}...`}
-                  onChange={e => updatePaso(i, e.target.value)}
-                  style={inputStyle(!!errors[`paso_${i}`], false)}
-                  onFocus={e => e.target.style.boxShadow = "0 0 0 3px rgba(46,134,171,0.12)"}
-                  onBlur={e  => e.target.style.boxShadow = "none"}
-                />
-                {errors[`paso_${i}`] && <FieldError msg={errors[`paso_${i}`]} />}
-              </div>
-
-              {pasos.length > 3 && (
-                <button
-                  type="button"
-                  onClick={() => removePaso(i)}
-                  style={{
-                    width: 34, height: 34, borderRadius: 8, flexShrink: 0, marginTop: 6,
-                    background: "rgba(224,82,82,0.07)",
-                    border: "1px solid rgba(224,82,82,0.20)",
-                    color: "#C04040", cursor: "pointer", fontSize: 16,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    transition: "all 0.2s",
-                  }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(224,82,82,0.14)"; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(224,82,82,0.07)"; }}
-                  aria-label="Eliminar paso"
-                >×</button>
-              )}
+  return(
+    <div style={{animation:"fadeUp 0.5s ease both"}}>
+      <div style={{background:"linear-gradient(160deg,#1B3A5C 0%,#1e4d74 55%,#2E86AB 100%)",borderRadius:16,padding:"28px 32px",marginBottom:20,boxShadow:"0 16px 48px rgba(27,58,92,0.25)"}}>
+        <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",flexWrap:"wrap" as const,gap:24}}>
+          <div>
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
+              <span style={{fontSize:22}}>✅</span>
+              <p style={{fontFamily:"'Plus Jakarta Sans', sans-serif",fontSize:16,fontWeight:800,color:"#fff"}}>¡Análisis generado exitosamente!</p>
             </div>
-          ))}
-        </div>
-
-        <button
-          type="button"
-          onClick={addPaso}
-          style={{
-            marginTop: 12, display: "flex", alignItems: "center", gap: 7,
-            padding: "9px 16px", borderRadius: 8,
-            border: "1.5px dashed rgba(46,134,171,0.35)",
-            background: "rgba(46,134,171,0.04)",
-            color: "#2E86AB",
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
-            fontSize: 13, fontWeight: 700,
-            cursor: "pointer", transition: "all 0.2s",
-          }}
-          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(46,134,171,0.09)"; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(46,134,171,0.04)"; }}
-        >
-          <span style={{ fontSize: 18, lineHeight: 1 }}>+</span> Agregar paso
-        </button>
-      </div>
-
-      {/* Equipo */}
-      <div style={{ marginBottom: 36 }}>
-        <label style={labelStyle(!!errors.equipo)}>
-          Equipo de trabajo <Required />
-        </label>
-        <input
-          type="text"
-          value={equipo}
-          placeholder="Ej: Soldador, Supervisor HSE, Ayudante, Electricista certificado"
-          onChange={e => { setEquipo(e.target.value); if (errors.equipo) setErrors(er => ({ ...er, equipo: "" })); }}
-          style={inputStyle(!!errors.equipo, false)}
-          onFocus={e => e.target.style.boxShadow = "0 0 0 3px rgba(46,134,171,0.12)"}
-          onBlur={e  => e.target.style.boxShadow = "none"}
-        />
-        {errors.equipo && <FieldError msg={errors.equipo} />}
-        <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 12, color: "#7A8EA0", marginTop: 6 }}>
-          Separa los roles con comas
-        </p>
-      </div>
-
-      {/* Submit */}
-      <SubmitButton loading={loading} />
-    </form>
-  );
-}
-
-// ─── Results Section ──────────────────────────────────────────────────────────
-function ResultsSection({
-  result, titulo, onReset,
-}: {
-  result:  ARResponse;
-  titulo:  string;
-  onReset: () => void;
-}) {
-  const [downloading, setDownloading] = useState(false);
-  const [dlError,     setDlError]     = useState("");
-  const tableRef = useRef<HTMLDivElement>(null);
-
-  const handleDownload = async () => {
-    setDownloading(true);
-    setDlError("");
-    try {
-      await downloadExcel(titulo, result.analisis);
-    } catch (err: any) {
-      setDlError(err.message || "Error al generar el Excel.");
-    } finally {
-      setDownloading(false);
-    }
-  };
-
-  const COLS = ["Fuente", "Detalle", "Peligro", "Consecuencia", "Controles", "Responsable"] as const;
-
-  const peligroColor = (p: string) => {
-    const t = p.toLowerCase();
-    if (t.includes("eléctric"))  return { bg: "rgba(244,162,97,0.12)",  color: "#B8620A" };
-    if (t.includes("mecánic"))   return { bg: "rgba(224,82,82,0.10)",   color: "#B83232" };
-    if (t.includes("químic"))    return { bg: "rgba(155,89,182,0.10)",  color: "#7B4A8C" };
-    if (t.includes("ergonóm"))   return { bg: "rgba(46,134,171,0.10)",  color: "#1B6A8C" };
-    if (t.includes("locativ"))   return { bg: "rgba(39,174,96,0.10)",   color: "#1A7A44" };
-    return                              { bg: "rgba(27,58,92,0.08)",    color: "#1B3A5C" };
-  };
-
-  return (
-    <div style={{ animation: "fadeUp 0.5s ease both" }}>
-
-      {/* Success banner */}
-      <div style={{
-        background:   "linear-gradient(135deg, rgba(39,174,96,0.08), rgba(46,134,171,0.06))",
-        border:       "1.5px solid rgba(39,174,96,0.25)",
-        borderRadius: 14, padding: "20px 24px", marginBottom: 28,
-        display:      "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16,
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ fontSize: 24 }}>✅</span>
-          <div>
-            <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 15, fontWeight: 700, color: "#1B3A5C" }}>
-              ¡Análisis generado exitosamente!
-            </p>
-            <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "#5A7080", marginTop: 2 }}>
-              {result.analisis.length} riesgos identificados · {result.creditos_restantes} créditos restantes
-            </p>
+            <p style={{fontFamily:"'Plus Jakarta Sans', sans-serif",fontSize:13,color:"rgba(255,255,255,0.60)",marginBottom:18}}>{result.analisis.length} riesgos · {result.creditos_restantes} créditos restantes</p>
+            <div style={{display:"flex",gap:14,flexWrap:"wrap" as const}}>
+              {[{label:"Riesgo Inherente",code:result.riesgo_inherente},{label:"Riesgo Residual",code:result.riesgo_residual}].map(({label,code})=>{
+                const c=RIESGO_COLOR[code]??{bg:"rgba(255,255,255,0.15)",color:"#fff",label:code};
+                return(
+                  <div key={label} style={{background:"rgba(255,255,255,0.10)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:12,padding:"12px 20px",display:"flex",alignItems:"center",gap:12}}>
+                    <div>
+                      <p style={{fontFamily:"'Plus Jakarta Sans', sans-serif",fontSize:10,fontWeight:700,color:"rgba(255,255,255,0.50)",letterSpacing:"0.08em",textTransform:"uppercase" as const}}>{label}</p>
+                      <p style={{fontFamily:"'DM Serif Display', serif",fontSize:34,fontWeight:400,color:"#fff",lineHeight:1,marginTop:2}}>{code}</p>
+                    </div>
+                    <div style={{background:c.bg,borderRadius:8,padding:"4px 10px"}}>
+                      <span style={{fontFamily:"'Plus Jakarta Sans', sans-serif",fontSize:11,fontWeight:700,color:c.color}}>{c.label}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <div style={{display:"flex",flexDirection:"column" as const,gap:10,minWidth:170}}>
+            <BtnA primary loading={dl} onClick={dl_excel} icon="⬇">{dl?"Descargando...":"Descargar Excel"}</BtnA>
+            <BtnA primary={false} loading={false} onClick={onReset} icon="↺">Generar otro AR</BtnA>
           </div>
         </div>
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <ActionButton
-            onClick={handleDownload}
-            loading={downloading}
-            primary
-            icon="⬇"
-          >
-            {downloading ? "Generando..." : "Descargar Excel"}
-          </ActionButton>
-          <ActionButton onClick={onReset} loading={false} primary={false} icon="↺">
-            Generar otro AR
-          </ActionButton>
-        </div>
       </div>
-
-      {dlError && (
-        <div style={{
-          background: "rgba(224,82,82,0.06)", border: "1.5px solid rgba(224,82,82,0.25)",
-          borderRadius: 10, padding: "12px 16px", marginBottom: 20,
-        }}>
-          <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "#C04040" }}>⚠️ {dlError}</p>
-        </div>
-      )}
-
-      {/* Table */}
-      <div ref={tableRef} style={{
-        background: "#fff",
-        borderRadius: 16,
-        border: "1.5px solid rgba(27,58,92,0.08)",
-        overflow: "hidden",
-        boxShadow: "0 2px 20px rgba(27,58,92,0.06)",
-      }}>
-        <div style={{
-          padding: "22px 28px",
-          borderBottom: "1px solid rgba(27,58,92,0.07)",
-          display: "flex", justifyContent: "space-between", alignItems: "center",
-        }}>
+      <div style={{background:"#fff",borderRadius:16,border:"1.5px solid rgba(27,58,92,0.08)",overflow:"hidden",boxShadow:"0 2px 20px rgba(27,58,92,0.06)"}}>
+        <div style={{padding:"18px 28px",borderBottom:"1px solid rgba(27,58,92,0.07)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
           <div>
-            <h2 style={{
-              fontFamily: "'DM Serif Display', serif",
-              fontSize: 20, fontWeight: 400, color: "#1B3A5C", letterSpacing: "-0.02em",
-            }}>Riesgos identificados</h2>
-            <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "#7A8EA0", marginTop: 3 }}>
-              {titulo}
-            </p>
+            <h2 style={{fontFamily:"'DM Serif Display', serif",fontSize:20,fontWeight:400,color:"#1B3A5C"}}>Riesgos identificados</h2>
+            <p style={{fontFamily:"'Plus Jakarta Sans', sans-serif",fontSize:13,color:"#7A8EA0",marginTop:3}}>{result.titulo_actividad}</p>
           </div>
-          <span style={{
-            background: "rgba(46,134,171,0.08)", border: "1px solid rgba(46,134,171,0.15)",
-            borderRadius: 100, padding: "4px 14px",
-            fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 700, color: "#2E86AB",
-          }}>{result.analisis.length} riesgos</span>
+          <span style={{background:"rgba(46,134,171,0.08)",border:"1px solid rgba(46,134,171,0.15)",borderRadius:100,padding:"4px 14px",fontFamily:"'Plus Jakarta Sans', sans-serif",fontSize:13,fontWeight:700,color:"#2E86AB"}}>{result.analisis.length} riesgos</span>
         </div>
-
-        {/* Scrollable table */}
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 900 }}>
+        <div style={{overflowX:"auto"}}>
+          <table style={{width:"100%",borderCollapse:"collapse" as const,minWidth:900}}>
             <thead>
-              <tr style={{ background: "#F8FAFC" }}>
-                {COLS.map(col => (
-                  <th key={col} style={{
-                    padding: "12px 16px",
-                    fontFamily: "'Plus Jakarta Sans', sans-serif",
-                    fontSize: 11, fontWeight: 700,
-                    color: "#7A8EA0", letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                    textAlign: "left",
-                    borderBottom: "1px solid rgba(27,58,92,0.07)",
-                    whiteSpace: "nowrap",
-                  }}>{col}</th>
+              <tr style={{background:"#F8FAFC"}}>
+                {COLS.map(col=>(
+                  <th key={col} style={{padding:"11px 13px",textAlign:"left" as const,fontFamily:"'Plus Jakarta Sans', sans-serif",fontSize:10,fontWeight:700,color:"#7A8EA0",letterSpacing:"0.08em",textTransform:"uppercase" as const,borderBottom:"1px solid rgba(27,58,92,0.07)",whiteSpace:"nowrap" as const}}>{col}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {result.analisis.map((r, i) => {
-                const pc = peligroColor(r.Peligro);
-                return (
-                  <tr key={i} style={{
-                    borderBottom: i < result.analisis.length - 1 ? "1px solid rgba(27,58,92,0.05)" : "none",
-                    transition: "background 0.15s",
-                  }}
-                  onMouseEnter={e => (e.currentTarget as HTMLTableRowElement).style.background = "rgba(46,134,171,0.025)"}
-                  onMouseLeave={e => (e.currentTarget as HTMLTableRowElement).style.background = "transparent"}
-                  >
-                    <td style={tdStyle}>{r.Fuente}</td>
-                    <td style={{ ...tdStyle, maxWidth: 260 }}>{r.Detalle}</td>
-                    <td style={tdStyle}>
-                      <span style={{
-                        background: pc.bg, color: pc.color,
-                        borderRadius: 100, padding: "3px 10px",
-                        fontSize: 12, fontWeight: 700,
-                        whiteSpace: "nowrap",
-                        fontFamily: "'Plus Jakarta Sans', sans-serif",
-                      }}>{r.Peligro}</span>
-                    </td>
-                    <td style={{ ...tdStyle, maxWidth: 220 }}>{r.Consecuencia}</td>
-                    <td style={{ ...tdStyle, maxWidth: 260 }}>{r.Controles}</td>
-                    <td style={tdStyle}>{r.Responsable}</td>
+              {result.analisis.map((r,i)=>{
+                const p=pc(r.Peligro);
+                return(
+                  <tr key={i} style={{borderBottom:i<result.analisis.length-1?"1px solid rgba(27,58,92,0.05)":"none"}}
+                    onMouseEnter={e=>(e.currentTarget as HTMLElement).style.background="rgba(46,134,171,0.025)"}
+                    onMouseLeave={e=>(e.currentTarget as HTMLElement).style.background="transparent"}>
+                    <td style={{padding:"13px",fontFamily:"'Plus Jakarta Sans', sans-serif",fontSize:13,color:"#2A4A60",lineHeight:1.5,verticalAlign:"top"}}>{r.Fuente}</td>
+                    <td style={{padding:"13px",fontFamily:"'Plus Jakarta Sans', sans-serif",fontSize:13,color:"#2A4A60",lineHeight:1.5,verticalAlign:"top",maxWidth:220}}>{r.Detalle}</td>
+                    <td style={{padding:"13px",verticalAlign:"top"}}><span style={{background:p.bg,color:p.color,borderRadius:100,padding:"3px 10px",fontSize:11,fontWeight:700,fontFamily:"'Plus Jakarta Sans', sans-serif",whiteSpace:"nowrap" as const}}>{r.Peligro}</span></td>
+                    <td style={{padding:"13px",fontFamily:"'Plus Jakarta Sans', sans-serif",fontSize:13,color:"#2A4A60",lineHeight:1.5,verticalAlign:"top",maxWidth:200}}>{r.Consecuencia}</td>
+                    <td style={{padding:"13px",fontFamily:"'Plus Jakarta Sans', sans-serif",fontSize:13,color:"#2A4A60",lineHeight:1.5,verticalAlign:"top",maxWidth:240}}>{r.Controles}</td>
+                    <td style={{padding:"13px",fontFamily:"'Plus Jakarta Sans', sans-serif",fontSize:13,color:"#2A4A60",lineHeight:1.5,verticalAlign:"top"}}>{r.Responsable}</td>
                   </tr>
                 );
               })}
@@ -527,216 +265,252 @@ function ResultsSection({
   );
 }
 
-// ─── Shared style helpers ─────────────────────────────────────────────────────
-const labelStyle = (error: boolean): React.CSSProperties => ({
-  display:       "block",
-  fontFamily:    "'Plus Jakarta Sans', sans-serif",
-  fontSize:      13, fontWeight: 600,
-  color:         error ? "#E05252" : "#1B3A5C",
-  marginBottom:  7, letterSpacing: "0.01em",
-});
-
-const inputStyle = (error: boolean, _focused: boolean): React.CSSProperties => ({
-  width:        "100%",
-  padding:      "12px 14px",
-  borderRadius: 10,
-  border:       error ? "1.5px solid #E05252" : "1.5px solid rgba(27,58,92,0.15)",
-  fontFamily:   "'Plus Jakarta Sans', sans-serif",
-  fontSize:     15, color: "#1B3A5C",
-  background:   "rgba(245,248,251,0.7)",
-  outline:      "none",
-  transition:   "all 0.2s ease",
-  boxSizing:    "border-box" as const,
-});
-
-const tdStyle: React.CSSProperties = {
-  padding:    "14px 16px",
-  fontFamily: "'Plus Jakarta Sans', sans-serif",
-  fontSize:   13, color: "#2A4A60",
-  lineHeight: 1.55,
-  verticalAlign: "top",
-};
-
-function Required() {
-  return <span style={{ color: "#2E86AB", marginLeft: 3 }}>*</span>;
-}
-
-function FieldError({ msg }: { msg: string }) {
-  return (
-    <p style={{
-      fontFamily: "'Plus Jakarta Sans', sans-serif",
-      fontSize: 12, color: "#E05252", marginTop: 5,
-      display: "flex", alignItems: "center", gap: 4,
-    }}>⚠ {msg}</p>
-  );
-}
-
-function SubmitButton({ loading }: { loading: boolean }) {
-  const [hovered, setHovered] = useState(false);
-  return (
-    <button
-      type="submit"
-      disabled={loading}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        width:          "100%", padding: "15px",
-        borderRadius:   11, border: "none",
-        cursor:         loading ? "not-allowed" : "pointer",
-        background:     loading ? "rgba(27,58,92,0.25)"
-          : hovered ? "linear-gradient(135deg, #16304d, #2677a0)"
-          : "linear-gradient(135deg, #1B3A5C, #2E86AB)",
-        color:          "#fff",
-        fontFamily:     "'Plus Jakarta Sans', sans-serif",
-        fontSize:       16, fontWeight: 800,
-        letterSpacing:  "-0.01em",
-        transition:     "all 0.22s ease",
-        boxShadow:      !loading && hovered ? "0 8px 28px rgba(46,134,171,0.45)" : !loading ? "0 3px 14px rgba(46,134,171,0.30)" : "none",
-        transform:      hovered && !loading ? "translateY(-1px)" : "translateY(0)",
-        display:        "flex", alignItems: "center", justifyContent: "center", gap: 10,
-      }}
-    >
-      {loading ? (
-        <>
-          <span style={{
-            width: 18, height: 18,
-            border: "2.5px solid rgba(255,255,255,0.35)",
-            borderTopColor: "#fff", borderRadius: "50%",
-            display: "inline-block",
-            animation: "spin 0.7s linear infinite",
-          }} />
-          Generando análisis con IA...
-        </>
-      ) : (
-        <><span style={{ fontSize: 18 }}>⚡</span> Generar Análisis de Riesgos</>
-      )}
+function SubmitBtn({loading}:{loading:boolean}){
+  const[h,setH]=useState(false);
+  return(
+    <button type="submit" disabled={loading} onMouseEnter={()=>setH(true)} onMouseLeave={()=>setH(false)}
+      style={{width:"100%",padding:"15px",borderRadius:12,border:"none",cursor:loading?"not-allowed":"pointer",
+        background:loading?"rgba(27,58,92,0.25)":h?"linear-gradient(135deg,#16304d,#2677a0)":"linear-gradient(135deg,#1B3A5C,#2E86AB)",
+        color:"#fff",fontFamily:"'Plus Jakarta Sans', sans-serif",fontSize:16,fontWeight:800,
+        boxShadow:!loading&&h?"0 8px 28px rgba(46,134,171,0.45)":!loading?"0 3px 14px rgba(46,134,171,0.30)":"none",
+        transform:h&&!loading?"translateY(-1px)":"translateY(0)",transition:"all 0.22s ease",
+        display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>
+      {loading?<><span style={{width:18,height:18,border:"2.5px solid rgba(255,255,255,0.35)",borderTopColor:"#fff",borderRadius:"50%",display:"inline-block",animation:"spin 0.7s linear infinite"}}/> Generando análisis con IA...</>
+        :<><span style={{fontSize:18}}>⚡</span> Generar Análisis de Riesgos</>}
     </button>
   );
 }
 
-function ActionButton({
-  onClick, loading, primary, icon, children,
-}: {
-  onClick:  () => void;
-  loading:  boolean;
-  primary:  boolean;
-  icon:     string;
-  children: React.ReactNode;
-}) {
-  const [hovered, setHovered] = useState(false);
-  return (
-    <button
-      onClick={onClick}
-      disabled={loading}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        display:       "flex", alignItems: "center", gap: 7,
-        padding:       "10px 18px", borderRadius: 9,
-        border:        primary ? "none" : "1.5px solid rgba(27,58,92,0.18)",
-        cursor:        loading ? "not-allowed" : "pointer",
-        background:    primary
-          ? loading ? "rgba(27,58,92,0.25)" : hovered ? "linear-gradient(135deg, #16304d, #2677a0)" : "linear-gradient(135deg, #1B3A5C, #2E86AB)"
-          : hovered ? "rgba(27,58,92,0.05)" : "#fff",
-        color:         primary ? "#fff" : "#1B3A5C",
-        fontFamily:    "'Plus Jakarta Sans', sans-serif",
-        fontSize:      13, fontWeight: 700,
-        transition:    "all 0.2s ease",
-        boxShadow:     primary && hovered && !loading ? "0 4px 16px rgba(46,134,171,0.35)" : "none",
-        transform:     hovered && !loading ? "translateY(-1px)" : "translateY(0)",
-        whiteSpace:    "nowrap",
-      }}
-    >
-      {loading
-        ? <span style={{ width: 14, height: 14, border: "2px solid rgba(255,255,255,0.4)", borderTopColor: "#fff", borderRadius: "50%", display: "inline-block", animation: "spin 0.7s linear infinite" }} />
-        : <span>{icon}</span>
-      }
-      {children}
-    </button>
-  );
-}
+export default function GeneratePage(){
+  const router=useRouter();
+  const resultRef=useRef<HTMLDivElement>(null);
+  useEffect(()=>{if(!getToken())router.replace("/login");},[router]);
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
-export default function GeneratePage() {
-  const router  = useRouter();
-  const [result, setResult] = useState<ARResponse | null>(null);
-  const [titulo, setTitulo] = useState("");
-  const resultRef = useRef<HTMLDivElement>(null);
+  const[tipoAnalisis,setTipoAnalisis]=useState("Análisis de riesgos de un trabajo");
+  const[fecha,setFecha]=useState(today());
+  const[inicio,setInicio]=useState(today());
+  const[fin,setFin]=useState(addDays(today(),1));
+  const[lugar,setLugar]=useState("");
+  const[area,setArea]=useState("");
+  const[empresa,setEmpresa]=useState("");
+  const[ot,setOt]=useState("");
+  const[proc,setProc]=useState("");
+  const[contacto,setContacto]=useState("");
+  const[titulo,setTitulo]=useState("");
+  const[pdfFile,setPdfFile]=useState<File|null>(null);
+  const[pasos,setPasos]=useState(["","",""]);
+  const[categoria,setCategoria]=useState("P");
+  const[gravedad,setGravedad]=useState(3);
+  const[probabilidad,setProbabilidad]=useState("C");
+  const[spEvento,setSpEvento]=useState("NO");
+  const[medidasOps,setMedidasOps]=useState("");
+  const[equipoResp,setEquipoResp]=useState("");
+  const[errors,setErrors]=useState<Record<string,string>>({});
+  const[loading,setLoading]=useState(false);
+  const[apiError,setApiError]=useState("");
+  const[result,setResult]=useState<ARResponse|null>(null);
 
-  // Route protection
-  useEffect(() => {
-    if (!getToken()) router.replace("/login");
-  }, [router]);
+  const inherente=calcularRiesgo(gravedad,probabilidad);
+  const residual=calcularRiesgo(gravedad,bajarProbabilidad(probabilidad));
 
-  const handleResult = useCallback((data: ARResponse, t: string) => {
-    setResult(data);
-    setTitulo(t);
-    setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
-  }, []);
+  useEffect(()=>{
+    if(daysBetween(inicio,fin)>30)setFin(addDays(inicio,30));
+    if(daysBetween(inicio,fin)<0)setFin(addDays(inicio,1));
+  },[inicio]);
 
-  const handleReset = () => {
-    setResult(null);
-    setTitulo("");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  const addPaso=()=>setPasos(p=>[...p,""]);
+  const removePaso=(i:number)=>setPasos(p=>p.filter((_,idx)=>idx!==i));
+  const setPaso=(i:number,v:string)=>{setPasos(p=>{const n=[...p];n[i]=v;return n;});if(errors[`paso_${i}`])setErrors(e=>{const n={...e};delete n[`paso_${i}`];return n;});};
+  const clearErr=(k:string)=>{if(errors[k])setErrors(e=>{const n={...e};delete n[k];return n;});};
+
+  const validate=()=>{
+    const errs:Record<string,string>={};
+    if(!titulo.trim()||titulo.trim().length<5)errs.titulo="Mínimo 5 caracteres.";
+    if(!lugar.trim())errs.lugar="Campo obligatorio.";
+    if(!area.trim())errs.area="Campo obligatorio.";
+    if(!empresa.trim())errs.empresa="Campo obligatorio.";
+    if(!equipoResp.trim())errs.equipoResp="Campo obligatorio.";
+    if(daysBetween(inicio,fin)>30)errs.fin="Máximo 30 días desde inicio.";
+    if(daysBetween(inicio,fin)<0)errs.fin="La fecha fin debe ser posterior al inicio.";
+    const pl=pasos.filter(p=>p.trim());
+    if(!pdfFile&&pl.length<3)errs.pasos="Adjunta un PDF o ingresa al menos 3 pasos.";
+    pasos.forEach((p,i)=>{if(!pdfFile&&!p.trim())errs[`paso_${i}`]="Paso vacío.";});
+    return errs;
   };
 
-  return (
+  const handleSubmit=async(e:React.FormEvent)=>{
+    e.preventDefault();
+    const errs=validate();
+    if(Object.keys(errs).length>0){setErrors(errs);return;}
+    setLoading(true);setApiError("");
+    try{
+      let pdfBase64:string|undefined;
+      if(pdfFile)pdfBase64=await fileToBase64(pdfFile);
+      const pl=pasos.filter(p=>p.trim());
+      const body={
+        tipo_analisis:tipoAnalisis,fecha,inicio,fin,
+        lugar:lugar.trim(),area:area.trim(),empresa:empresa.trim(),
+        ot:ot.trim()||undefined,proc:proc.trim()||undefined,contacto:contacto.trim()||undefined,
+        sp_evento:spEvento,medidas_ops:medidasOps.trim()||undefined,
+        titulo_actividad:titulo.trim(),
+        pasos:pl.length>=3?pl:undefined,
+        equipo:equipoResp.trim(),gravedad,probabilidad,
+        pdf_procedimiento:pdfBase64,
+      };
+      const res=await fetch(`${API}/ar/generate`,{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${getToken()}`},body:JSON.stringify(body)});
+      const data=await res.json();
+      if(res.ok){setResult(data);setTimeout(()=>resultRef.current?.scrollIntoView({behavior:"smooth",block:"start"}),100);}
+      else if(res.status===401){localStorage.removeItem("generar_token");router.push("/login");}
+      else{const msg=data?.detail||"Error al generar el análisis.";setApiError(typeof msg==="string"?msg:JSON.stringify(msg));}
+    }catch{setApiError("No se pudo conectar con el servidor.");}
+    finally{setLoading(false);}
+  };
+
+  return(
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body { -webkit-font-smoothing: antialiased; background: #F5F8FB; }
-        @keyframes spin    { to { transform: rotate(360deg); } }
-        @keyframes fadeUp  { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+        body{-webkit-font-smoothing:antialiased;background:#F5F8FB;}
+        @keyframes spin{to{transform:rotate(360deg);}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+        input[type="date"]::-webkit-calendar-picker-indicator{opacity:0.5;cursor:pointer;}
+        select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%231B3A5C' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;}
       `}</style>
-
-      <GenerateNav />
-
-      <main style={{ maxWidth: 860, margin: "0 auto", padding: "44px 24px 80px" }}>
-
-        {/* Header */}
-        <div style={{ marginBottom: 36, animation: "fadeUp 0.5s ease both" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12, flexWrap: "wrap" }}>
-            <StepBadge n={1} label="Describe la actividad"    active={!result} />
-            <div style={{ width: 32, height: 1, background: "rgba(27,58,92,0.15)" }} />
-            <StepBadge n={2} label="Genera con IA"            active={!result} />
-            <div style={{ width: 32, height: 1, background: "rgba(27,58,92,0.15)" }} />
-            <StepBadge n={3} label="Descarga tu AR en Excel"  active={!!result} />
-          </div>
-          <h1 style={{
-            fontFamily: "'DM Serif Display', Georgia, serif",
-            fontSize: "clamp(26px, 4vw, 36px)",
-            fontWeight: 400, color: "#1B3A5C",
-            letterSpacing: "-0.02em", marginBottom: 6,
-          }}>
-            {result ? "Tu análisis de riesgos está listo" : "Nuevo análisis de riesgos HSE"}
+      <Nav/>
+      <main style={{maxWidth:860,margin:"0 auto",padding:"36px 24px 80px",fontFamily:"'Plus Jakarta Sans', sans-serif"}}>
+        <div style={{marginBottom:26,animation:"fadeUp 0.5s ease both"}}>
+          <h1 style={{fontFamily:"'DM Serif Display', serif",fontSize:"clamp(22px,4vw,30px)",fontWeight:400,color:"#1B3A5C",letterSpacing:"-0.02em",marginBottom:5}}>
+            {result?"Análisis de Riesgos HSE — Generado":"Nuevo Análisis de Riesgos HSE"}
           </h1>
-          <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 15, color: "#7A8EA0" }}>
-            {result
-              ? "Revisa los riesgos identificados por IA y descarga el archivo Excel."
-              : "Completa los datos de la actividad y la IA generará un análisis completo en segundos."}
-          </p>
+          <p style={{fontSize:14,color:"#7A8EA0"}}>{result?"Revisa los riesgos identificados y descarga el Excel.":"Completa todos los datos para generar el análisis con IA."}</p>
         </div>
 
-        {/* Form card */}
-        {!result && (
-          <div style={{
-            background:   "#fff",
-            borderRadius: 18,
-            border:       "1.5px solid rgba(27,58,92,0.08)",
-            boxShadow:    "0 4px 24px rgba(27,58,92,0.07)",
-            padding:      "36px 40px",
-            animation:    "fadeUp 0.5s ease 0.1s both",
-          }}>
-            <FormSection onResult={handleResult} />
-          </div>
-        )}
+        {result&&<div ref={resultRef}><Results result={result} onReset={()=>{setResult(null);window.scrollTo({top:0,behavior:"smooth"});}}/></div>}
 
-        {/* Results */}
-        {result && (
-          <div ref={resultRef}>
-            <ResultsSection result={result} titulo={titulo} onReset={handleReset} />
-          </div>
+        {!result&&(
+          <form onSubmit={handleSubmit} noValidate style={{animation:"fadeUp 0.5s ease 0.05s both"}}>
+            {apiError&&(
+              <div style={{background:"rgba(198,40,40,0.06)",border:"1.5px solid rgba(198,40,40,0.25)",borderRadius:12,padding:"14px 18px",marginBottom:18,display:"flex",gap:10}}>
+                <span style={{fontSize:16,flexShrink:0}}>⚠️</span>
+                <p style={{fontSize:14,color:"#C62828",lineHeight:1.5,fontFamily:"'Plus Jakarta Sans', sans-serif"}}>{apiError}</p>
+              </div>
+            )}
+
+            <SectionCard title="Tipo de análisis" icon="📋">
+              <RadioGroup value={tipoAnalisis} onChange={setTipoAnalisis} options={[
+                {value:"Análisis de riesgos de un trabajo",label:"Análisis de riesgos de un trabajo"},
+                {value:"Análisis de riesgos integral",label:"Análisis de riesgos integral"},
+              ]}/>
+            </SectionCard>
+
+            <SectionCard title="Datos Generales" icon="📄">
+              <G3>
+                <Field label="Fecha diligenciamiento" required><TI type="date" value={fecha} onChange={setFecha}/></Field>
+                <Field label="Fecha inicio" required><TI type="date" value={inicio} onChange={v=>{setInicio(v);clearErr("fin");}}/></Field>
+                <Field label="Fecha fin" required error={errors.fin} hint={`Máx. ${addDays(inicio,30)}`}>
+                  <TI type="date" value={fin} onChange={v=>{setFin(v);clearErr("fin");}} error={!!errors.fin}/>
+                </Field>
+              </G3>
+              <G2>
+                <Field label="Planta / Lugar" required error={errors.lugar}><TI value={lugar} onChange={v=>{setLugar(v);clearErr("lugar");}} placeholder="Ej: Planta Barrancabermeja" error={!!errors.lugar}/></Field>
+                <Field label="Área" required error={errors.area}><TI value={area} onChange={v=>{setArea(v);clearErr("area");}} placeholder="Ej: Área de producción" error={!!errors.area}/></Field>
+              </G2>
+              <G2>
+                <Field label="Empresa ejecutora" required error={errors.empresa}><TI value={empresa} onChange={v=>{setEmpresa(v);clearErr("empresa");}} placeholder="Ej: Ecopetrol S.A." error={!!errors.empresa}/></Field>
+                <Field label="Orden de Trabajo (OT)"><TI value={ot} onChange={setOt} placeholder="Ej: OT-2024-0451"/></Field>
+              </G2>
+              <G2>
+                <Field label="Procedimiento"><TI value={proc} onChange={setProc} placeholder="Ej: PRO-HSE-001"/></Field>
+                <Field label="Contactos de emergencia"><TI value={contacto} onChange={setContacto} placeholder="Ej: 123, Bomberos 119"/></Field>
+              </G2>
+            </SectionCard>
+
+            <SectionCard title="Detalle de la Actividad" icon="⚙️">
+              <Field label="Nombre de la actividad" required error={errors.titulo}>
+                <TA value={titulo} onChange={v=>{setTitulo(v);clearErr("titulo");}} placeholder="Describe la actividad..." rows={2} error={!!errors.titulo}/>
+              </Field>
+              <Field label="PDF de procedimiento" hint="Opcional. Si adjuntas PDF los pasos manuales son opcionales.">
+                <div style={{border:"2px dashed rgba(46,134,171,0.30)",borderRadius:10,padding:"14px 18px",background:"rgba(46,134,171,0.03)",display:"flex",alignItems:"center",gap:14}}
+                  onDragOver={e=>e.preventDefault()}
+                  onDrop={e=>{e.preventDefault();const f=e.dataTransfer.files[0];if(f?.type==="application/pdf")setPdfFile(f);}}>
+                  <span style={{fontSize:26}}>📄</span>
+                  <div style={{flex:1}}>
+                    {pdfFile?(
+                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                        <div><p style={{fontSize:13,fontWeight:700,color:"#1B3A5C"}}>{pdfFile.name}</p><p style={{fontSize:11,color:"#7A8EA0"}}>{(pdfFile.size/1024).toFixed(1)} KB</p></div>
+                        <button type="button" onClick={()=>setPdfFile(null)} style={{background:"rgba(198,40,40,0.08)",border:"none",borderRadius:6,padding:"4px 10px",color:"#C62828",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'Plus Jakarta Sans', sans-serif"}}>Quitar</button>
+                      </div>
+                    ):(
+                      <><p style={{fontSize:13,fontWeight:600,color:"#2E86AB"}}>Arrastra un PDF o haz clic para seleccionar</p>
+                      <p style={{fontSize:11,color:"#7A8EA0"}}>Se extraerá el texto del procedimiento automáticamente</p></>
+                    )}
+                  </div>
+                  {!pdfFile&&(<label style={{cursor:"pointer"}}>
+                    <input type="file" accept=".pdf" style={{display:"none"}} onChange={e=>{if(e.target.files?.[0])setPdfFile(e.target.files[0]);}}/>
+                    <span style={{padding:"8px 14px",borderRadius:8,background:"rgba(46,134,171,0.10)",border:"1px solid rgba(46,134,171,0.20)",color:"#2E86AB",fontSize:12,fontWeight:700,fontFamily:"'Plus Jakarta Sans', sans-serif",whiteSpace:"nowrap" as const}}>Seleccionar PDF</span>
+                  </label>)}
+                </div>
+              </Field>
+              <div>
+                <label style={{display:"block",fontFamily:"'Plus Jakarta Sans', sans-serif",fontSize:11,fontWeight:700,color:errors.pasos?"#C62828":"#1B3A5C",letterSpacing:"0.07em",textTransform:"uppercase" as const,marginBottom:8}}>
+                  Pasos de la actividad{!pdfFile&&<span style={{color:"#2E86AB",marginLeft:3}}>*</span>}
+                  {pdfFile&&<span style={{color:"#7A8EA0",fontWeight:400,marginLeft:6,textTransform:"none" as const,letterSpacing:0}}>(opcional con PDF)</span>}
+                </label>
+                {errors.pasos&&<p style={{fontSize:11,color:"#C62828",marginBottom:8,fontFamily:"'Plus Jakarta Sans', sans-serif"}}>⚠ {errors.pasos}</p>}
+                <div style={{display:"flex",flexDirection:"column" as const,gap:8}}>
+                  {pasos.map((paso,i)=>(
+                    <div key={i} style={{display:"flex",gap:8,alignItems:"flex-start"}}>
+                      <div style={{width:26,height:26,borderRadius:"50%",flexShrink:0,marginTop:8,background:"linear-gradient(135deg,rgba(27,58,92,0.08),rgba(46,134,171,0.12))",border:"1px solid rgba(46,134,171,0.15)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color:"#2E86AB"}}>{i+1}</div>
+                      <div style={{flex:1}}>
+                        <TI value={paso} onChange={v=>setPaso(i,v)} placeholder={`Paso ${i+1}...`} error={!!errors[`paso_${i}`]}/>
+                        {errors[`paso_${i}`]&&<p style={{fontSize:11,color:"#C62828",marginTop:3,fontFamily:"'Plus Jakarta Sans', sans-serif"}}>⚠ {errors[`paso_${i}`]}</p>}
+                      </div>
+                      {pasos.length>3&&(<button type="button" onClick={()=>removePaso(i)} style={{width:32,height:32,borderRadius:8,flexShrink:0,marginTop:5,background:"rgba(198,40,40,0.07)",border:"1px solid rgba(198,40,40,0.18)",color:"#C62828",cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>×</button>)}
+                    </div>
+                  ))}
+                </div>
+                <button type="button" onClick={addPaso} style={{marginTop:10,display:"flex",alignItems:"center",gap:6,padding:"8px 14px",borderRadius:8,border:"1.5px dashed rgba(46,134,171,0.35)",background:"rgba(46,134,171,0.04)",color:"#2E86AB",fontFamily:"'Plus Jakarta Sans', sans-serif",fontSize:13,fontWeight:700,cursor:"pointer"}}>
+                  <span style={{fontSize:16}}>+</span> Agregar paso
+                </button>
+              </div>
+            </SectionCard>
+
+            <SectionCard title="Calculadora RAM" icon="📊">
+              <G3>
+                <Field label="Categoría"><SI value={categoria} onChange={setCategoria} options={[{value:"P",label:"P — Personas"},{value:"E",label:"E — Económica"},{value:"A",label:"A — Ambiental"},{value:"C",label:"C — Cliente"},{value:"I",label:"I — Imagen"}]}/></Field>
+                <Field label="Gravedad (0–5)"><SI value={String(gravedad)} onChange={v=>setGravedad(Number(v))} options={[0,1,2,3,4,5].map(n=>({value:String(n),label:`${n} — ${["Sin daño","Leve","Moderado","Serio","Mayor","Catastrófico"][n]}`}))}/></Field>
+                <Field label="Probabilidad (A–E)"><SI value={probabilidad} onChange={setProbabilidad} options={[{value:"A",label:"A — Casi imposible"},{value:"B",label:"B — Improbable"},{value:"C",label:"C — Posible"},{value:"D",label:"D — Probable"},{value:"E",label:"E — Casi seguro"}]}/></Field>
+              </G3>
+              <div style={{marginTop:6,padding:"18px 22px",borderRadius:12,background:"linear-gradient(135deg,rgba(27,58,92,0.03),rgba(46,134,171,0.05))",border:"1px solid rgba(46,134,171,0.12)"}}>
+                <p style={{fontFamily:"'Plus Jakarta Sans', sans-serif",fontSize:11,fontWeight:700,color:"#7A8EA0",letterSpacing:"0.08em",textTransform:"uppercase" as const,marginBottom:14}}>Resultado RAM — Categoría {categoria}</p>
+                <div style={{display:"flex",gap:14,alignItems:"center"}}>
+                  <RamBadge code={inherente} label="Riesgo Inherente"/>
+                  <span style={{color:"#7A8EA0",fontSize:22,paddingBottom:20}}>→</span>
+                  <RamBadge code={residual} label="Riesgo Residual"/>
+                </div>
+                <p style={{fontFamily:"'Plus Jakarta Sans', sans-serif",fontSize:11,color:"#7A8EA0",marginTop:10}}>
+                  Residual: probabilidad baja de <strong>{probabilidad}</strong> → <strong>{bajarProbabilidad(probabilidad)}</strong>
+                </p>
+              </div>
+            </SectionCard>
+
+            <SectionCard title="Seguridad de Procesos" icon="🛡️">
+              <Field label="¿La actividad puede generar evento de seguridad de procesos?" required>
+                <RadioGroup value={spEvento} onChange={setSpEvento} options={[{value:"SI",label:"SÍ"},{value:"NO",label:"NO"}]}/>
+              </Field>
+              {spEvento==="SI"&&(
+                <Field label="Medidas transitorias de operación">
+                  <TA value={medidasOps} onChange={setMedidasOps} placeholder="Describe las medidas transitorias..." rows={3}/>
+                </Field>
+              )}
+              <Field label="Equipo responsable" required error={errors.equipoResp}>
+                <TI value={equipoResp} onChange={v=>{setEquipoResp(v);clearErr("equipoResp");}} placeholder="Ej: Soldador, Supervisor HSE, Operario" error={!!errors.equipoResp}/>
+              </Field>
+            </SectionCard>
+
+            <SubmitBtn loading={loading}/>
+          </form>
         )}
       </main>
     </>
