@@ -29,7 +29,9 @@ function getToken(): string | null {
 
 function formatDate(iso: string): string {
   try {
-    return new Date(iso).toLocaleDateString("es-CO", {
+    // Normalizar formato con espacio y UTC
+    const normalized = iso.replace(" UTC", "").replace(" ", "T") + "Z";
+    return new Date(normalized).toLocaleDateString("es-CO", {
       day: "2-digit", month: "short", year: "numeric",
     });
   } catch { return iso; }
