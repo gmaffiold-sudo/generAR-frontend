@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 const API = "https://hse-risk-analyzer-production.up.railway.app";
@@ -101,7 +101,10 @@ function InputField({
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
-export default function LoginPage() {
+// useSearchParams() requires a Suspense boundary in Next.js App Router.
+// Solution: move all logic into LoginForm, export a shell with <Suspense>.
+
+function LoginForm() {
   const router       = useRouter();
   const searchParams = useSearchParams();
 
@@ -370,6 +373,30 @@ export default function LoginPage() {
         @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
     </>
+  );
+}
+
+// ─── Default export — wraps LoginForm in Suspense (required by Next.js) ───────
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div style={{
+        minHeight: "100vh", display: "flex",
+        alignItems: "center", justifyContent: "center",
+        background: "#F5F8FB",
+      }}>
+        <div style={{
+          width: 36, height: 36,
+          border: "3px solid rgba(27,58,92,0.15)",
+          borderTopColor: "#2E86AB",
+          borderRadius: "50%",
+          animation: "spin 0.7s linear infinite",
+        }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   );
 }
 
