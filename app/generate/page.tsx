@@ -353,7 +353,7 @@ export default function GeneratePage(){
         ot:ot.trim()||undefined,proc:proc.trim()||undefined,contacto:contacto.trim()||undefined,
         sp_evento:spEvento,medidas_ops:medidasOps.trim()||undefined,
         titulo_actividad:titulo.trim(),
-        pasos:pl.length>=3?pl:undefined,
+        pasos:pl.length>0?pl:undefined,
         equipo:equipoResp.trim(),gravedad,probabilidad,
         pdf_procedimiento:pdfBase64,
       };
