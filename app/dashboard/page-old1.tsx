@@ -275,7 +275,7 @@ function HistoryTable({ registros, loading }: { registros: RegistroAR[]; loading
             background: "#F8FAFC",
             borderBottom: "1px solid rgba(27,58,92,0.06)",
           }}>
-            {["Fecha", "Título de actividad", "Descargar"].map(col => (
+            {["Fecha", "Título de actividad", ""].map(col => (
               <span key={col} style={{
                 fontFamily: "'Plus Jakarta Sans', sans-serif",
                 fontSize: 11, fontWeight: 700,
@@ -392,12 +392,7 @@ function TableRow({ registro, isLast }: { registro: RegistroAR; isLast: boolean 
                 animation: "spin 0.7s linear infinite",
               }} />
             ) : (
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <rect width="24" height="24" rx="4" fill="#217346"/>
-                <path d="M14 2H8C6.9 2 6 2.9 6 4v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z" fill="#fff" opacity="0.15"/>
-                <path d="M14 2v6h6" stroke="#fff" strokeWidth="1.5" fill="none"/>
-                <text x="7" y="17" fontSize="8" fontWeight="bold" fill="#fff">XLS</text>
-              </svg>
+              <span style={{ fontSize: 15, lineHeight: 1 }}>⬇</span>
             )}
           </button>
         </div>
