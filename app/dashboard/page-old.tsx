@@ -270,12 +270,12 @@ function HistoryTable({ registros, loading }: { registros: RegistroAR[]; loading
         <div style={{ overflowX: "auto" }}>
           {/* Table header */}
           <div style={{
-            display: "grid", gridTemplateColumns: "180px 1fr 60px",
+            display: "grid", gridTemplateColumns: "180px 1fr",
             padding: "12px 32px",
             background: "#F8FAFC",
             borderBottom: "1px solid rgba(27,58,92,0.06)",
           }}>
-            {["Fecha", "Título de actividad", ""].map(col => (
+            {["Fecha", "Título de actividad"].map(col => (
               <span key={col} style={{
                 fontFamily: "'Plus Jakarta Sans', sans-serif",
                 fontSize: 11, fontWeight: 700,
@@ -296,132 +296,34 @@ function HistoryTable({ registros, loading }: { registros: RegistroAR[]; loading
 }
 
 function TableRow({ registro, isLast }: { registro: RegistroAR; isLast: boolean }) {
-  const [hovered,      setHovered]      = useState(false);
-  const [downloading,  setDownloading]  = useState(false);
-  const [errorMsg,     setErrorMsg]     = useState("");
-
-  const handleDownload = async () => {
-    setDownloading(true);
-    setErrorMsg("");
-    try {
-      const token = getToken();
-      const res   = await fetch(`${API}/ar/${registro.id}/download`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-
-      if (res.status === 422) {
-        setErrorMsg("Este AR fue generado antes de que se activara esta función");
-        return;
-      }
-      if (!res.ok) {
-        setErrorMsg(data?.detail || "Error al descargar el archivo");
-        return;
-      }
-
-      // Decodificar base64 y disparar descarga
-      const bytes    = Uint8Array.from(atob(data.excel_base64), c => c.charCodeAt(0));
-      const blob     = new Blob([bytes], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-      const url      = URL.createObjectURL(blob);
-      const fechaFmt = formatDate(registro.fecha).replace(/\s/g, "_").replace(/\./g, "");
-      const nombre   = `AR_${registro.titulo_actividad.replace(/\s+/g, "_").slice(0, 40)}_${fechaFmt}.xlsx`;
-      const a        = document.createElement("a");
-      a.href         = url;
-      a.download     = nombre;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch {
-      setErrorMsg("No se pudo conectar con el servidor");
-    } finally {
-      setDownloading(false);
-    }
-  };
-
+  const [hovered, setHovered] = useState(false);
   return (
-    <>
-      <div
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-        style={{
-          display: "grid", gridTemplateColumns: "180px 1fr 60px",
-          padding: "16px 32px",
-          borderBottom: isLast && !errorMsg ? "none" : "1px solid rgba(27,58,92,0.05)",
-          background: hovered ? "rgba(46,134,171,0.03)" : "#fff",
-          transition: "background 0.15s ease",
-          alignItems: "center",
-        }}
-      >
-        <span style={{
-          fontFamily: "'Plus Jakarta Sans', sans-serif",
-          fontSize: 13, color: "#7A8EA0", fontWeight: 500,
-          display: "flex", alignItems: "center", gap: 6,
-        }}>
-          <span style={{ fontSize: 12 }}>🗓</span>
-          {formatDate(registro.fecha)}
-        </span>
-
-        <span style={{
-          fontFamily: "'Plus Jakarta Sans', sans-serif",
-          fontSize: 14, color: "#1B3A5C", fontWeight: 600,
-          lineHeight: 1.4,
-        }}>{registro.titulo_actividad}</span>
-
-        {/* Download button */}
-        <div style={{ display: "flex", justifyContent: "center" }}>
-          <button
-            onClick={handleDownload}
-            disabled={downloading}
-            title="Descargar Excel"
-            style={{
-              width: 34, height: 34, borderRadius: 8,
-              border: "1.5px solid rgba(27,58,92,0.12)",
-              background: downloading ? "rgba(27,58,92,0.04)" : hovered ? "rgba(46,134,171,0.08)" : "#fff",
-              cursor: downloading ? "not-allowed" : "pointer",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              transition: "all 0.18s ease",
-              flexShrink: 0,
-            }}
-          >
-            {downloading ? (
-              <span style={{
-                width: 14, height: 14,
-                border: "2px solid rgba(27,58,92,0.2)",
-                borderTopColor: "#2E86AB",
-                borderRadius: "50%",
-                display: "inline-block",
-                animation: "spin 0.7s linear infinite",
-              }} />
-            ) : (
-              <span style={{ fontSize: 15, lineHeight: 1 }}>⬇</span>
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* Error message inline below the row */}
-      {errorMsg && (
-        <div style={{
-          padding: "8px 32px 10px",
-          borderBottom: isLast ? "none" : "1px solid rgba(27,58,92,0.05)",
-          background: "rgba(224,82,82,0.04)",
-          display: "flex", alignItems: "center", gap: 8,
-        }}>
-          <span style={{ fontSize: 13 }}>⚠️</span>
-          <span style={{
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
-            fontSize: 12, color: "#C04040", lineHeight: 1.4,
-          }}>{errorMsg}</span>
-          <button
-            onClick={() => setErrorMsg("")}
-            style={{
-              marginLeft: "auto", background: "none", border: "none",
-              cursor: "pointer", fontSize: 12, color: "#A0B0BC",
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
-            }}
-          >✕</button>
-        </div>
-      )}
-    </>
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: "grid", gridTemplateColumns: "180px 1fr",
+        padding: "16px 32px",
+        borderBottom: isLast ? "none" : "1px solid rgba(27,58,92,0.05)",
+        background: hovered ? "rgba(46,134,171,0.03)" : "#fff",
+        transition: "background 0.15s ease",
+        cursor: "default",
+      }}
+    >
+      <span style={{
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+        fontSize: 13, color: "#7A8EA0", fontWeight: 500,
+        display: "flex", alignItems: "center", gap: 6,
+      }}>
+        <span style={{ fontSize: 12 }}>🗓</span>
+        {formatDate(registro.fecha)}
+      </span>
+      <span style={{
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+        fontSize: 14, color: "#1B3A5C", fontWeight: 600,
+        lineHeight: 1.4,
+      }}>{registro.titulo_actividad}</span>
+    </div>
   );
 }
 
@@ -599,9 +501,6 @@ export default function DashboardPage() {
         @keyframes fadeUp {
           from { opacity: 0; transform: translateY(16px); }
           to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes spin {
-          to { transform: rotate(360deg); }
         }
       `}</style>
 
