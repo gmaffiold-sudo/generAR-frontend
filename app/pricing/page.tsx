@@ -521,9 +521,7 @@ function CtaSection() {
           }}>
           Crear cuenta gratis →
         </a>
-        <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "#A0B0BC", marginTop: 16 }}>
-          Prueba 7 días gratis · Sin compromiso
-        </p>
+        
       </div>
     </section>
   );
