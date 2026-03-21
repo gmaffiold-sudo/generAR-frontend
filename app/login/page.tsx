@@ -353,6 +353,15 @@ function LoginForm() {
               <div style={{ flex: 1, height: 1, background: "rgba(27,58,92,0.10)" }} />
             </div>
 
+            {/* Forgot password link */}
+            <p style={{ textAlign: "center", marginBottom: 16, fontSize: 14, color: "#7A8EA0" }}>
+              <a href="/forgot-password" style={{ color: "#2E86AB", fontWeight: 600, textDecoration: "none" }}
+                onMouseEnter={e => e.currentTarget.style.textDecoration = "underline"}
+                onMouseLeave={e => e.currentTarget.style.textDecoration = "none"}
+              >¿Olvidaste tu contraseña?</a>
+            </p>
+
+
             {/* Register link */}
             <p style={{ textAlign: "center", fontSize: 14, color: "#7A8EA0" }}>
               ¿No tienes cuenta?{" "}
