@@ -151,8 +151,24 @@ function CreditsCard({
           )}
         </div>
 
-        {/* Right — CTA button */}
-        <div style={{ display: "flex", alignItems: "center" }}>
+        {/* Right — CTA buttons */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <a href="/pricing" style={{
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            fontSize: 13, fontWeight: 600,
+            color: "rgba(255,255,255,0.75)",
+            textDecoration: "none",
+            padding: "8px 16px",
+            borderRadius: 8,
+            border: "1px solid rgba(255,255,255,0.20)",
+            transition: "all 0.2s ease",
+            whiteSpace: "nowrap",
+        }}
+          onMouseEnter={e => e.currentTarget.style.color = "#fff"}
+          onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.75)"}
+        >
+          Ver planes
+        </a>
           <GenerateButton onClick={onGenerate} disabled={loading || !credits || credits.creditos_restantes <= 0} />
         </div>
       </div>
