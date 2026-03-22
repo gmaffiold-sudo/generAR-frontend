@@ -326,14 +326,17 @@ function CheckoutForm() {
               {scriptOk ? (
                 <form ref={formRef}>
                   <script
-                    src="https://checkout.wompi.co/widget.js"
-                    data-render="button"
-                    data-public-key={sessionData.public_key}
-                    data-currency="COP"
-                    data-amount-in-cents={String(sessionData.precio)}
-                    data-reference={sessionData.referencia}
-                    data-signature:integrity={sessionData.firma}
-                    data-redirect-url={sessionData.redirect_url}
+                    dangerouslySetInnerHTML={{ __html: "" }}
+                    {...{
+                      src: "https://checkout.wompi.co/widget.js",
+                      "data-render": "button",
+                      "data-public-key": sessionData.public_key,
+                      "data-currency": "COP",
+                      "data-amount-in-cents": String(sessionData.precio),
+                      "data-reference": sessionData.referencia,
+                      "data-signature:integrity": sessionData.firma,
+                      "data-redirect-url": sessionData.redirect_url,
+                    } as any}
                   />
                 </form>
               ) : (
