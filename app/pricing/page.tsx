@@ -48,9 +48,9 @@ const PLANS = [
       "Todo lo del Professional",
       "Soporte dedicado",
     ],
-    cta:   "Contactar ventas",
-    href:  "mailto:ventas@generar.co",
-    mail:  true,
+    cta:   "Empezar ahora",
+    href:  "/checkout?plan=business",
+    mail:  false,
 
   },
 ];
