@@ -677,7 +677,10 @@ function Footer() {
 
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.07)", paddingTop: 28, display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
           <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "rgba(255,255,255,0.30)" }}>
-            © 2025 GenerAR. Todos los derechos reservados.
+            © 2026 GenerAR. Todos los derechos reservados.{" "}
+              <a href="/politica-de-datos" style={{ color: "inherit", textDecoration: "underline" }}>
+                Política de datos personales
+              </a>
           </span>
           <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "rgba(255,255,255,0.25)" }}>
             Hecho con IA para profesionales HSE 🛡️
