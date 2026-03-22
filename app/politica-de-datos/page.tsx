@@ -257,24 +257,7 @@ export default function PoliticaDatosPage() {
           <section id="seccion-1">
             <SectionTitle number="1">Identificación del Responsable del Tratamiento</SectionTitle>
 
-            {/* Datos clave del responsable */}
-            <div style={{
-              background: C.gray50, borderRadius: 12, border: `1px solid ${C.gray200}`,
-              padding: 20, marginBottom: 20, fontSize: 15,
-            }}>
-              <div style={{ marginBottom: 10 }}>
-                <span style={{ fontWeight: 600, color: C.gray500, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                  Nombre del Responsable
-                </span>
-                <p style={{ color: C.gray900, fontWeight: 600, margin: "4px 0 0" }}>Gabriel Maffiold</p>
-              </div>
-              <div>
-                <span style={{ fontWeight: 600, color: C.gray500, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                  Cédula de Ciudadanía
-                </span>
-                <p style={{ color: C.gray900, margin: "4px 0 0" }}>91.522.262</p>
-              </div>
-            </div>
+                  
 
             {/* Imagen del responsable */}
             <img
