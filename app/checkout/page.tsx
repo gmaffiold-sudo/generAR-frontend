@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Script from "next/script";
 
 const API = "https://hse-risk-analyzer-production.up.railway.app";
 
@@ -114,16 +115,15 @@ function Spinner({ size = 24, color = "#2E86AB" }: { size?: number; color?: stri
 function CheckoutForm() {
   const router       = useRouter();
   const searchParams = useSearchParams();
-  const formRef      = useRef<HTMLFormElement>(null);
 
   const planId = searchParams.get("plan") ?? "";
   const plan   = PLANES[planId];
 
   const [sessionData, setSessionData] = useState<{
-    referencia:  string;
-    precio:      number;
-    firma:       string;
-    public_key:  string;
+    referencia:   string;
+    precio:       number;
+    firma:        string;
+    public_key:   string;
     redirect_url: string;
   } | null>(null);
   const [loading,  setLoading]  = useState(true);
@@ -160,20 +160,6 @@ function CheckoutForm() {
       }
     })();
   }, [planId, plan]);
-
-  // Load Wompi script after session data is ready
-  useEffect(() => {
-    if (!sessionData) return;
-    const existing = document.getElementById("wompi-script");
-    if (existing) { setScriptOk(true); return; }
-    const s    = document.createElement("script");
-    s.id       = "wompi-script";
-    s.src      = "https://checkout.wompi.co/widget.js";
-    s.setAttribute("data-render", "button");
-    s.onload   = () => setScriptOk(true);
-    s.onerror  = () => setError("No se pudo cargar el módulo de pago. Recarga la página.");
-    document.head.appendChild(s);
-  }, [sessionData]);
 
   if (!plan) return null;
 
@@ -322,30 +308,41 @@ function CheckoutForm() {
                 </span>
               </div>
 
+              {/* Wompi Script — loaded via next/script once session is ready */}
+              {sessionData && (
+                <Script
+                  src="https://checkout.wompi.co/widget.js"
+                  strategy="afterInteractive"
+                  onLoad={() => setScriptOk(true)}
+                />
+              )}
+
               {/* Wompi form button */}
-              {scriptOk ? (
-                <form ref={formRef}>
-                  <script
-                    dangerouslySetInnerHTML={{ __html: "" }}
-                    {...{
-                      src: "https://checkout.wompi.co/widget.js",
-                      "data-render": "button",
-                      "data-public-key": sessionData.public_key,
-                      "data-currency": "COP",
-                      "data-amount-in-cents": String(sessionData.precio),
-                      "data-reference": sessionData.referencia,
-                      "data-signature:integrity": sessionData.firma,
-                      "data-redirect-url": sessionData.redirect_url,
-                    } as any}
-                  />
-                </form>
-              ) : (
-                <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "16px 0" }}>
-                  <Spinner size={20} />
-                  <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, color: "#7A8EA0" }}>
-                    Cargando módulo de pago...
-                  </span>
-                </div>
+              {sessionData && (
+                scriptOk ? (
+                  <div dangerouslySetInnerHTML={{
+                    __html: `
+                      <form action="https://checkout.wompi.co/p/" method="GET">
+                        <input type="hidden" name="public-key"         value="${sessionData.public_key}" />
+                        <input type="hidden" name="currency"           value="COP" />
+                        <input type="hidden" name="amount-in-cents"    value="${sessionData.precio}" />
+                        <input type="hidden" name="reference"          value="${sessionData.referencia}" />
+                        <input type="hidden" name="signature:integrity" value="${sessionData.firma}" />
+                        <input type="hidden" name="redirect-url"       value="https://generar.co/payment-result" />
+                        <button type="submit" style="width:100%;padding:15px;border-radius:11px;border:none;cursor:pointer;background:linear-gradient(135deg,#1B3A5C,#2E86AB);color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:16px;font-weight:800;letter-spacing:-0.01em;box-shadow:0 3px 14px rgba(46,134,171,0.30);transition:all 0.22s ease;">
+                          🔒 Pagar ${formatCOP(sessionData.precio)}
+                        </button>
+                      </form>
+                    `,
+                  }} />
+                ) : (
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "16px 0" }}>
+                    <Spinner size={20} />
+                    <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, color: "#7A8EA0" }}>
+                      Cargando módulo de pago...
+                    </span>
+                  </div>
+                )
               )}
 
               <p style={{
