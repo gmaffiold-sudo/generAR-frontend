@@ -18,8 +18,9 @@ const PLANS = [
       "Soporte por email",
     ],
     cta:   "Empezar ahora",
-    href:  "/register",
+    href:  "/checkout?plan=starter",
     mail:  false,
+
   },
   {
     name:     "Professional",
@@ -33,7 +34,7 @@ const PLANS = [
       "Soporte prioritario",
     ],
     cta:   "Empezar ahora",
-    href:  "/register",
+    href:  "/checkout?plan=professional",
     mail:  false,
   },
   {
@@ -50,6 +51,7 @@ const PLANS = [
     cta:   "Contactar ventas",
     href:  "mailto:ventas@generar.co",
     mail:  true,
+
   },
 ];
 
