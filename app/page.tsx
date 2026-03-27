@@ -644,33 +644,40 @@ function Footer() {
             </p>
           </div>
 
-          {/* Links */}
+          {/* Legal */}
           <div>
             <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.35)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 16 }}>Legal</p>
-            {["Términos de servicio", "Política de privacidad"].map(l => (
-              <a key={l} href="#" style={{
+            {[
+              { label: "Términos de servicio", href: "/terminos-de-servicio" },
+              { label: "Política de datos personales", href: "/politica-de-datos" },
+            ].map(l => (
+              <a key={l.label} href={l.href} style={{
                 display: "block", fontFamily: "'Plus Jakarta Sans', sans-serif",
                 fontSize: 14, color: "rgba(255,255,255,0.50)", textDecoration: "none",
                 marginBottom: 10, transition: "color 0.2s",
               }}
               onMouseEnter={e => e.currentTarget.style.color = "#2E86AB"}
               onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.50)"}
-              >{l}</a>
+              >{l.label}</a>
             ))}
           </div>
 
           {/* Product */}
           <div>
             <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.35)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 16 }}>Producto</p>
-            {["Características", "Precios", "Documentación"].map(l => (
-              <a key={l} href="#" style={{
+            {[
+              { label: "Características", href: "/#caracteristicas" },
+              { label: "Precios", href: "/pricing" },
+              { label: "Guía de uso", href: "/guia-de-uso" },
+            ].map(l => (
+              <a key={l.label} href={l.href} style={{
                 display: "block", fontFamily: "'Plus Jakarta Sans', sans-serif",
                 fontSize: 14, color: "rgba(255,255,255,0.50)", textDecoration: "none",
                 marginBottom: 10, transition: "color 0.2s",
               }}
               onMouseEnter={e => e.currentTarget.style.color = "#2E86AB"}
               onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.50)"}
-              >{l}</a>
+              >{l.label}</a>
             ))}
           </div>
         </div>
