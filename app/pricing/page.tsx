@@ -535,11 +535,18 @@ function Footer() {
     <footer style={{ background: "#0F2236", padding: "36px 24px" }}>
       <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
         <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "rgba(255,255,255,0.30)" }}>
-          © 2025 GenerAR · generar.co
+          © 2026 GenerAR · generar.co
         </span>
         <div style={{ display: "flex", gap: 24 }}>
-          {["Términos", "Privacidad", "Contacto"].map(l => (
-            <a key={l} href="#" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "rgba(255,255,255,0.40)", textDecoration: "none" }}>{l}</a>
+          {[
+            { label: "Términos", href: "/terminos-de-servicio" },
+            { label: "Privacidad", href: "/politica-de-datos" },
+            { label: "Contacto", href: "mailto:soporte@generar.co" },
+          ].map(l => (
+            <a key={l.label} href={l.href} style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "rgba(255,255,255,0.40)", textDecoration: "none" }}
+              onMouseEnter={e => e.currentTarget.style.color = "#2E86AB"}
+              onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.40)"}
+            >{l.label}</a>
           ))}
         </div>
       </div>
