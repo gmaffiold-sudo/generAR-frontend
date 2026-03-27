@@ -215,8 +215,8 @@ export default function TerminosDeServicio() {
             <p style={prose}>
               Estos Términos de Servicio (en adelante, "los Términos") rigen el acceso y uso de la plataforma GenerAR, disponible en{" "}
               <strong style={strong}>generar.co</strong> (en adelante, "la Plataforma"), operada por{" "}
-              <Placeholder>NOMBRE DEL RESPONSABLE</Placeholder>, persona natural identificada con cédula de ciudadanía{" "}
-              <Placeholder>CÉDULA</Placeholder>, domiciliada en la ciudad de Cali, Valle del Cauca, Colombia (en adelante, "el Operador").
+              <Placeholder>VER IMAGEN</Placeholder>, persona natural identificada con cédula de ciudadanía{" "}
+              <Placeholder>VER IMAGEN</Placeholder>, domiciliada en la ciudad de Cali, Valle del Cauca, Colombia (en adelante, "el Operador").
             </p>
             <img
               src="/images/responsable_tratamiento.png"
@@ -490,7 +490,7 @@ export default function TerminosDeServicio() {
               <><strong style={strong}>Correo electrónico:</strong> soporte@generar.co</>,
               <><strong style={strong}>Sitio web:</strong> generar.co</>,
               <><strong style={strong}>Ciudad:</strong> Cali, Valle del Cauca, Colombia</>,
-              <><strong style={strong}>Responsable:</strong>{" "}<Placeholder>NOMBRE DEL RESPONSABLE</Placeholder>, C.C.{" "}<Placeholder>CÉDULA</Placeholder></>,
+              <><strong style={strong}>Responsable:</strong>{" "}<Placeholder>VER IMAGEN</Placeholder>, C.C.{" "}<Placeholder>VER IMAGEN</Placeholder></>,
             ]} />
             <p style={{ ...prose, marginBottom: 0 }}>
               El Operador se compromete a dar respuesta a las solicitudes dentro de los plazos establecidos por la normativa colombiana o, en su defecto, en un término razonable no superior a quince (15) días hábiles.
