@@ -132,7 +132,8 @@ export default function RegisterPage() {
   const [loading,   setLoading]   = useState(false);
   const [apiError,  setApiError]  = useState("");
   const [success,   setSuccess]   = useState(false);
-
+  const [aceptaPolitica, setAceptaPolitica] = useState(false);
+  
   const handleChange = (name: string, val: string) => {
     setForm(f => ({ ...f, [name]: val }));
     if (errors[name]) setErrors(e => ({ ...e, [name]: "" }));
@@ -143,6 +144,10 @@ export default function RegisterPage() {
     e.preventDefault();
     const errs = validate(form);
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
+    if (!aceptaPolitica) {
+      alert("Debes aceptar la Política de Datos Personales y los Términos de Servicio para continuar.");
+      return;
+    }
 
     setLoading(true);
     setApiError("");
@@ -369,7 +374,8 @@ export default function RegisterPage() {
               <input
                 type="checkbox"
                 id="acepto_politica"
-                required
+                checked={aceptaPolitica}
+                onChange={e => setAceptaPolitica(e.target.checked)}
                 style={{ marginTop: 3, accentColor: "#2E86AB", width: 16, height: 16, flexShrink: 0, cursor: "pointer" }}
               />
               <label htmlFor="acepto_politica" style={{
