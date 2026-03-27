@@ -162,6 +162,7 @@ export default function RegisterPage() {
           nombre:   form.nombre.trim(),
           empresa:  form.empresa.trim() || undefined,
           cargo:    form.cargo.trim()   || undefined,
+          acepto_politica: aceptaPolitica,
         }),
       });
 
