@@ -11,7 +11,7 @@ interface Plan     { name: string; price: string; ars: string; highlight: boolea
 const NAV_LINKS: NavLink[] = [
   { label: "Características", href: "#beneficios" },
   { label: "Precios",         href: "#precios"    },
-  { label: "Contacto",        href: "#footer"     },
+  { label: "Contacto",        href: "mailto:soporte@generar.co"     },
 ];
 
 const BENEFITS: Benefit[] = [
