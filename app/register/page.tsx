@@ -365,12 +365,28 @@ export default function RegisterPage() {
               >Inicia sesión</a>
             </p>
 
-            <p style={{ textAlign: "center", marginTop: 20, fontSize: 12, color: "#A0B0BC", lineHeight: 1.6 }}>
-              Al registrarte aceptas nuestros{" "}
-              <a href="/terminos" style={{ color: "#5A7080", textDecoration: "underline" }}>Términos de servicio</a>
-              {" "}y{" "}
-              <a href="/privacidad" style={{ color: "#5A7080", textDecoration: "underline" }}>Política de privacidad</a>
-            </p>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 16, marginTop: 8 }}>
+              <input
+                type="checkbox"
+                id="acepto_politica"
+                required
+                style={{ marginTop: 3, accentColor: "#2E86AB", width: 16, height: 16, flexShrink: 0, cursor: "pointer" }}
+              />
+              <label htmlFor="acepto_politica" style={{
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                fontSize: 13, color: "#5A7080", lineHeight: 1.6, cursor: "pointer"
+              }}>
+                He leído y acepto la{" "}
+                <a href="/politica-de-datos" target="_blank" style={{ color: "#2E86AB", textDecoration: "underline" }}>
+                  Política de Datos Personales
+                </a>
+                {" "}y los{" "}
+                <a href="/terminos-de-servicio" target="_blank" style={{ color: "#2E86AB", textDecoration: "underline" }}>
+                  Términos de Servicio
+                </a>
+                {" "}de GenerAR. *
+              </label>
+            </div>
           </div>
         </div>
       </div>
