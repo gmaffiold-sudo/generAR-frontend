@@ -37,6 +37,7 @@ interface ARResponse {
   message: string; registro_id: string; titulo_actividad: string;
   creditos_usados: number; creditos_restantes: number; fecha: string;
   analisis: RiesgoItem[];
+  tiene_datos_ecopetrol?: boolean;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -614,6 +615,21 @@ function Step2({ result, equipoInicial, onReset }: {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.detail || "Error al generar el Excel.");
+
+      // Guardar datos Ecopetrol en el registro (silencioso — no interrumpe descarga)
+      fetch(`${API}/ar/registro/${result.registro_id}/datos-ecopetrol`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${getToken()}` },
+        body: JSON.stringify({
+          tipo_analisis: tipoAnalisis, fecha, inicio, fin,
+          lugar: lugar.trim(), area: area.trim(), empresa: empresa.trim(),
+          ot: ot.trim() || undefined, proc: proc.trim() || undefined,
+          contacto: contacto.trim() || undefined, sp_evento: spEvento,
+          medidas_ops: medidasOps.trim() || undefined,
+          equipo: equipo.trim(), gravedad, probabilidad,
+        }),
+      }).catch(() => {});  // ignorar errores silenciosamente
+
       triggerDownload(
         data.excel_base64,
         `AR_Ecopetrol_${result.titulo_actividad.replace(/\s+/g, "_").slice(0, 40)}.xlsx`,
