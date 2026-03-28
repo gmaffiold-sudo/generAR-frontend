@@ -16,9 +16,10 @@ interface Credits {
 }
 
 interface RegistroAR {
-  id:               string;
-  fecha:            string;
-  titulo_actividad: string;
+  id:                    string;
+  fecha:                 string;
+  titulo_actividad:      string;
+  tiene_datos_ecopetrol: boolean;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -286,12 +287,12 @@ function HistoryTable({ registros, loading }: { registros: RegistroAR[]; loading
         <div style={{ overflowX: "auto" }}>
           {/* Table header */}
           <div style={{
-            display: "grid", gridTemplateColumns: "180px 1fr 60px",
+            display: "grid", gridTemplateColumns: "150px 1fr auto",
             padding: "12px 32px",
             background: "#F8FAFC",
             borderBottom: "1px solid rgba(27,58,92,0.06)",
           }}>
-            {["Fecha", "Título de actividad", "Descargar"].map(col => (
+            {["Fecha", "Título de actividad", "Descargas"].map(col => (
               <span key={col} style={{
                 fontFamily: "'Plus Jakarta Sans', sans-serif",
                 fontSize: 11, fontWeight: 700,
@@ -311,46 +312,113 @@ function HistoryTable({ registros, loading }: { registros: RegistroAR[]; loading
   );
 }
 
-function TableRow({ registro, isLast }: { registro: RegistroAR; isLast: boolean }) {
-  const [hovered,      setHovered]      = useState(false);
-  const [downloading,  setDownloading]  = useState(false);
-  const [errorMsg,     setErrorMsg]     = useState("");
+function triggerXlsxDownload(b64: string, filename: string) {
+  const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+  const blob  = new Blob([bytes], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  const url   = URL.createObjectURL(blob);
+  const a     = document.createElement("a"); a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+function triggerPdfDownload(b64: string, filename: string) {
+  const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+  const blob  = new Blob([bytes], { type: "application/pdf" });
+  const url   = URL.createObjectURL(blob);
+  const a     = document.createElement("a"); a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
 
-  const handleDownload = async () => {
-    setDownloading(true);
-    setErrorMsg("");
+function DlIconButton({
+  title, color, loading, disabled, onClick, children,
+}: {
+  title: string; color: string; loading: boolean;
+  disabled?: boolean; onClick: () => void; children: React.ReactNode;
+}) {
+  const [h, setH] = useState(false);
+  const isDisabled = loading || disabled;
+  return (
+    <button
+      onClick={onClick} disabled={isDisabled} title={title}
+      onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)}
+      style={{
+        width: 32, height: 32, borderRadius: 7, flexShrink: 0,
+        border: `1.5px solid ${h && !isDisabled ? color + "50" : "rgba(27,58,92,0.12)"}`,
+        background: isDisabled ? "rgba(27,58,92,0.03)" : h ? color + "12" : "#fff",
+        cursor: isDisabled ? "not-allowed" : "pointer",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        transition: "all 0.18s ease",
+      }}
+    >
+      {loading ? (
+        <span style={{
+          width: 13, height: 13,
+          border: "1.5px solid rgba(27,58,92,0.15)",
+          borderTopColor: color,
+          borderRadius: "50%", display: "inline-block",
+          animation: "spin 0.7s linear infinite",
+        }} />
+      ) : children}
+    </button>
+  );
+}
+
+function TableRow({ registro, isLast }: { registro: RegistroAR; isLast: boolean }) {
+  const [hovered,       setHovered]       = useState(false);
+  const [dlXls,         setDlXls]         = useState(false);
+  const [dlEco,         setDlEco]         = useState(false);
+  const [dlPdf,         setDlPdf]         = useState(false);
+  const [errorMsg,      setErrorMsg]      = useState("");
+
+  const slugTitle = registro.titulo_actividad.replace(/\s+/g, "_").slice(0, 40);
+  const fechaFmt  = formatDate(registro.fecha).replace(/\s/g, "_").replace(/\./g, "");
+
+  // 📊 Excel básico — GET /ar/{id}/download
+  const handleXls = async () => {
+    setDlXls(true); setErrorMsg("");
     try {
-      const token = getToken();
-      const res   = await fetch(`${API}/ar/${registro.id}/download`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const res  = await fetch(`${API}/ar/${registro.id}/download`, {
+        headers: { Authorization: `Bearer ${getToken()}` },
       });
       const data = await res.json();
+      if (res.status === 422) { setErrorMsg("Este AR fue generado antes de que se activara esta función"); return; }
+      if (!res.ok)            { setErrorMsg(data?.detail || "Error al descargar"); return; }
+      triggerXlsxDownload(data.excel_base64, `AR_${slugTitle}_${fechaFmt}.xlsx`);
+    } catch { setErrorMsg("No se pudo conectar con el servidor"); }
+    finally { setDlXls(false); }
+  };
 
-      if (res.status === 422) {
-        setErrorMsg("Este AR fue generado antes de que se activara esta función");
-        return;
-      }
-      if (!res.ok) {
-        setErrorMsg(data?.detail || "Error al descargar el archivo");
-        return;
-      }
+  // 🏭 Ecopetrol — GET /ar/{id}/download (mismo endpoint, nombre distinto)
+  const handleEco = async () => {
+    setDlEco(true); setErrorMsg("");
+    try {
+      const res  = await fetch(`${API}/ar/${registro.id}/download`, {
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+      const data = await res.json();
+      if (res.status === 422) { setErrorMsg("Este AR fue generado antes de que se activara esta función"); return; }
+      if (!res.ok)            { setErrorMsg(data?.detail || "Error al descargar"); return; }
+      triggerXlsxDownload(data.excel_base64, `AR_Ecopetrol_${slugTitle}_${fechaFmt}.xlsx`);
+    } catch { setErrorMsg("No se pudo conectar con el servidor"); }
+    finally { setDlEco(false); }
+  };
 
-      // Decodificar base64 y disparar descarga
-      const bytes    = Uint8Array.from(atob(data.excel_base64), c => c.charCodeAt(0));
-      const blob     = new Blob([bytes], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-      const url      = URL.createObjectURL(blob);
-      const fechaFmt = formatDate(registro.fecha).replace(/\s/g, "_").replace(/\./g, "");
-      const nombre   = `AR_${registro.titulo_actividad.replace(/\s+/g, "_").slice(0, 40)}_${fechaFmt}.xlsx`;
-      const a        = document.createElement("a");
-      a.href         = url;
-      a.download     = nombre;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch {
-      setErrorMsg("No se pudo conectar con el servidor");
-    } finally {
-      setDownloading(false);
-    }
+  // 📄 PDF — POST /ar/export/pdf
+  const handlePdf = async () => {
+    setDlPdf(true); setErrorMsg("");
+    try {
+      const res  = await fetch(`${API}/ar/export/pdf`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+        body: JSON.stringify({
+          registro_id:      registro.id,
+          analisis:         [],
+          titulo_actividad: registro.titulo_actividad,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setErrorMsg(data?.detail || "Error al generar el PDF"); return; }
+      triggerPdfDownload(data.pdf_base64, `AR_${slugTitle}_${fechaFmt}.pdf`);
+    } catch { setErrorMsg("No se pudo conectar con el servidor"); }
+    finally { setDlPdf(false); }
   };
 
   return (
@@ -359,14 +427,15 @@ function TableRow({ registro, isLast }: { registro: RegistroAR; isLast: boolean 
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         style={{
-          display: "grid", gridTemplateColumns: "180px 1fr 60px",
-          padding: "16px 32px",
+          display: "grid", gridTemplateColumns: "150px 1fr auto",
+          padding: "14px 32px",
           borderBottom: isLast && !errorMsg ? "none" : "1px solid rgba(27,58,92,0.05)",
           background: hovered ? "rgba(46,134,171,0.03)" : "#fff",
           transition: "background 0.15s ease",
-          alignItems: "center",
+          alignItems: "center", gap: 16,
         }}
       >
+        {/* Fecha */}
         <span style={{
           fontFamily: "'Plus Jakarta Sans', sans-serif",
           fontSize: 13, color: "#7A8EA0", fontWeight: 500,
@@ -376,46 +445,45 @@ function TableRow({ registro, isLast }: { registro: RegistroAR; isLast: boolean 
           {formatDate(registro.fecha)}
         </span>
 
+        {/* Título */}
         <span style={{
           fontFamily: "'Plus Jakarta Sans', sans-serif",
-          fontSize: 14, color: "#1B3A5C", fontWeight: 600,
-          lineHeight: 1.4,
-        }}>{registro.titulo_actividad}</span>
+          fontSize: 14, color: "#1B3A5C", fontWeight: 600, lineHeight: 1.4,
+        }}>
+          {registro.titulo_actividad}
+        </span>
 
-        {/* Download button */}
-        <div style={{ display: "flex", justifyContent: "center" }}>
-          <button
-            onClick={handleDownload}
-            disabled={downloading}
-            title="Descargar Excel"
-            style={{
-              width: 34, height: 34, borderRadius: 8,
-              border: "1.5px solid rgba(27,58,92,0.12)",
-              background: downloading ? "rgba(27,58,92,0.04)" : hovered ? "rgba(46,134,171,0.08)" : "#fff",
-              cursor: downloading ? "not-allowed" : "pointer",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              transition: "all 0.18s ease",
-              flexShrink: 0,
-            }}
-          >
-            {downloading ? (
-              <span style={{
-                width: 14, height: 14,
-                border: "2px solid rgba(27,58,92,0.2)",
-                borderTopColor: "#2E86AB",
-                borderRadius: "50%",
-                display: "inline-block",
-                animation: "spin 0.7s linear infinite",
-              }} />
-            ) : (
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <rect width="24" height="24" rx="4" fill="#217346"/>
-                <path d="M14 2H8C6.9 2 6 2.9 6 4v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z" fill="#fff" opacity="0.15"/>
-                <path d="M14 2v6h6" stroke="#fff" strokeWidth="1.5" fill="none"/>
-                <text x="7" y="17" fontSize="8" fontWeight="bold" fill="#fff">XLS</text>
+        {/* Botones de descarga */}
+        <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+          {/* 📊 Excel básico — siempre visible */}
+          <DlIconButton title="Descargar Excel básico" color="#217346" loading={dlXls} onClick={handleXls}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <rect width="24" height="24" rx="4" fill="#217346"/>
+              <path d="M14 2H8C6.9 2 6 2.9 6 4v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z" fill="#fff" opacity="0.15"/>
+              <path d="M14 2v6h6" stroke="#fff" strokeWidth="1.5" fill="none"/>
+              <text x="7" y="17" fontSize="8" fontWeight="bold" fill="#fff">XLS</text>
+            </svg>
+          </DlIconButton>
+
+          {/* 🏭 Ecopetrol — solo si tiene datos Ecopetrol */}
+          {registro.tiene_datos_ecopetrol && (
+            <DlIconButton title="Descargar formato Ecopetrol" color="#1B3A5C" loading={dlEco} onClick={handleEco}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <rect width="24" height="24" rx="4" fill="#1B3A5C"/>
+                <text x="4" y="16" fontSize="10" fontWeight="bold" fill="#fff">HSE</text>
               </svg>
-            )}
-          </button>
+            </DlIconButton>
+          )}
+
+          {/* 📄 PDF — siempre visible */}
+          <DlIconButton title="Descargar PDF" color="#C04040" loading={dlPdf} onClick={handlePdf}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <rect width="24" height="24" rx="4" fill="#C04040"/>
+              <path d="M14 2H8C6.9 2 6 2.9 6 4v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z" fill="#fff" opacity="0.15"/>
+              <path d="M14 2v6h6" stroke="#fff" strokeWidth="1.5" fill="none"/>
+              <text x="6" y="17" fontSize="8" fontWeight="bold" fill="#fff">PDF</text>
+            </svg>
+          </DlIconButton>
         </div>
       </div>
 
@@ -428,17 +496,12 @@ function TableRow({ registro, isLast }: { registro: RegistroAR; isLast: boolean 
           display: "flex", alignItems: "center", gap: 8,
         }}>
           <span style={{ fontSize: 13 }}>⚠️</span>
-          <span style={{
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
-            fontSize: 12, color: "#C04040", lineHeight: 1.4,
-          }}>{errorMsg}</span>
+          <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 12, color: "#C04040", lineHeight: 1.4 }}>
+            {errorMsg}
+          </span>
           <button
             onClick={() => setErrorMsg("")}
-            style={{
-              marginLeft: "auto", background: "none", border: "none",
-              cursor: "pointer", fontSize: 12, color: "#A0B0BC",
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
-            }}
+            style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", fontSize: 12, color: "#A0B0BC" }}
           >✕</button>
         </div>
       )}
@@ -574,9 +637,14 @@ export default function DashboardPage() {
       });
       if (res.ok) {
         const data = await res.json();
-        // Sort newest first
+        // Sort newest first; derive tiene_datos_ecopetrol from presence of "lugar" in datos_formulario
         const sorted = Array.isArray(data)
-          ? [...data].sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())
+          ? [...data]
+              .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())
+              .map(r => ({
+                ...r,
+                tiene_datos_ecopetrol: Boolean(r.datos_formulario?.lugar),
+              }))
           : [];
         setRegistros(sorted);
       }
