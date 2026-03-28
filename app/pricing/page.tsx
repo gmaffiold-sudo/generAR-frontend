@@ -581,6 +581,7 @@ export default function PricingPage() {
   const router = useRouter();
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
     const token = localStorage.getItem("generar_token");
     if (!token) router.replace("/login");
   }, [router]);
