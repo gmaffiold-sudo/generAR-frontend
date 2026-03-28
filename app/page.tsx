@@ -525,10 +525,9 @@ function Pricing() {
   </p>
 </div>
 
-</div>
-</div>
-</section>
-);
+      </div>
+    </section>
+  );
 }
  
 
