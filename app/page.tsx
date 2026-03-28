@@ -521,7 +521,7 @@ function Pricing() {
     fontFamily: "'Plus Jakarta Sans', sans-serif",
     fontSize: 12, color: "#A0B0BC", marginTop: 16,
   }}>
-    * Disponible para usuarios con suscripción activa. Ver detalles en <a href="/pricing" style={{ color: "#2E86AB", textDecoration: "underline" }}>Precios</a>
+    * Disponible para usuarios con suscripción activa. 
   </p>
 </div>
 
