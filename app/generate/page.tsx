@@ -330,7 +330,7 @@ function Step1({ onResult }: { onResult: (r: ARResponse, equipo: string) => void
         titulo_actividad: titulo.trim(),
         equipo: equipo.trim(),
       };
-      if (validPasos.length >= 3) body.pasos = validPasos;
+      if (validPasos.length >= 1) body.pasos = validPasos;
       if (pdfBase64)              body.pdf_procedimiento = pdfBase64;
 
       const res  = await fetch(`${API}/ar/generate`, {
