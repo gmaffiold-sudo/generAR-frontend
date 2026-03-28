@@ -479,10 +479,58 @@ function Pricing() {
             <PricingCard key={plan.name} plan={plan} delay={i * 120} visible={visible} />
           ))}
         </div>
+
+        {/* Top-up informativo */}
+<div style={{
+  marginTop: 48, padding: "28px 32px",
+  background: "rgba(46,134,171,0.05)",
+  border: "1.5px solid rgba(46,134,171,0.15)",
+  borderRadius: 16, textAlign: "center",
+}}>
+  <p style={{
+    fontFamily: "'Plus Jakarta Sans', sans-serif",
+    fontSize: 13, fontWeight: 700, color: "#2E86AB",
+    letterSpacing: "0.08em", textTransform: "uppercase",
+    marginBottom: 8,
+  }}>¿Necesitas más AR este mes?</p>
+  <p style={{
+    fontFamily: "'Plus Jakarta Sans', sans-serif",
+    fontSize: 15, color: "#4A6070", marginBottom: 20,
+  }}>
+    Compra créditos adicionales sin cambiar de plan
+  </p>
+  <div style={{ display: "flex", justifyContent: "center", gap: 16, flexWrap: "wrap" }}>
+    {[
+      { label: "Paquete S", ars: "10 AR", price: "$35.000" },
+      { label: "Paquete M", ars: "30 AR", price: "$95.000" },
+      { label: "Paquete L", ars: "100 AR", price: "$220.000" },
+    ].map(t => (
+      <div key={t.label} style={{
+        background: "#fff", borderRadius: 12,
+        padding: "16px 24px", textAlign: "center",
+        border: "1.5px solid rgba(27,58,92,0.09)",
+        minWidth: 140,
+      }}>
+        <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 11, fontWeight: 700, color: "#2E86AB", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4 }}>{t.label}</p>
+        <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22, color: "#1B3A5C", marginBottom: 2 }}>{t.ars}</p>
+        <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 16, fontWeight: 800, color: "#1B3A5C" }}>{t.price} <span style={{ fontSize: 11, fontWeight: 500, color: "#7A8EA0" }}>COP</span></p>
       </div>
-    </section>
-  );
+    ))}
+  </div>
+  <p style={{
+    fontFamily: "'Plus Jakarta Sans', sans-serif",
+    fontSize: 12, color: "#A0B0BC", marginTop: 16,
+  }}>
+    * Disponible para usuarios con suscripción activa. Ver detalles en <a href="/pricing" style={{ color: "#2E86AB", textDecoration: "underline" }}>Precios</a>
+  </p>
+</div>
+
+</div>
+</div>
+</section>
+);
 }
+ 
 
 function PricingCard({ plan, delay, visible }: { plan: Plan; delay: number; visible: boolean }) {
   const [hovered, setHovered] = useState(false);
