@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 const PLANS = [
@@ -577,6 +578,13 @@ function Footer() {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function PricingPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem("generar_token");
+    if (!token) router.replace("/login");
+  }, [router]);
+
   return (
     <>
       <style>{`
