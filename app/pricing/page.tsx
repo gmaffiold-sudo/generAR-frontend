@@ -579,12 +579,18 @@ function Footer() {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function PricingPage() {
   const router = useRouter();
+  const [autorizado, setAutorizado] = useState(false);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
     const token = localStorage.getItem("generar_token");
-    if (!token) router.replace("/login");
+    if (!token) {
+      router.replace("/login");
+    } else {
+      setAutorizado(true);
+    }
   }, [router]);
+
+  if (!autorizado) return null;
 
   return (
     <>
