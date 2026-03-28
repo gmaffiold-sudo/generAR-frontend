@@ -713,8 +713,8 @@ function Footer() {
           <div>
             <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.35)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 16 }}>Producto</p>
             {[
-              { label: "Características", href: "/#caracteristicas" },
-              { label: "Precios", href: "/pricing" },
+              { label: "Características", href: "#beneficios" },
+              { label: "Precios", href: "#precios" },
               { label: "Guía de uso", href: "/guia-de-uso" },
             ].map(l => (
               <a key={l.label} href={l.href} style={{
