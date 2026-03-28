@@ -56,9 +56,9 @@ const PLANS = [
 ];
 
 const TOPUPS = [
-  { label: "Paquete S", ars: "10 AR",  price: "35.000" },
-  { label: "Paquete M", ars: "30 AR",  price: "95.000" },
-  { label: "Paquete L", ars: "100 AR", price: "220.000" },
+  { label: "Paquete S", ars: "10 AR",  price: "35.000",  planId: "topup_s" },
+  { label: "Paquete M", ars: "30 AR",  price: "95.000",  planId: "topup_m" },
+  { label: "Paquete L", ars: "100 AR", price: "220.000", planId: "topup_l" },
 ];
 
 const FAQS = [
@@ -402,6 +402,20 @@ function TopupCard({ item, delay, visible }: { item: typeof TOPUPS[0]; delay: nu
       <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 12, color: "#A0B0BC", marginTop: 4 }}>
         ${Math.round(parseInt(item.price.replace(".", "")) / parseInt(item.ars)).toLocaleString("es-CO")} por AR
       </p>
+
+      <a href={`/checkout?plan=${item.planId}`} style={{
+        display: "block", marginTop: 20,
+        padding: "10px 20px", borderRadius: 9,
+        background: hov ? "linear-gradient(135deg, #1B3A5C, #2E86AB)" : "rgba(27,58,92,0.06)",
+        color: hov ? "#fff" : "#1B3A5C",
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+        fontSize: 14, fontWeight: 700,
+        textDecoration: "none", textAlign: "center",
+        border: `1.5px solid ${hov ? "transparent" : "rgba(27,58,92,0.12)"}`,
+        transition: "all 0.25s ease",
+      }}>
+        Comprar ahora
+      </a>
     </div>
   );
 }
