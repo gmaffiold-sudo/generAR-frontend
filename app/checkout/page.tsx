@@ -142,7 +142,20 @@ function CheckoutForm() {
     (async () => {
       setLoading(true);
       try {
-        const res  = await fetch(`${API}/payments/create-session`, {
+        // Si es top-up verificar suscripción activa primero
+        if (planId.startsWith("topup_")) {
+          const resCredits = await fetch(`${API}/user/credits`, {
+            headers: { "Authorization": `Bearer ${getToken()}` },
+          });
+          const dataCredits = await resCredits.json();
+          if (!resCredits.ok || dataCredits.estado_suscripcion !== "activa") {
+            setError("Necesitas un plan activo para comprar créditos adicionales. Adquiere un plan primero.");
+            setLoading(false);
+            return;
+          }
+        }
+
+        const res = await fetch(`${API}/payments/create-session`, {
           method:  "POST",
           headers: {
             "Content-Type":  "application/json",
@@ -278,6 +291,21 @@ function CheckoutForm() {
                     textDecoration: "underline", padding: 0,
                   }}
                 >Recargar página</button>
+                
+                {error.includes("plan activo") && (
+                  <a href="/pricing" style={{
+                    display: "block", marginTop: 12,
+                    padding: "10px 20px", borderRadius: 9,
+                    background: "linear-gradient(135deg, #1B3A5C, #2E86AB)",
+                    color: "#fff", fontFamily: "'Plus Jakarta Sans', sans-serif",
+                    fontSize: 14, fontWeight: 700,
+                    textDecoration: "none", textAlign: "center",
+                  }}>
+                    Ver planes disponibles
+                  </a>
+                )}
+
+
               </div>
             </div>
           ) : loading ? (
