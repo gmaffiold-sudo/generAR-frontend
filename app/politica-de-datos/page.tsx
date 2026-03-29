@@ -129,7 +129,7 @@ function RightItem({ code, title, def }: { code: string; title: string; def: str
 }
 
 function ThirdPartyCard({ code, name, role, detail, url }: {
-  code: string; name: string; role: string; detail: string; url: string;
+  code: string; name: string; role: string; detail: string; url?: string;
 }) {
   return (
     <div style={{ marginBottom: 16, borderRadius: 12, border: `1px solid ${C.gray200}`, overflow: "hidden" }}>
@@ -144,9 +144,12 @@ function ThirdPartyCard({ code, name, role, detail, url }: {
       </div>
       <div style={{ padding: "16px 20px" }}>
         <p style={{ fontSize: 15, color: C.gray700, lineHeight: 1.7, marginBottom: 8, marginTop: 0 }}>{detail}</p>
-        <a href={url} target="_blank" rel="noopener noreferrer"
-          style={{ fontSize: 13, color: C.accent, textDecoration: "none", wordBreak: "break-all" }}>
-          Política de privacidad: {url}
+        {url && (
+          <a href={url} target="_blank" rel="noopener noreferrer"
+            style={{ fontSize: 13, color: C.accent, textDecoration: "none", wordBreak: "break-all" }}>
+            Política de privacidad: {url}
+          </a>
+        )}
         </a>
       </div>
     </div>
