@@ -346,7 +346,7 @@ export default function PoliticaDatosPage() {
 
             <SubTitle>4.3 Datos de facturación y pagos</SubTitle>
             <BulletList items={[
-              "Información de pago procesada a través de la pasarela Wompi (la cual aplica sus propias políticas de privacidad y seguridad)",
+              "Información de pago procesada a través de un proveedor certificado de pagos electrónicos, el cual aplica sus propias políticas de privacidad y seguridad bajo estándar PCI DSS.",
             ]} />
 
             <div style={{
@@ -399,24 +399,20 @@ export default function PoliticaDatosPage() {
             </Body>
 
             <ThirdPartyCard
-              code="6.1" name="Wompi" role="Pagos en línea"
-              detail="Procesadora de pagos electrónicos utilizada para gestionar las transacciones económicas realizadas en la plataforma. Los datos de pago son transmitidos directamente a Wompi bajo sus propios estándares de seguridad (PCI DSS). El Responsable no almacena datos de tarjetas de crédito o débito."
-              url="https://wompi.com/assets/downloadble/Reglamento-colombia.pdf"
+              code="6.1" name="Procesador de pagos" role="Pagos en línea"
+              detail="Proveedor certificado de procesamiento de pagos electrónicos utilizado para gestionar las transacciones económicas realizadas en la plataforma. Los datos de pago son transmitidos directamente al procesador bajo estándares internacionales de seguridad (PCI DSS). El Responsable no almacena datos de tarjetas de crédito o débito."
             />
             <ThirdPartyCard
-              code="6.2" name="Anthropic" role="Inteligencia Artificial"
-              detail="Proveedor de los modelos de inteligencia artificial que potencian las funcionalidades de generación de contenido de la plataforma GenerAR. Los prompts e instrucciones del usuario pueden ser procesados por los servidores de Anthropic conforme a sus políticas de uso y privacidad."
-              url="https://www.anthropic.com/privacy"
+              code="6.2" name="Proveedor de inteligencia artificial" role="Procesamiento con IA"
+              detail="Proveedor especializado de modelos de inteligencia artificial que potencia las funcionalidades de generación de contenido de la plataforma GenerAR. Los datos ingresados por el usuario pueden ser procesados por los servidores de este proveedor conforme a sus políticas de uso y privacidad, bajo estándares internacionales de seguridad."
             />
             <ThirdPartyCard
-              code="6.3" name="Supabase" role="Base de datos"
-              detail="Proveedor de infraestructura de base de datos en la nube utilizado para el almacenamiento seguro de los datos de los usuarios y del historial de uso de la plataforma."
-              url="https://supabase.com/privacy"
+              code="6.3" name="Proveedor de infraestructura en la nube" role="Almacenamiento de datos"
+              detail="Proveedor certificado de infraestructura en la nube utilizado para el almacenamiento seguro de los datos de los usuarios y del historial de uso de la plataforma, bajo estándares internacionales de seguridad y disponibilidad."
             />
             <ThirdPartyCard
-              code="6.4" name="Resend" role="Envío de correos electrónicos"
-              detail="Plataforma de envío de correos electrónicos transaccionales utilizada para el envío de notificaciones, confirmaciones y comunicaciones operativas a los usuarios registrados."
-              url="https://resend.com/legal/privacy-policy"
+              code="6.4" name="Proveedor de comunicaciones" role="Envío de correos electrónicos"
+              detail="Proveedor especializado en comunicaciones digitales utilizado para el envío de notificaciones, confirmaciones y comunicaciones operativas a los usuarios registrados, bajo estándares de seguridad y privacidad internacionales."
             />
 
             <Body>
@@ -526,10 +522,10 @@ export default function PoliticaDatosPage() {
             </Body>
             <BulletList items={[
               "Cifrado de datos en tránsito mediante protocolos TLS/HTTPS.",
-              "Almacenamiento seguro de datos a través de proveedores certificados (Supabase).",
+              "Almacenamiento seguro de datos a través de proveedores certificados con estándares internacionales de seguridad.",
               "Control de acceso basado en roles para el personal autorizado.",
               "Monitoreo periódico de la seguridad de los sistemas y la plataforma.",
-              "Uso de proveedores de pago certificados bajo estándar PCI DSS (Wompi).",
+              "Uso de procesadores de pago certificados bajo estándar PCI DSS.",
               "Revisión y actualización periódica de las políticas y procedimientos de seguridad.",
               "Capacitación y sensibilización del personal involucrado en el tratamiento de datos.",
             ]} />
