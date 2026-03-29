@@ -375,14 +375,44 @@ function TableRow({ registro, isLast }: { registro: RegistroAR; isLast: boolean 
   const handleXls = async () => {
     setDlXls(true); setErrorMsg("");
     try {
-      const res  = await fetch(`${API}/ar/${registro.id}/download`, {
+      // 1. Obtener array de riesgos del backend
+      const res  = await fetch(`${API}/ar/${registro.id}/analisis`, {
         headers: { Authorization: `Bearer ${getToken()}` },
       });
       const data = await res.json();
-      if (res.status === 422) { setErrorMsg("Este AR fue generado antes de que se activara esta función"); return; }
-      if (!res.ok)            { setErrorMsg(data?.detail || "Error al descargar"); return; }
-      triggerXlsxDownload(data.excel_base64, `AR_${slugTitle}_${fechaFmt}.xlsx`);
-    } catch { setErrorMsg("No se pudo conectar con el servidor"); }
+      if (res.status === 404) { setErrorMsg("Este AR no tiene análisis guardado"); return; }
+      if (!res.ok)            { setErrorMsg(data?.detail || "Error al obtener el análisis"); return; }
+
+      // 2. Cargar SheetJS dinámicamente si no está cargado
+      if (!(window as any).XLSX) {
+        await new Promise<void>((resolve, reject) => {
+          const s = document.createElement("script");
+          s.src     = "https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js";
+          s.onload  = () => resolve();
+          s.onerror = () => reject(new Error("No se pudo cargar SheetJS"));
+          document.head.appendChild(s);
+        });
+      }
+      const XLSX = (window as any).XLSX;
+
+      // 3. Generar Excel en el frontend
+      const headers = ["Fuente", "Detalle", "Peligro", "Consecuencia", "Controles", "Responsable"];
+      const rows = (data.analisis as any[]).map((r: any) => [
+        r.Fuente, r.Detalle, r.Peligro, r.Consecuencia, r.Controles, r.Responsable,
+      ]);
+      const ws = XLSX.utils.aoa_to_sheet([
+        [`ANÁLISIS DE RIESGOS HSE — ${registro.titulo_actividad.toUpperCase()}`],
+        [`GenerAR (generar.co) — ${new Date().toLocaleDateString("es-CO")}`],
+        [],
+        headers,
+        ...rows,
+      ]);
+      ws["!cols"]   = [{ wch: 22 }, { wch: 40 }, { wch: 20 }, { wch: 35 }, { wch: 40 }, { wch: 22 }];
+      ws["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 5 } }, { s: { r: 1, c: 0 }, e: { r: 1, c: 5 } }];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Análisis de Riesgos");
+      XLSX.writeFile(wb, `AR_${slugTitle}_${fechaFmt}.xlsx`);
+    } catch (e: any) { setErrorMsg(e.message || "No se pudo conectar con el servidor"); }
     finally { setDlXls(false); }
   };
 
@@ -401,16 +431,25 @@ function TableRow({ registro, isLast }: { registro: RegistroAR; isLast: boolean 
     finally { setDlEco(false); }
   };
 
-  // 📄 PDF — POST /ar/export/pdf
+  // 📄 PDF — GET analisis primero, luego POST /ar/export/pdf con datos reales
   const handlePdf = async () => {
     setDlPdf(true); setErrorMsg("");
     try {
+      // 1. Obtener array de riesgos del backend
+      const resAnalisis = await fetch(`${API}/ar/${registro.id}/analisis`, {
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+      const dataAnalisis = await resAnalisis.json();
+      if (resAnalisis.status === 404) { setErrorMsg("Este AR no tiene análisis guardado"); return; }
+      if (!resAnalisis.ok)            { setErrorMsg(dataAnalisis?.detail || "Error al obtener el análisis"); return; }
+
+      // 2. Generar PDF en el backend con los riesgos reales
       const res  = await fetch(`${API}/ar/export/pdf`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
         body: JSON.stringify({
           registro_id:      registro.id,
-          analisis:         [],
+          analisis:         dataAnalisis.analisis,
           titulo_actividad: registro.titulo_actividad,
         }),
       });
