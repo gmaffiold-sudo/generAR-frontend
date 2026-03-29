@@ -599,21 +599,31 @@ function Step2({ result, equipoInicial, onReset }: {
     if (Object.keys(errs).length > 0) { setEcoFieldErrs(errs); return; }
     setEcoLoading(true); setEcoError("");
     try {
+      const body = {
+        registro_id: result.registro_id, analisis: result.analisis,
+        tipo_analisis: tipoAnalisis, fecha, inicio, fin,
+        lugar: lugar.trim(), area: area.trim(), empresa: empresa.trim(),
+        ot: ot.trim() || undefined, proc: proc.trim() || undefined,
+        contacto: contacto.trim() || undefined, sp_evento: spEvento,
+        medidas_ops: medidasOps.trim() || undefined,
+        equipo: equipo.trim(), gravedad, probabilidad,
+      };
+
       const res = await fetch(`${API}/ar/export/ecopetrol`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${getToken()}` },
-        body: JSON.stringify({
-          registro_id: result.registro_id, analisis: result.analisis,
-          tipo_analisis: tipoAnalisis, fecha, inicio, fin,
-          lugar: lugar.trim(), area: area.trim(), empresa: empresa.trim(),
-          ot: ot.trim() || undefined, proc: proc.trim() || undefined,
-          contacto: contacto.trim() || undefined, sp_evento: spEvento,
-          medidas_ops: medidasOps.trim() || undefined,
-          equipo: equipo.trim(), gravedad, probabilidad,
-        }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.detail || "Error al generar el Excel.");
+
+      // Guardar datos Ecopetrol en el registro (silencioso si falla)
+      fetch(`${API}/ar/registro/${result.registro_id}/datos-ecopetrol`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${getToken()}` },
+        body: JSON.stringify(body),
+      }).catch(() => {});
+
       triggerDownload(
         data.excel_base64,
         `AR_Ecopetrol_${result.titulo_actividad.replace(/\s+/g, "_").slice(0, 40)}.xlsx`,
