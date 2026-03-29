@@ -457,14 +457,13 @@ function TableRow({ registro, isLast }: { registro: RegistroAR; isLast: boolean 
         <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
           {/* 📊 Excel básico — siempre visible */}
           <DlIconButton title="Descargar Excel básico" color="#217346" loading={dlXls} onClick={handleXls}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
               <rect width="24" height="24" rx="4" fill="#217346"/>
-              <path d="M14 2H8C6.9 2 6 2.9 6 4v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z" fill="#fff" opacity="0.15"/>
-              <path d="M14 2v6h6" stroke="#fff" strokeWidth="1.5" fill="none"/>
-              <text x="7" y="17" fontSize="8" fontWeight="bold" fill="#fff">XLS</text>
+              <path d="M7 8h10M7 12h10M7 16h6" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>
+              <path d="M14 2v6h6M14 2H8C6.9 2 6 2.9 6 4v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z" stroke="#fff" strokeWidth="1.5" fill="none"/>
             </svg>
           </DlIconButton>
-
+          
           {/* 🏭 Ecopetrol — solo si tiene datos Ecopetrol */}
           {registro.tiene_datos_ecopetrol && (
             <DlIconButton title="Descargar formato Ecopetrol" color="#1B3A5C" loading={dlEco} onClick={handleEco}>
