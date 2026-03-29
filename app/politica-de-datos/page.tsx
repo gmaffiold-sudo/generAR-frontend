@@ -150,7 +150,7 @@ function ThirdPartyCard({ code, name, role, detail, url }: {
             Política de privacidad: {url}
           </a>
         )}
-        </a>
+        
       </div>
     </div>
   );
