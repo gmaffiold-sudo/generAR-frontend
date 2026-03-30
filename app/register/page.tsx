@@ -135,32 +135,26 @@ export default function RegisterPage() {
   const [aceptaPolitica, setAceptaPolitica] = useState(false);
   const [recaptchaToken, setRecaptchaToken] = useState("");
 
-  // Cargar script de Google reCAPTCHA
   useEffect(() => {
-    const script = document.createElement("script");
-    script.src   = "https://www.google.com/recaptcha/api.js";
-    script.async = true;
-    script.defer = true;
-    document.head.appendChild(script);
-  }, []);
-
-  // Capturar token cuando el usuario completa el captcha
-  useEffect(() => {
-      const interval = setInterval(() => {
-        if ((window as any).grecaptcha && (window as any).grecaptcha.render) {
-          clearInterval(interval);
-          (window as any).grecaptcha.render("recaptcha-container", {
-            sitekey: "6LeasJ0sAAAAAP8lXU5b6MGa-I3RjiVk6F2k0ZUd",
-            callback: (token: string) => {
-              setRecaptchaToken(token);
-              setApiError("");
-            },
-            "expired-callback": () => setRecaptchaToken(""),
-          });
-        }
-      }, 100);
-      return () => clearInterval(interval);
-    }, []);
+  // Cargar script
+  const script = document.createElement("script");
+  script.src = "https://www.google.com/recaptcha/api.js?render=explicit";
+  script.async = true;
+  script.defer = true;
+  script.onload = () => {
+    (window as any).grecaptcha.ready(() => {
+      (window as any).grecaptcha.render("recaptcha-container", {
+        sitekey: "6LeasJ0sAAAAAP8lXU5b6MGa-I3RjiVk6F2k0ZUd",
+        callback: (token: string) => {
+          setRecaptchaToken(token);
+          setApiError("");
+        },
+        "expired-callback": () => setRecaptchaToken(""),
+      });
+    });
+  };
+  document.head.appendChild(script);
+}, []);
   
   
   const handleChange = (name: string, val: string) => {
@@ -171,6 +165,7 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Token al submit:", recaptchaToken);
     const errs = validate(form);
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
     if (!aceptaPolitica) {
@@ -371,6 +366,7 @@ export default function RegisterPage() {
                   value={form[field.name]}
                   error={errors[field.name]}
                   onChange={handleChange}
+                  
                 />
               ))}
 
