@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import HCaptcha from "@hcaptcha/react-hcaptcha";
+import ReCAPTCHA from "react-google-recaptcha";
 
 const API = "https://hse-risk-analyzer-production.up.railway.app";
 
@@ -134,8 +134,8 @@ export default function RegisterPage() {
   const [apiError,  setApiError]  = useState("");
   const [success,   setSuccess]   = useState(false);
   const [aceptaPolitica, setAceptaPolitica] = useState(false);
-  const [hcaptchaToken,  setHcaptchaToken]  = useState("");
-  const hcaptchaRef = useRef<HCaptcha>(null);
+  const [recaptchaToken,  setRecaptchaToken]  = useState("");
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
   
   const handleChange = (name: string, val: string) => {
     setForm(f => ({ ...f, [name]: val }));
@@ -151,7 +151,7 @@ export default function RegisterPage() {
       alert("Debes aceptar la Política de Datos Personales y los Términos de Servicio para continuar.");
       return;
     }
-    if (!hcaptchaToken) {
+    if (!recaptchaToken) {
       setApiError("Por favor completa la verificación de seguridad.");
       return;
     }
@@ -170,7 +170,7 @@ export default function RegisterPage() {
           empresa:  form.empresa.trim() || undefined,
           cargo:    form.cargo.trim()   || undefined,
           acepto_politica: aceptaPolitica,
-          hcaptcha_token:  hcaptchaToken,
+          recaptcha_token: recaptchaToken,
         }),
       });
 
@@ -178,18 +178,18 @@ export default function RegisterPage() {
 
       if (res.ok) {
         setSuccess(true);
-        hcaptchaRef.current?.resetCaptcha();
+        recaptchaRef.current?.reset();
         setTimeout(() => router.push("/login?registered=true"), 1800);
       } else {
         const msg = data?.detail || "Error al registrar. Intenta de nuevo.";
         setApiError(typeof msg === "string" ? msg : JSON.stringify(msg));
-        hcaptchaRef.current?.resetCaptcha();
-        setHcaptchaToken("");
+        recaptchaRef.current?.reset();
+        setRecaptchaToken("");
       }
     } catch {
       setApiError("No se pudo conectar con el servidor. Verifica tu conexión.");
-      hcaptchaRef.current?.resetCaptcha();
-      setHcaptchaToken("");
+      recaptchaRef.current?.reset();
+      setRecaptchaToken("");
     } finally {
       setLoading(false);
     }
@@ -371,12 +371,12 @@ export default function RegisterPage() {
               )}
 
               <div style={{ marginBottom: 16 }}>
-                <HCaptcha
-                  sitekey="c28e81bc-25c6-40a4-a2f6-c980c2ee0b10"
-                  onVerify={(token) => { setHcaptchaToken(token); setApiError(""); }}
-                  onExpire={() => setHcaptchaToken("")}
-                  ref={hcaptchaRef}
-                  languageOverride="es"
+                <ReCAPTCHA
+                  sitekey="6LcyrJ0sAAAAAIlYHBN96cwKwhcKa6sqSacKRvDj"
+                  onChange={(token) => { setRecaptchaToken(token || ""); setApiError(""); }}
+                  onExpired={() => setRecaptchaToken("")}
+                  ref={recaptchaRef}
+                  hl="es"
                 />
               </div>
 
