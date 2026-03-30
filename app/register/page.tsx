@@ -144,7 +144,7 @@ export default function RegisterPage() {
   script.onload = () => {
     (window as any).grecaptcha.ready(() => {
       (window as any).grecaptcha.render("recaptcha-container", {
-        sitekey: "6LeasJ0sAAAAAP8lXU5b6MGa-I3RjiVk6F2k0ZUd",
+        sitekey: "6LcRg54sAAAAAG_COmrKBB36aCCPgzXEEQ-Tww3f",
         callback: (token: string) => {
           setRecaptchaToken(token);
           setApiError("");
