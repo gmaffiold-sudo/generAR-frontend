@@ -138,21 +138,21 @@ export default function RegisterPage() {
   useEffect(() => {
   // Cargar script
   const script = document.createElement("script");
-  script.src = "https://www.google.com/recaptcha/api.js?render=explicit";
+  script.src = "https://www.google.com/recaptcha/enterprise.js?render=explicit";
   script.async = true;
   script.defer = true;
   script.onload = () => {
-    (window as any).grecaptcha.ready(() => {
-      (window as any).grecaptcha.render("recaptcha-container", {
-        sitekey: "6LcRg54sAAAAAG_COmrKBB36aCCPgzXEEQ-Tww3f",
-        callback: (token: string) => {
-          setRecaptchaToken(token);
-          setApiError("");
-        },
-        "expired-callback": () => setRecaptchaToken(""),
+    (window as any).grecaptcha.enterprise.ready(() => {
+      (window as any).grecaptcha.enterprise.render("recaptcha-container", {
+          sitekey: "6LcRg54sAAAAAG_COmrKBB36aCCPgzXEEQ-Tww3f",
+          callback: (token: string) => {
+            setRecaptchaToken(token);
+            setApiError("");
+          },
+          "expired-callback": () => setRecaptchaToken(""),
+        });
       });
-    });
-  };
+  };   
   document.head.appendChild(script);
 }, []);
   
