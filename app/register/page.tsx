@@ -372,7 +372,7 @@ export default function RegisterPage() {
 
               <div style={{ marginBottom: 16 }}>
                 <HCaptcha
-                  sitekey="336ac450-d458-4f50-8222-72fcf9ae93cc"
+                  sitekey="c28e81bc-25c6-40a4-a2f6-c980c2ee0b10"
                   onVerify={(token) => { setHcaptchaToken(token); setApiError(""); }}
                   onExpire={() => setHcaptchaToken("")}
                   ref={hcaptchaRef}
