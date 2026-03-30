@@ -146,11 +146,22 @@ export default function RegisterPage() {
 
   // Capturar token cuando el usuario completa el captcha
   useEffect(() => {
-    (window as any).onRecaptchaSuccess = (token: string) => {
-      setRecaptchaToken(token);
-      setApiError("");
-    };
-  }, []);
+      const interval = setInterval(() => {
+        if ((window as any).grecaptcha && (window as any).grecaptcha.render) {
+          clearInterval(interval);
+          (window as any).grecaptcha.render("recaptcha-container", {
+            sitekey: "6LeasJ0sAAAAAP8lXU5b6MGa-I3RjiVk6F2k0ZUd",
+            callback: (token: string) => {
+              setRecaptchaToken(token);
+              setApiError("");
+            },
+            "expired-callback": () => setRecaptchaToken(""),
+          });
+        }
+      }, 100);
+      return () => clearInterval(interval);
+    }, []);
+  
   
   const handleChange = (name: string, val: string) => {
     setForm(f => ({ ...f, [name]: val }));
@@ -384,12 +395,7 @@ export default function RegisterPage() {
               )}
 
               <div style={{ marginBottom: 16 }}>
-                <div
-                  className="g-recaptcha"
-                  data-sitekey="6LeasJ0sAAAAAP8lXU5b6MGa-I3RjiVk6F2k0ZUd"
-                  data-callback="onRecaptchaSuccess"
-                />
-              </div>
+                <div id="recaptcha-container"></div>
 
               <SubmitButton loading={loading} disabled={success}>
                 {loading ? "Creando cuenta..." : "Crear cuenta gratis →"}
