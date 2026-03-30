@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import ReCAPTCHA from "react-google-recaptcha";
 
 const API = "https://hse-risk-analyzer-production.up.railway.app";
 
@@ -134,8 +133,24 @@ export default function RegisterPage() {
   const [apiError,  setApiError]  = useState("");
   const [success,   setSuccess]   = useState(false);
   const [aceptaPolitica, setAceptaPolitica] = useState(false);
-  const [recaptchaToken,  setRecaptchaToken]  = useState("");
-  const recaptchaRef = useRef<ReCAPTCHA>(null);
+  const [recaptchaToken, setRecaptchaToken] = useState("");
+
+  // Cargar script de Google reCAPTCHA
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src   = "https://www.google.com/recaptcha/api.js";
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+  }, []);
+
+  // Capturar token cuando el usuario completa el captcha
+  useEffect(() => {
+    (window as any).onRecaptchaSuccess = (token: string) => {
+      setRecaptchaToken(token);
+      setApiError("");
+    };
+  }, []);
   
   const handleChange = (name: string, val: string) => {
     setForm(f => ({ ...f, [name]: val }));
@@ -178,17 +193,15 @@ export default function RegisterPage() {
 
       if (res.ok) {
         setSuccess(true);
-        recaptchaRef.current?.reset();
+        setRecaptchaToken("");
         setTimeout(() => router.push("/login?registered=true"), 1800);
       } else {
         const msg = data?.detail || "Error al registrar. Intenta de nuevo.";
         setApiError(typeof msg === "string" ? msg : JSON.stringify(msg));
-        recaptchaRef.current?.reset();
         setRecaptchaToken("");
       }
     } catch {
       setApiError("No se pudo conectar con el servidor. Verifica tu conexión.");
-      recaptchaRef.current?.reset();
       setRecaptchaToken("");
     } finally {
       setLoading(false);
@@ -371,12 +384,10 @@ export default function RegisterPage() {
               )}
 
               <div style={{ marginBottom: 16 }}>
-                <ReCAPTCHA
-                  sitekey="6LeasJ0sAAAAAP8lXU5b6MGa-I3RjiVk6F2k0ZUd"
-                  onChange={(token) => { setRecaptchaToken(token || ""); setApiError(""); }}
-                  onExpired={() => setRecaptchaToken("")}
-                  ref={recaptchaRef}
-                  hl="es"
+                <div
+                  className="g-recaptcha"
+                  data-sitekey="6LeasJ0sAAAAAP8lXU5b6MGa-I3RjiVk6F2k0ZUd"
+                  data-callback="onRecaptchaSuccess"
                 />
               </div>
 
