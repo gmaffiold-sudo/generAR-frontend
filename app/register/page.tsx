@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import HCaptcha from "@hcaptcha/react-hcaptcha";
 
 const API = "https://hse-risk-analyzer-production.up.railway.app";
 
@@ -133,6 +134,8 @@ export default function RegisterPage() {
   const [apiError,  setApiError]  = useState("");
   const [success,   setSuccess]   = useState(false);
   const [aceptaPolitica, setAceptaPolitica] = useState(false);
+  const [hcaptchaToken,  setHcaptchaToken]  = useState("");
+  const hcaptchaRef = useRef<HCaptcha>(null);
   
   const handleChange = (name: string, val: string) => {
     setForm(f => ({ ...f, [name]: val }));
@@ -146,6 +149,10 @@ export default function RegisterPage() {
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
     if (!aceptaPolitica) {
       alert("Debes aceptar la Política de Datos Personales y los Términos de Servicio para continuar.");
+      return;
+    }
+    if (!hcaptchaToken) {
+      setApiError("Por favor completa la verificación de seguridad.");
       return;
     }
 
@@ -163,6 +170,7 @@ export default function RegisterPage() {
           empresa:  form.empresa.trim() || undefined,
           cargo:    form.cargo.trim()   || undefined,
           acepto_politica: aceptaPolitica,
+          hcaptcha_token:  hcaptchaToken,
         }),
       });
 
@@ -170,13 +178,18 @@ export default function RegisterPage() {
 
       if (res.ok) {
         setSuccess(true);
+        hcaptchaRef.current?.resetCaptcha();
         setTimeout(() => router.push("/login?registered=true"), 1800);
       } else {
         const msg = data?.detail || "Error al registrar. Intenta de nuevo.";
         setApiError(typeof msg === "string" ? msg : JSON.stringify(msg));
+        hcaptchaRef.current?.resetCaptcha();
+        setHcaptchaToken("");
       }
     } catch {
       setApiError("No se pudo conectar con el servidor. Verifica tu conexión.");
+      hcaptchaRef.current?.resetCaptcha();
+      setHcaptchaToken("");
     } finally {
       setLoading(false);
     }
@@ -356,6 +369,16 @@ export default function RegisterPage() {
                   </p>
                 </div>
               )}
+
+              <div style={{ marginBottom: 16 }}>
+                <HCaptcha
+                  sitekey="336ac450-d458-4f50-8222-72fcf9ae93cc"
+                  onVerify={(token) => { setHcaptchaToken(token); setApiError(""); }}
+                  onExpire={() => setHcaptchaToken("")}
+                  ref={hcaptchaRef}
+                  languageOverride="es"
+                />
+              </div>
 
               <SubmitButton loading={loading} disabled={success}>
                 {loading ? "Creando cuenta..." : "Crear cuenta gratis →"}
