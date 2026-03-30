@@ -372,7 +372,7 @@ export default function RegisterPage() {
 
               <div style={{ marginBottom: 16 }}>
                 <ReCAPTCHA
-                  sitekey="6LcyrJ0sAAAAAIlYHBN96cwKwhcKa6sqSacKRvDj"
+                  sitekey="6LeasJ0sAAAAAP8lXU5b6MGa-I3RjiVk6F2k0ZUd"
                   onChange={(token) => { setRecaptchaToken(token || ""); setApiError(""); }}
                   onExpired={() => setRecaptchaToken("")}
                   ref={recaptchaRef}
