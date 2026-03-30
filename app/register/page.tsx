@@ -396,7 +396,8 @@ export default function RegisterPage() {
 
               <div style={{ marginBottom: 16 }}>
                 <div id="recaptcha-container"></div>
-
+              </div>
+              
               <SubmitButton loading={loading} disabled={success}>
                 {loading ? "Creando cuenta..." : "Crear cuenta gratis →"}
               </SubmitButton>
