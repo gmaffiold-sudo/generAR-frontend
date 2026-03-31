@@ -50,28 +50,28 @@ const STEPS = [
     num: "03",
     emoji: "⚙️",
     title: "Generar un Análisis de Riesgos",
-    subtitle: "Completa el formulario guiado y deja que la IA haga el trabajo pesado.",
+    subtitle: "Completa el formulario mínimo y deja que la IA haga el trabajo pesado.",
     items: [
-      { icon: "1.", text: "Selecciona el tipo de análisis que necesitas realizar." },
-      { icon: "2.", text: "Completa los datos generales: fecha, lugar de trabajo, empresa y número de OT." },
-      { icon: "3.", text: "Describe la actividad con el mayor detalle posible." },
+      { icon: "1.", text: <>Haz clic en <strong style={{ color: C.navy }}>«Generar nuevo AR»</strong> en el dashboard.</> },
+      { icon: "2.", text: "Ingresa el nombre de la actividad." },
+      { icon: "3.", text: "Ingresa el equipo de trabajo (ej: Supervisor HSE, Técnico, Operario)." },
       { icon: "4.", text: <>Opcionalmente adjunta un <strong style={{ color: C.navy }}>PDF del procedimiento</strong> para que la IA lo use como referencia.</> },
-      { icon: "5.", text: "Ingresa los pasos de la actividad (mínimo 3 pasos requeridos)." },
-      { icon: "6.", text: <>Usa la <strong style={{ color: C.navy }}>calculadora RAM</strong> para indicar gravedad y probabilidad de cada riesgo.</> },
-      { icon: "7.", text: "Indica si existe un evento de seguridad de procesos asociado." },
-      { icon: "8.", text: "Registra el equipo de trabajo participante en la actividad." },
-      { icon: "9.", text: <>Haz clic en <strong style={{ color: C.navy }}>«Generar»</strong> y espera entre 10 y 30 segundos.</> },
+      { icon: "5.", text: "Ingresa los pasos de la actividad (mínimo 3 si no hay PDF)." },
+      { icon: "6.", text: <>Haz clic en <strong style={{ color: C.navy }}>«Generar Análisis de Riesgos»</strong> y espera unos segundos.</> },
+      { icon: "7.", text: "La IA analiza la actividad y genera la tabla de riesgos en segundos." },
     ],
   },
   {
     num: "04",
     emoji: "📄",
-    title: "Revisar y descargar el AR",
-    subtitle: "Tu análisis listo para usar, en formato oficial HSE Ecopetrol.",
+    title: "Descargar el AR",
+    subtitle: "Tu análisis listo para usar en múltiples formatos.",
     items: [
-      { icon: "🔍", text: "Revisa la tabla de riesgos generada por la IA directamente en pantalla." },
-      { icon: "📥", text: <>Descarga el <strong style={{ color: C.navy }}>Excel con formato oficial HSE-F-160 Ecopetrol</strong>.</> },
-      { icon: "💾", text: "El AR queda automáticamente guardado en tu historial para futuras consultas." },
+      { icon: "🔍", text: "Revisa la tabla de riesgos generada directamente en pantalla." },
+      { icon: "📊", text: <>📊 <strong style={{ color: C.navy }}>Excel básico</strong> — tabla simple lista para editar.</> },
+      { icon: "🏭", text: <>🏭 <strong style={{ color: C.navy }}>Formato Ecopetrol</strong> — completa datos adicionales (tipo análisis, fecha, lugar, empresa, RAM, equipo) y descarga el formato oficial HSE-F-160.</> },
+      { icon: "📄", text: <>📄 <strong style={{ color: C.navy }}>PDF</strong> — descarga directa en formato PDF.</> },
+      { icon: "💾", text: "El AR queda guardado automáticamente en tu historial." },
     ],
   },
   {
@@ -306,8 +306,8 @@ export default function GuiaDeUso() {
               color: "rgba(255,255,255,0.5)", fontSize: 14,
               fontWeight: 300, marginBottom: 32, lineHeight: 1.7,
             }}>
-              Sin compromisos. Tu primera cuenta incluye créditos de prueba.
-            </p>
+              Sin compromisos. 
+                          </p>
             <a
               href="/register"
               style={{
