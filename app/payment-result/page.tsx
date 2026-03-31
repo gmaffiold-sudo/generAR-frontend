@@ -68,8 +68,9 @@ const STATUS_CONFIG: Record<PaymentStatus, StatusConfig> = {
 // ─── Result card (uses useSearchParams) ───────────────────────────────────────
 function ResultCard() {
   const searchParams = useSearchParams();
+  const rawStatus = (searchParams.get("status") ?? "").toUpperCase() as PaymentStatus;
+  const transactionId = searchParams.get("id") ?? "";
 
-  const rawStatus  = (searchParams.get("status") ?? "").toUpperCase() as PaymentStatus;
   const status     = (rawStatus in STATUS_CONFIG ? rawStatus : "unknown") as PaymentStatus;
   const reference  = searchParams.get("reference") ?? "";
   const id         = searchParams.get("id") ?? "";

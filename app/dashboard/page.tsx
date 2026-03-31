@@ -22,6 +22,16 @@ interface RegistroAR {
   tiene_datos_ecopetrol: boolean;
 }
 
+interface Transaccion {
+  id:          string;
+  nombre_plan: string;
+  monto:       number;
+  moneda:      string;
+  estado:      string;
+  tipo:        string;
+  fecha_pago:  string;
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function getToken(): string | null {
   if (typeof window === "undefined") return null;
@@ -547,6 +557,189 @@ function TableRow({ registro, isLast }: { registro: RegistroAR; isLast: boolean 
   );
 }
 
+// ─── Payments Table ───────────────────────────────────────────────────────────
+function formatCOP(centavos: number): string {
+  return new Intl.NumberFormat("es-CO", {
+    style: "currency", currency: "COP", maximumFractionDigits: 0,
+  }).format(centavos / 100);
+}
+
+function PaymentsTable({
+  transacciones, loading,
+}: {
+  transacciones: Transaccion[]; loading: boolean;
+}) {
+  return (
+    <div style={{
+      background: "#fff", borderRadius: 16,
+      border: "1.5px solid rgba(27,58,92,0.08)",
+      overflow: "hidden", boxShadow: "0 2px 16px rgba(27,58,92,0.05)",
+    }}>
+      {/* Header */}
+      <div style={{
+        padding: "24px 32px", borderBottom: "1px solid rgba(27,58,92,0.07)",
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+      }}>
+        <div>
+          <h2 style={{
+            fontFamily: "'DM Serif Display', Georgia, serif",
+            fontSize: 22, fontWeight: 400, color: "#1B3A5C", letterSpacing: "-0.02em",
+          }}>Historial de pagos</h2>
+          <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "#7A8EA0", marginTop: 4 }}>
+            Tus transacciones en GenerAR
+          </p>
+        </div>
+        {!loading && transacciones.length > 0 && (
+          <span style={{
+            background: "rgba(46,134,171,0.08)", border: "1px solid rgba(46,134,171,0.15)",
+            borderRadius: 100, padding: "4px 14px",
+            fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 700, color: "#2E86AB",
+          }}>{transacciones.length} pagos</span>
+        )}
+      </div>
+
+      {/* Content */}
+      {loading ? (
+        <div style={{ padding: "32px" }}>
+          {[...Array(3)].map((_, i) => (
+            <div key={i} style={{ display: "flex", gap: 20, marginBottom: 20, alignItems: "center" }}>
+              <Skeleton w={100} h={14} />
+              <Skeleton w={120} h={14} />
+              <Skeleton w="40%" h={14} />
+            </div>
+          ))}
+        </div>
+      ) : transacciones.length === 0 ? (
+        <div style={{ padding: "64px 32px", textAlign: "center" }}>
+          <div style={{
+            width: 64, height: 64, borderRadius: 16, margin: "0 auto 20px",
+            background: "linear-gradient(135deg, rgba(27,58,92,0.05), rgba(46,134,171,0.08))",
+            border: "1px solid rgba(46,134,171,0.12)",
+            display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28,
+          }}>💳</div>
+          <p style={{
+            fontFamily: "'DM Serif Display', Georgia, serif",
+            fontSize: 20, color: "#1B3A5C", fontWeight: 400, marginBottom: 8,
+          }}>Aún no tienes pagos registrados</p>
+          <p style={{
+            fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, color: "#7A8EA0", lineHeight: 1.6,
+          }}>
+            Aquí aparecerán tus transacciones cuando adquieras un plan o top-up.
+          </p>
+        </div>
+      ) : (
+        <div style={{ overflowX: "auto" }}>
+          {/* Table header */}
+          <div style={{
+            display: "grid", gridTemplateColumns: "160px 1fr 120px 130px 110px",
+            padding: "12px 32px", background: "#F8FAFC",
+            borderBottom: "1px solid rgba(27,58,92,0.06)",
+          }}>
+            {["Fecha", "Plan", "Tipo", "Monto", "Estado"].map(col => (
+              <span key={col} style={{
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                fontSize: 11, fontWeight: 700, color: "#7A8EA0",
+                letterSpacing: "0.08em", textTransform: "uppercase",
+              }}>{col}</span>
+            ))}
+          </div>
+
+          {/* Rows */}
+          {transacciones.map((t, i) => (
+            <PaymentRow key={t.id} transaccion={t} isLast={i === transacciones.length - 1} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PaymentRow({ transaccion: t, isLast }: { transaccion: Transaccion; isLast: boolean }) {
+  const [hovered, setHovered] = useState(false);
+
+  const tipoLabel = t.tipo === "top-up" ? "Top-up" : "Suscripción";
+
+  const fechaFmt = (() => {
+    try {
+      const normalized = t.fecha_pago.replace(" UTC", "").replace(" ", "T") + "Z";
+      return new Date(normalized).toLocaleDateString("es-CO", {
+        day: "2-digit", month: "short", year: "numeric",
+      });
+    } catch { return t.fecha_pago; }
+  })();
+
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: "grid", gridTemplateColumns: "160px 1fr 120px 130px 110px",
+        padding: "14px 32px", alignItems: "center",
+        borderBottom: isLast ? "none" : "1px solid rgba(27,58,92,0.05)",
+        background: hovered ? "rgba(46,134,171,0.03)" : "#fff",
+        transition: "background 0.15s ease",
+      }}
+    >
+      {/* Fecha */}
+      <span style={{
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+        fontSize: 13, color: "#7A8EA0", fontWeight: 500,
+        display: "flex", alignItems: "center", gap: 6,
+      }}>
+        <span style={{ fontSize: 12 }}>🗓</span>
+        {fechaFmt}
+      </span>
+
+      {/* Plan */}
+      <span style={{
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+        fontSize: 14, color: "#1B3A5C", fontWeight: 600,
+      }}>{t.nombre_plan}</span>
+
+      {/* Tipo */}
+      <span style={{
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+        fontSize: 12, fontWeight: 600,
+        color: t.tipo === "top-up" ? "#2E86AB" : "#1B3A5C",
+        background: t.tipo === "top-up" ? "rgba(46,134,171,0.08)" : "rgba(27,58,92,0.06)",
+        border: `1px solid ${t.tipo === "top-up" ? "rgba(46,134,171,0.20)" : "rgba(27,58,92,0.12)"}`,
+        borderRadius: 100, padding: "3px 10px",
+        display: "inline-flex", alignItems: "center", gap: 4,
+        width: "fit-content",
+      }}>
+        {t.tipo === "top-up" ? "➕" : "📦"} {tipoLabel}
+      </span>
+
+      {/* Monto */}
+      <span style={{
+        fontFamily: "'DM Serif Display', Georgia, serif",
+        fontSize: 16, color: "#1B3A5C", fontWeight: 400,
+      }}>
+        {formatCOP(t.monto)}
+      </span>
+
+      {/* Estado */}
+      <span style={{
+        display: "inline-flex", alignItems: "center", gap: 5,
+        background: t.estado === "APROBADO" ? "rgba(39,174,96,0.10)" : "rgba(244,162,97,0.10)",
+        border: `1px solid ${t.estado === "APROBADO" ? "rgba(39,174,96,0.25)" : "rgba(244,162,97,0.25)"}`,
+        borderRadius: 100, padding: "3px 10px",
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+        fontSize: 11, fontWeight: 700,
+        color: t.estado === "APROBADO" ? "#1A7A44" : "#92600A",
+        width: "fit-content",
+      }}>
+        <span style={{
+          width: 6, height: 6, borderRadius: "50%", flexShrink: 0,
+          background: t.estado === "APROBADO" ? "#27AE60" : "#F4A261",
+        }} />
+        {t.estado === "APROBADO" ? "Aprobado" : t.estado}
+      </span>
+    </div>
+  );
+}
+
+
 // ─── Navbar ───────────────────────────────────────────────────────────────────
 function DashboardNav({ email, onLogout }: { email: string; onLogout: () => void }) {
   const [hovered, setHovered] = useState(false);
@@ -633,11 +826,13 @@ function DashboardNav({ email, onLogout }: { email: string; onLogout: () => void
 export default function DashboardPage() {
   const router = useRouter();
 
-  const [email,          setEmail]         = useState("");
-  const [credits,        setCredits]       = useState<Credits | null>(null);
-  const [registros,      setRegistros]     = useState<RegistroAR[]>([]);
-  const [loadingCredits, setLoadingCredits]= useState(true);
-  const [loadingHistory, setLoadingHistory]= useState(true);
+  const [email,               setEmail]              = useState("");
+  const [credits,             setCredits]            = useState<Credits | null>(null);
+  const [registros,           setRegistros]          = useState<RegistroAR[]>([]);
+  const [transacciones,       setTransacciones]      = useState<Transaccion[]>([]);
+  const [loadingCredits,      setLoadingCredits]     = useState(true);
+  const [loadingHistory,      setLoadingHistory]     = useState(true);
+  const [loadingTransacciones,setLoadingTransacciones] = useState(true);
 
   // ── Route protection ──
   useEffect(() => {
@@ -693,12 +888,33 @@ export default function DashboardPage() {
     }
   }, []);
 
+  // ── Fetch transacciones ──
+  const fetchTransacciones = useCallback(async () => {
+    const token = getToken();
+    if (!token) return;
+    setLoadingTransacciones(true);
+    try {
+      const res = await fetch(`${API}/user/transacciones`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setTransacciones(Array.isArray(data) ? data : []);
+      }
+    } catch {
+      console.error("Error fetching transacciones");
+    } finally {
+      setLoadingTransacciones(false);
+    }
+  }, []);
+
   useEffect(() => {
     const token = getToken();
     if (!token) return;
     fetchCredits();
     fetchHistory();
-  }, [fetchCredits, fetchHistory]);
+    fetchTransacciones();
+  }, [fetchCredits, fetchHistory, fetchTransacciones]);
 
   // ── Logout ──
   const handleLogout = () => {
@@ -769,6 +985,11 @@ export default function DashboardPage() {
         {/* History */}
         <div style={{ animation: "fadeUp 0.5s ease 0.2s both" }}>
           <HistoryTable registros={registros} loading={loadingHistory} />
+        </div>
+
+        {/* Payments history */}
+        <div style={{ marginTop: 28, animation: "fadeUp 0.5s ease 0.3s both" }}>
+          <PaymentsTable transacciones={transacciones} loading={loadingTransacciones} />
         </div>
       </main>
     </>
