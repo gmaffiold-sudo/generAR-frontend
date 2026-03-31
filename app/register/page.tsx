@@ -200,7 +200,7 @@ export default function RegisterPage() {
       if (res.ok) {
         setSuccess(true);
         setRecaptchaToken("");
-        setTimeout(() => router.push("/login?registered=true"), 1800);
+        setTimeout(() => router.push("/login?registered=true"), 6000);
       } else {
         const msg = data?.detail || "Error al registrar. Intenta de nuevo.";
         setApiError(typeof msg === "string" ? msg : JSON.stringify(msg));
