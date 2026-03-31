@@ -335,12 +335,17 @@ export default function RegisterPage() {
                 background: "linear-gradient(135deg, rgba(46,134,171,0.08), rgba(27,58,92,0.06))",
                 border: "1.5px solid rgba(46,134,171,0.3)",
                 borderRadius: 12, padding: "16px 20px",
-                marginBottom: 24, display: "flex", alignItems: "center", gap: 12,
+                marginBottom: 24, display: "flex", alignItems: "flex-start", gap: 12,
               }}>
-                <span style={{ fontSize: 20 }}>✅</span>
+                <span style={{ fontSize: 20, flexShrink: 0 }}>✅</span>
                 <div>
                   <p style={{ fontSize: 14, fontWeight: 700, color: "#1B3A5C" }}>¡Registro exitoso!</p>
-                  <p style={{ fontSize: 13, color: "#5A7080", marginTop: 2 }}>Redirigiendo al login...</p>
+                  <p style={{ fontSize: 13, color: "#5A7080", marginTop: 4, lineHeight: 1.5 }}>
+                    Te enviamos un email de verificación a tu correo. Por favor revísalo y haz clic en el enlace para activar tu cuenta.
+                  </p>
+                  <p style={{ fontSize: 12, color: "#7A8EA0", marginTop: 4 }}>
+                    Redirigiendo al login en unos segundos...
+                  </p>
                 </div>
               </div>
             )}
