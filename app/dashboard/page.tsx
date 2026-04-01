@@ -20,6 +20,7 @@ interface RegistroAR {
   fecha:                 string;
   titulo_actividad:      string;
   tiene_datos_ecopetrol: boolean;
+  creado_por?:           string;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -59,11 +60,12 @@ function Skeleton({ w = "100%", h = 20, radius = 8 }: { w?: string | number; h?:
 
 // ─── Credits Card ─────────────────────────────────────────────────────────────
 function CreditsCard({
-  credits, loading, onGenerate,
+  credits, loading, onGenerate, isSubUser,
 }: {
   credits:    Credits | null;
   loading:    boolean;
   onGenerate: () => void;
+  isSubUser:  boolean;
 }) {
   const pct = credits
     ? Math.round((credits.creditos_usados / credits.creditos_totales) * 100)
@@ -154,6 +156,7 @@ function CreditsCard({
 
         {/* Right — CTA buttons */}
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {!isSubUser && (
           <a href="/pricing" style={{
             fontFamily: "'Plus Jakarta Sans', sans-serif",
             fontSize: 13, fontWeight: 600,
@@ -170,6 +173,8 @@ function CreditsCard({
         >
           Ver planes
         </a>
+          )}
+          {!isSubUser && (
           <a href="/settings" style={{
             fontFamily: "'Plus Jakarta Sans', sans-serif",
             fontSize: 13, fontWeight: 600,
@@ -187,6 +192,7 @@ function CreditsCard({
           >
             ⚙️ Configuración
           </a>
+          )}
           <GenerateButton onClick={onGenerate} disabled={loading || !credits || credits.creditos_restantes <= 0} />
         </div>
       </div>
@@ -304,12 +310,12 @@ function HistoryTable({ registros, loading }: { registros: RegistroAR[]; loading
         <div style={{ overflowX: "auto" }}>
           {/* Table header */}
           <div style={{
-            display: "grid", gridTemplateColumns: "150px 1fr auto",
+            display: "grid", gridTemplateColumns: "150px 1fr 130px auto",
             padding: "12px 32px",
             background: "#F8FAFC",
             borderBottom: "1px solid rgba(27,58,92,0.06)",
           }}>
-            {["Fecha", "Título de actividad", "Descargas"].map(col => (
+            {["Fecha", "Título de actividad", "Creado por", "Descargas"].map(col => (
               <span key={col} style={{
                 fontFamily: "'Plus Jakarta Sans', sans-serif",
                 fontSize: 11, fontWeight: 700,
@@ -483,7 +489,7 @@ function TableRow({ registro, isLast }: { registro: RegistroAR; isLast: boolean 
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         style={{
-          display: "grid", gridTemplateColumns: "150px 1fr auto",
+          display: "grid", gridTemplateColumns: "150px 1fr 130px auto",
           padding: "14px 32px",
           borderBottom: isLast && !errorMsg ? "none" : "1px solid rgba(27,58,92,0.05)",
           background: hovered ? "rgba(46,134,171,0.03)" : "#fff",
@@ -507,6 +513,16 @@ function TableRow({ registro, isLast }: { registro: RegistroAR; isLast: boolean 
           fontSize: 14, color: "#1B3A5C", fontWeight: 600, lineHeight: 1.4,
         }}>
           {registro.titulo_actividad}
+        </span>
+
+        {/* Creado por */}
+        <span style={{
+          fontFamily: "'Plus Jakarta Sans', sans-serif",
+          fontSize: 13, color: registro.creado_por ? "#2E86AB" : "#A0B0BC",
+          fontWeight: registro.creado_por ? 600 : 400,
+          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+        }}>
+          {registro.creado_por ?? "Tú"}
         </span>
 
         {/* Botones de descarga */}
@@ -653,6 +669,7 @@ export default function DashboardPage() {
   const [email,               setEmail]              = useState("");
   const [credits,        setCredits]       = useState<Credits | null>(null);
   const [registros,      setRegistros]     = useState<RegistroAR[]>([]);
+  const [rol,            setRol]           = useState<"admin" | "usuario" | null>(null);
   const [loadingCredits, setLoadingCredits]= useState(true);
   const [loadingHistory, setLoadingHistory]= useState(true);
 
@@ -715,6 +732,11 @@ export default function DashboardPage() {
     if (!token) return;
     fetchCredits();
     fetchHistory();
+    // Fetch role to conditionally show admin links
+    fetch(`${API}/user/profile`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) setRol(d.rol === "usuario" ? "usuario" : "admin"); })
+      .catch(() => {});
   }, [fetchCredits, fetchHistory]);
 
   // ── Logout ──
@@ -780,6 +802,7 @@ export default function DashboardPage() {
             credits={credits}
             loading={loadingCredits}
             onGenerate={handleGenerate}
+            isSubUser={rol === "usuario"}
           />
         </div>
 
