@@ -272,11 +272,10 @@ export default function SettingsPage() {
         setChangePwSuccess(true);
         setCurrentPw(""); setNewPw(""); setConfirmPw("");
         setTimeout(() => {
-        localStorage.removeItem("generar_token");
-        router.replace("/login");
+          localStorage.removeItem("generar_token");
+          router.replace("/login");
         }, 3000);
-          
-      else {
+      } else {
         setChangePwError(data?.detail || "Error al cambiar contraseña.");
       }
     } catch {
