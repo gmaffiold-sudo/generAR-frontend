@@ -193,7 +193,18 @@ export default function SettingsPage() {
 
   // Route protection
   useEffect(() => {
-    if (!getToken()) router.replace("/login");
+    const token = getToken();
+    if (!token) { router.replace("/login"); return; }
+
+    // Verificar que no es sub-usuario
+    fetch("https://hse-risk-analyzer-production.up.railway.app/user/profile", {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    .then(r => r.json())
+    .then(d => {
+      if (d.rol === "usuario") router.replace("/dashboard");
+    })
+    .catch(() => {});
   }, [router]);
 
   const fetchAll = useCallback(async () => {

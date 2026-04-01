@@ -583,12 +583,19 @@ export default function PricingPage() {
 
   useEffect(() => {
     const token = localStorage.getItem("generar_token");
-    if (!token) {
-      router.replace("/login");
-    } else {
-      setAutorizado(true);
-    }
-  }, [router]);
+    if (!token) { router.replace("/login"); return; }
+    
+    // Verificar que no es sub-usuario
+    fetch("https://hse-risk-analyzer-production.up.railway.app/user/profile", {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    .then(r => r.json())
+    .then(d => {
+      if (d.rol === "usuario") router.replace("/dashboard");
+      else setAutorizado(true);
+    })
+    .catch(() => setAutorizado(true));
+}, [router]);
 
   if (!autorizado) return null;
 
