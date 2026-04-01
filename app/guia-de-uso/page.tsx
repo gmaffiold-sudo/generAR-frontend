@@ -395,7 +395,7 @@ interface Step {
   num: string;
   emoji: string;
   title: string;
-  subtitle: string;
+  subtitle: string | React.ReactNode;
   items: StepItem[];
 }
 
