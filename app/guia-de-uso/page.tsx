@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const C = {
@@ -31,7 +32,8 @@ const STEPS = [
     items: [
       { icon: "→", text: <>Ingresa a <strong style={{ color: C.navy }}>generar.co/register</strong> desde cualquier navegador.</> },
       { icon: "→", text: "Completa tu nombre completo, correo electrónico, empresa y contraseña." },
-      { icon: "→", text: "Confirma tu correo y accede con tus credenciales." },
+      { icon: "✉️", text: <>Revisa tu bandeja de entrada y haz clic en el enlace de <strong style={{ color: C.navy }}>verificación de email</strong> que te enviamos. El enlace es válido por 24 horas.</> },
+      { icon: "→", text: "Una vez verificado tu correo, ya puedes iniciar sesión en generar.co/login." },
     ],
   },
   {
@@ -42,8 +44,9 @@ const STEPS = [
     items: [
       { icon: "📊", text: "Visualiza tus créditos disponibles en tiempo real." },
       { icon: "📋", text: "Consulta el historial completo de Análisis de Riesgos generados." },
-      { icon: "⬇️", text: "Descarga AR anteriores directamente desde el historial." },
+      { icon: "⬇️", text: "Descarga AR anteriores directamente desde el historial en 3 formatos: Excel básico, Ecopetrol o PDF." },
       { icon: "⚡", text: "Accede al generador con un solo clic desde el panel principal." },
+      { icon: "⚙️", text: <>Usa el botón <strong style={{ color: C.navy }}>Configuración</strong> para gestionar tu perfil, equipo, suscripción e historial de pagos.</> },
     ],
   },
   {
@@ -65,17 +68,30 @@ const STEPS = [
     num: "04",
     emoji: "📄",
     title: "Descargar el AR",
-    subtitle: "Tu análisis listo para usar en múltiples formatos.",
+    subtitle: "Tu análisis listo para usar en tres formatos.",
     items: [
       { icon: "🔍", text: "Revisa la tabla de riesgos generada directamente en pantalla." },
-      { icon: "📊", text: <>📊 <strong style={{ color: C.navy }}>Excel básico</strong> — tabla simple lista para editar.</> },
-      { icon: "🏭", text: <>🏭 <strong style={{ color: C.navy }}>Formato Ecopetrol</strong> — completa datos adicionales (tipo análisis, fecha, lugar, empresa, RAM, equipo) y descarga el formato oficial HSE-F-160.</> },
-      { icon: "📄", text: <>📄 <strong style={{ color: C.navy }}>PDF</strong> — descarga directa en formato PDF.</> },
-      { icon: "💾", text: "El AR queda guardado automáticamente en tu historial." },
+      { icon: "📊", text: <><strong style={{ color: C.navy }}>Excel básico</strong> — tabla simple generada en el navegador, lista para editar. Disponible en todo momento desde el historial.</> },
+      { icon: "🏭", text: <><strong style={{ color: C.navy }}>Formato Ecopetrol</strong> — completa datos adicionales (tipo de análisis, fecha, lugar, empresa, calculadora RAM, equipo) y descarga el formato oficial HSE-F-160.</> },
+      { icon: "📄", text: <><strong style={{ color: C.navy }}>PDF</strong> — descarga directa en formato A4 horizontal con todos los riesgos del AR.</> },
+      { icon: "💾", text: "El AR queda guardado automáticamente en tu historial con los tres formatos disponibles." },
     ],
   },
   {
     num: "05",
+    emoji: "🛠️",
+    title: "Configuración de cuenta",
+    subtitle: <>Gestiona todos los aspectos de tu cuenta desde <strong style={{ color: C.navy }}>generar.co/settings</strong>.</>,
+    items: [
+      { icon: "👤", text: "Perfil: visualiza tu nombre, email, empresa y cargo registrados." },
+      { icon: "💳", text: "Suscripción: revisa créditos disponibles, plan activo y fecha de vencimiento, y accede a los planes para hacer upgrade." },
+      { icon: "👥", text: <>Equipo (planes Professional y Business): invita sub-usuarios a tu cuenta, gestiona sus accesos y controla el límite de miembros de tu plan.</> },
+      { icon: "🧾", text: "Historial de pagos: consulta todas tus transacciones en GenerAR con fecha, plan, tipo y estado." },
+      { icon: "🔒", text: "Zona de peligro: solicita la eliminación permanente de tu cuenta mediante confirmación por email." },
+    ],
+  },
+  {
+    num: "06",
     emoji: "💳",
     title: "Gestionar tu suscripción",
     subtitle: "Controla tu plan y créditos sin complicaciones.",
@@ -112,6 +128,12 @@ const FAQS = [
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function GuiaDeUso() {
+  const router = useRouter();
+  useEffect(() => {
+    const token = localStorage.getItem("generar_token");
+    if (!token) router.replace("/login");
+  }, [router]);
+
   return (
     <>
       <style>{`
