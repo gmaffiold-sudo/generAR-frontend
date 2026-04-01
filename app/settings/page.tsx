@@ -29,6 +29,13 @@ interface Transaccion {
   tipo:        string;
   fecha_pago:  string;
 }
+interface Miembro {
+  id:             string;
+  nombre:         string;
+  email:          string;
+  fecha_registro: string;
+  activo:         boolean;
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function getToken(): string | null {
@@ -163,9 +170,20 @@ export default function SettingsPage() {
   const [profile,         setProfile]         = useState<Profile | null>(null);
   const [credits,         setCredits]         = useState<Credits | null>(null);
   const [transacciones,   setTransacciones]   = useState<Transaccion[]>([]);
+  const [rol,             setRol]             = useState<"admin" | "usuario" | null>(null);
+  const [equipo,          setEquipo]          = useState<Miembro[]>([]);
   const [loadingProfile,  setLoadingProfile]  = useState(true);
   const [loadingCredits,  setLoadingCredits]  = useState(true);
   const [loadingTx,       setLoadingTx]       = useState(true);
+  const [loadingEquipo,   setLoadingEquipo]   = useState(true);
+
+  // Invite form state
+  const [inviteNombre,    setInviteNombre]    = useState("");
+  const [inviteEmail,     setInviteEmail]     = useState("");
+  const [inviting,        setInviting]        = useState(false);
+  const [inviteSuccess,   setInviteSuccess]   = useState("");
+  const [inviteError,     setInviteError]     = useState("");
+  const [removingId,      setRemovingId]      = useState<string | null>(null);
 
   // Danger zone state
   const [showConfirm,     setShowConfirm]     = useState(false);
@@ -182,11 +200,16 @@ export default function SettingsPage() {
     const token = getToken();
     if (!token) return;
 
-    // Profile
+    // Profile (also captures rol)
     setLoadingProfile(true);
     fetch(`${API}/user/profile`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d) setProfile(d); })
+      .then(d => {
+        if (d) {
+          setProfile(d);
+          setRol(d.rol === "usuario" ? "usuario" : "admin");
+        }
+      })
       .catch(() => {})
       .finally(() => setLoadingProfile(false));
 
@@ -205,6 +228,14 @@ export default function SettingsPage() {
       .then(d => setTransacciones(Array.isArray(d) ? d : []))
       .catch(() => {})
       .finally(() => setLoadingTx(false));
+
+    // Equipo (solo para admins — el backend devolverá 403 para sub-usuarios, ignoramos)
+    setLoadingEquipo(true);
+    fetch(`${API}/user/equipo`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.ok ? r.json() : [])
+      .then(d => setEquipo(Array.isArray(d) ? d : []))
+      .catch(() => {})
+      .finally(() => setLoadingEquipo(false));
   }, []);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
@@ -225,6 +256,47 @@ export default function SettingsPage() {
       }
     } catch { setDeleteError("No se pudo conectar con el servidor."); }
     finally { setDeleting(false); }
+  };
+
+  const handleInvite = async () => {
+    if (!inviteNombre.trim() || !inviteEmail.trim()) {
+      setInviteError("Completa nombre y email para invitar."); return;
+    }
+    setInviting(true); setInviteError(""); setInviteSuccess("");
+    try {
+      const res  = await fetch(`${API}/user/invite`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+        body: JSON.stringify({ nombre: inviteNombre.trim(), email: inviteEmail.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setInviteSuccess(`Invitación enviada a ${inviteEmail.trim()}.`);
+        setInviteNombre(""); setInviteEmail("");
+        // Refresh equipo list
+        fetch(`${API}/user/equipo`, { headers: { Authorization: `Bearer ${getToken()}` } })
+          .then(r => r.ok ? r.json() : [])
+          .then(d => setEquipo(Array.isArray(d) ? d : []))
+          .catch(() => {});
+      } else {
+        setInviteError(data?.detail || "Error al enviar la invitación.");
+      }
+    } catch { setInviteError("No se pudo conectar con el servidor."); }
+    finally { setInviting(false); }
+  };
+
+  const handleRemoveMember = async (memberId: string) => {
+    setRemovingId(memberId);
+    try {
+      const res  = await fetch(`${API}/user/equipo/${memberId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+      if (res.ok) {
+        setEquipo(prev => prev.map(m => m.id === memberId ? { ...m, activo: false } : m));
+      }
+    } catch {}
+    finally { setRemovingId(null); }
   };
 
   const pct = credits
@@ -268,7 +340,8 @@ export default function SettingsPage() {
           </SectionCard>
         </div>
 
-        {/* ── SECCIÓN 2: Suscripción ── */}
+        {/* ── SECCIÓN 2: Suscripción (solo admin) ── */}
+        {rol !== "usuario" && (
         <div style={{ animation: "fadeUp 0.5s ease 0.10s both" }}>
           <SectionCard title="Suscripción" icon="💳">
             {loadingCredits ? (
@@ -334,8 +407,191 @@ export default function SettingsPage() {
             )}
           </SectionCard>
         </div>
+        )} {/* end admin-only subscripcion */}
 
-        {/* ── SECCIÓN 3: Historial de pagos ── */}
+        {/* ── SECCIÓN 2.5: Equipo (solo admin) ── */}
+        {rol !== "usuario" && (
+        <div style={{ animation: "fadeUp 0.5s ease 0.12s both" }}>
+          <SectionCard title="Equipo" icon="👥">
+            {(() => {
+              const planLower = credits?.plan?.toLowerCase() ?? "";
+              const limite    = planLower.includes("business")      ? 9
+                              : planLower.includes("professional")  ? 2
+                              : 0;
+              const activos   = equipo.filter(m => m.activo).length;
+
+              if (loadingEquipo) {
+                return (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    <Skeleton w={180} h={14} /> <Skeleton w="70%" h={14} />
+                  </div>
+                );
+              }
+
+              if (limite === 0) {
+                return (
+                  <div style={{
+                    background: "rgba(244,162,97,0.08)", border: "1.5px solid rgba(244,162,97,0.25)",
+                    borderRadius: 12, padding: "16px 20px",
+                    display: "flex", alignItems: "flex-start", gap: 10,
+                  }}>
+                    <span style={{ fontSize: 18 }}>🔒</span>
+                    <div>
+                      <p style={{ fontSize: 14, fontWeight: 700, color: "#92600A", marginBottom: 4 }}>
+                        Tu plan no permite sub-usuarios
+                      </p>
+                      <p style={{ fontSize: 13, color: "#7A8EA0", lineHeight: 1.5 }}>
+                        Actualiza a <strong>Professional</strong> (hasta 2 miembros) o <strong>Business</strong> (hasta 9 miembros) para invitar a tu equipo.
+                      </p>
+                      <a href="/pricing" style={{
+                        display: "inline-block", marginTop: 10,
+                        color: "#2E86AB", fontWeight: 700, fontSize: 13, textDecoration: "none",
+                      }}>Ver planes →</a>
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <>
+                  {/* Límite del plan */}
+                  <div style={{
+                    display: "flex", alignItems: "center", gap: 8, marginBottom: 20,
+                    padding: "10px 14px", borderRadius: 9,
+                    background: "rgba(46,134,171,0.06)", border: "1px solid rgba(46,134,171,0.15)",
+                  }}>
+                    <span style={{ fontSize: 15 }}>👤</span>
+                    <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "#1B3A5C", fontWeight: 600 }}>
+                      {activos} de {limite} miembros disponibles en tu plan
+                    </span>
+                  </div>
+
+                  {/* Lista de miembros */}
+                  {equipo.length === 0 ? (
+                    <p style={{ fontSize: 14, color: "#7A8EA0", marginBottom: 24 }}>
+                      Aún no has invitado ningún miembro a tu equipo.
+                    </p>
+                  ) : (
+                    <div style={{ marginBottom: 24 }}>
+                      {equipo.map(m => (
+                        <div key={m.id} style={{
+                          display: "flex", alignItems: "center", justifyContent: "space-between",
+                          padding: "12px 14px", borderRadius: 10, marginBottom: 8,
+                          background: m.activo ? "#fff" : "rgba(27,58,92,0.03)",
+                          border: m.activo ? "1.5px solid rgba(27,58,92,0.10)" : "1.5px solid rgba(27,58,92,0.06)",
+                          opacity: m.activo ? 1 : 0.6,
+                        }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                            <div style={{
+                              width: 34, height: 34, borderRadius: "50%",
+                              background: m.activo
+                                ? "linear-gradient(135deg, #1B3A5C, #2E86AB)"
+                                : "rgba(27,58,92,0.20)",
+                              display: "flex", alignItems: "center", justifyContent: "center",
+                              color: "#fff", fontSize: 13, fontWeight: 700, flexShrink: 0,
+                            }}>
+                              {m.nombre.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, fontWeight: 600, color: "#1B3A5C", marginBottom: 2 }}>
+                                {m.nombre}
+                                {!m.activo && <span style={{ marginLeft: 8, fontSize: 11, color: "#A0B0BC" }}>inactivo</span>}
+                              </p>
+                              <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 12, color: "#7A8EA0" }}>{m.email}</p>
+                            </div>
+                          </div>
+                          {m.activo && (
+                            <button
+                              onClick={() => handleRemoveMember(m.id)}
+                              disabled={removingId === m.id}
+                              style={{
+                                padding: "6px 12px", borderRadius: 7,
+                                border: "1.5px solid rgba(198,40,40,0.25)",
+                                background: "rgba(198,40,40,0.05)", color: "#C62828",
+                                fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 12, fontWeight: 700,
+                                cursor: removingId === m.id ? "not-allowed" : "pointer",
+                                display: "flex", alignItems: "center", gap: 5,
+                                transition: "all 0.18s ease",
+                                opacity: removingId === m.id ? 0.6 : 1,
+                              }}
+                            >
+                              {removingId === m.id ? (
+                                <span style={{ width: 10, height: 10, border: "1.5px solid rgba(198,40,40,0.3)", borderTopColor: "#C62828", borderRadius: "50%", display: "inline-block", animation: "spin 0.7s linear infinite" }} />
+                              ) : "✕"}
+                              Eliminar
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Formulario de invitación */}
+                  {activos < limite && (
+                    <div style={{ borderTop: "1px solid rgba(27,58,92,0.07)", paddingTop: 20 }}>
+                      <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 12, fontWeight: 700, color: "#7A8EA0", letterSpacing: "0.07em", textTransform: "uppercase", marginBottom: 12 }}>
+                        Invitar nuevo miembro
+                      </p>
+                      {inviteSuccess && (
+                        <div style={{ background: "rgba(39,174,96,0.08)", border: "1.5px solid rgba(39,174,96,0.22)", borderRadius: 10, padding: "10px 14px", marginBottom: 12, display: "flex", gap: 8, alignItems: "center" }}>
+                          <span>✅</span>
+                          <span style={{ fontSize: 13, color: "#1A7A44" }}>{inviteSuccess}</span>
+                        </div>
+                      )}
+                      {inviteError && (
+                        <div style={{ background: "rgba(198,40,40,0.06)", border: "1.5px solid rgba(198,40,40,0.22)", borderRadius: 10, padding: "10px 14px", marginBottom: 12, display: "flex", gap: 8, alignItems: "flex-start" }}>
+                          <span style={{ flexShrink: 0 }}>⚠️</span>
+                          <span style={{ fontSize: 13, color: "#C62828" }}>{inviteError}</span>
+                        </div>
+                      )}
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 14px", marginBottom: 12 }}>
+                        <div>
+                          <label style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 11, fontWeight: 700, color: "#1B3A5C", letterSpacing: "0.06em", textTransform: "uppercase", display: "block", marginBottom: 5 }}>Nombre</label>
+                          <input
+                            type="text" value={inviteNombre} placeholder="Nombre del miembro"
+                            onChange={e => { setInviteNombre(e.target.value); setInviteError(""); setInviteSuccess(""); }}
+                            style={{ width: "100%", padding: "10px 12px", borderRadius: 9, outline: "none", border: "1.5px solid rgba(27,58,92,0.15)", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, color: "#1B3A5C", background: "#fff", boxSizing: "border-box" as const }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 11, fontWeight: 700, color: "#1B3A5C", letterSpacing: "0.06em", textTransform: "uppercase", display: "block", marginBottom: 5 }}>Email</label>
+                          <input
+                            type="email" value={inviteEmail} placeholder="correo@empresa.com"
+                            onChange={e => { setInviteEmail(e.target.value); setInviteError(""); setInviteSuccess(""); }}
+                            style={{ width: "100%", padding: "10px 12px", borderRadius: 9, outline: "none", border: "1.5px solid rgba(27,58,92,0.15)", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, color: "#1B3A5C", background: "#fff", boxSizing: "border-box" as const }}
+                          />
+                        </div>
+                      </div>
+                      <button
+                        onClick={handleInvite} disabled={inviting}
+                        style={{
+                          display: "inline-flex", alignItems: "center", gap: 7,
+                          padding: "10px 20px", borderRadius: 9, border: "none",
+                          cursor: inviting ? "not-allowed" : "pointer",
+                          background: inviting ? "rgba(46,134,171,0.40)" : "linear-gradient(135deg, #1B3A5C, #2E86AB)",
+                          color: "#fff", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 700,
+                          transition: "all 0.18s ease",
+                        }}
+                      >
+                        {inviting && <span style={{ width: 13, height: 13, border: "2px solid rgba(255,255,255,0.4)", borderTopColor: "#fff", borderRadius: "50%", display: "inline-block", animation: "spin 0.7s linear infinite" }} />}
+                        {inviting ? "Enviando..." : "✉️ Enviar invitación"}
+                      </button>
+                    </div>
+                  )}
+                  {activos >= limite && (
+                    <p style={{ fontSize: 13, color: "#7A8EA0", fontStyle: "italic" }}>
+                      Has alcanzado el límite de tu plan. <a href="/pricing" style={{ color: "#2E86AB", fontWeight: 600 }}>Actualiza para agregar más →</a>
+                    </p>
+                  )}
+                </>
+              );
+            })()}
+          </SectionCard>
+        </div>
+        )} {/* end admin-only equipo */}
+
+        {/* ── SECCIÓN 3: Historial de pagos (solo admin) ── */}
+        {rol !== "usuario" && (
         <div style={{ animation: "fadeUp 0.5s ease 0.15s both" }}>
           <SectionCard title="Historial de pagos" icon="🧾">
             {loadingTx ? (
@@ -422,8 +678,10 @@ export default function SettingsPage() {
             )}
           </SectionCard>
         </div>
+        )} {/* end admin-only historial de pagos */}
 
-        {/* ── SECCIÓN 4: Zona de peligro ── */}
+        {/* ── SECCIÓN 4: Zona de peligro (solo admin) ── */}
+        {rol !== "usuario" && (
         <div style={{ animation: "fadeUp 0.5s ease 0.20s both" }}>
           <SectionCard title="Zona de peligro" icon="⚠️" danger>
             <p style={{ fontSize: 14, color: "#5A7080", lineHeight: 1.6, marginBottom: 20 }}>
@@ -500,6 +758,7 @@ export default function SettingsPage() {
             )}
           </SectionCard>
         </div>
+        )} {/* end admin-only zona de peligro */}
       </main>
     </>
   );
