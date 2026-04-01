@@ -190,6 +190,12 @@ export default function SettingsPage() {
   const [deleting,        setDeleting]        = useState(false);
   const [deleteSuccess,   setDeleteSuccess]   = useState(false);
   const [deleteError,     setDeleteError]     = useState("");
+  const [currentPw,       setCurrentPw]       = useState("");
+  const [newPw,           setNewPw]           = useState("");
+  const [confirmPw,       setConfirmPw]       = useState("");
+  const [changingPw,      setChangingPw]      = useState(false);
+  const [changePwSuccess, setChangePwSuccess] = useState(false);
+  const [changePwError,   setChangePwError]   = useState("");
 
   // Route protection
   useEffect(() => {
@@ -250,6 +256,30 @@ export default function SettingsPage() {
   }, []);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
+
+  const handleChangePw = async () => {
+    if (newPw !== confirmPw) { setChangePwError("Las contraseñas no coinciden."); return; }
+    if (newPw.length < 8)    { setChangePwError("Mínimo 8 caracteres."); return; }
+    setChangingPw(true); setChangePwError(""); setChangePwSuccess(false);
+    try {
+      const res  = await fetch(`${API}/user/change-password`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+        body:    JSON.stringify({ current_password: currentPw, new_password: newPw }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setChangePwSuccess(true);
+        setCurrentPw(""); setNewPw(""); setConfirmPw("");
+      } else {
+        setChangePwError(data?.detail || "Error al cambiar contraseña.");
+      }
+    } catch {
+      setChangePwError("No se pudo conectar con el servidor.");
+    } finally {
+      setChangingPw(false);
+    }
+  };
 
   const handleDeleteRequest = async () => {
     setDeleting(true); setDeleteError("");
@@ -690,6 +720,41 @@ export default function SettingsPage() {
           </SectionCard>
         </div>
         )} {/* end admin-only historial de pagos */}
+
+        {/* ── SECCIÓN 3.5: Cambiar contraseña ── */}
+        <SectionCard title="Cambiar contraseña" icon="🔐">
+          <div style={{ maxWidth: 400 }}>
+            {changePwSuccess && (
+              <div style={{ background: "rgba(39,174,96,0.08)", border: "1px solid rgba(39,174,96,0.25)", borderRadius: 10, padding: "12px 16px", marginBottom: 16 }}>
+                <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, color: "#1B7A3E" }}>✅ Contraseña actualizada exitosamente.</p>
+              </div>
+            )}
+            {changePwError && (
+              <div style={{ background: "rgba(224,82,82,0.06)", border: "1px solid rgba(224,82,82,0.25)", borderRadius: 10, padding: "12px 16px", marginBottom: 16 }}>
+                <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, color: "#C04040" }}>⚠️ {changePwError}</p>
+              </div>
+            )}
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: "block", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 600, color: "#1B3A5C", marginBottom: 6 }}>Contraseña actual</label>
+              <input type="password" value={currentPw} onChange={e => setCurrentPw(e.target.value)}
+                style={{ width: "100%", padding: "11px 14px", borderRadius: 9, border: "1.5px solid rgba(27,58,92,0.15)", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, outline: "none", boxSizing: "border-box" as const }} />
+            </div>
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: "block", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 600, color: "#1B3A5C", marginBottom: 6 }}>Nueva contraseña</label>
+              <input type="password" value={newPw} onChange={e => setNewPw(e.target.value)}
+                style={{ width: "100%", padding: "11px 14px", borderRadius: 9, border: "1.5px solid rgba(27,58,92,0.15)", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, outline: "none", boxSizing: "border-box" as const }} />
+            </div>
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: "block", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 600, color: "#1B3A5C", marginBottom: 6 }}>Confirmar nueva contraseña</label>
+              <input type="password" value={confirmPw} onChange={e => setConfirmPw(e.target.value)}
+                style={{ width: "100%", padding: "11px 14px", borderRadius: 9, border: "1.5px solid rgba(27,58,92,0.15)", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, outline: "none", boxSizing: "border-box" as const }} />
+            </div>
+            <button onClick={handleChangePw} disabled={changingPw}
+              style={{ padding: "11px 24px", borderRadius: 9, border: "none", cursor: changingPw ? "not-allowed" : "pointer", background: changingPw ? "rgba(27,58,92,0.2)" : "linear-gradient(135deg, #1B3A5C, #2E86AB)", color: "#fff", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, fontWeight: 700 }}>
+              {changingPw ? "Actualizando..." : "Cambiar contraseña"}
+            </button>
+          </div>
+        </SectionCard>
 
         {/* ── SECCIÓN 4: Zona de peligro (solo admin) ── */}
         {rol !== "usuario" && (
