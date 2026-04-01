@@ -271,7 +271,12 @@ export default function SettingsPage() {
       if (res.ok) {
         setChangePwSuccess(true);
         setCurrentPw(""); setNewPw(""); setConfirmPw("");
-      } else {
+        setTimeout(() => {
+        localStorage.removeItem("generar_token");
+        router.replace("/login");
+        }, 3000);
+          
+      else {
         setChangePwError(data?.detail || "Error al cambiar contraseña.");
       }
     } catch {
@@ -726,7 +731,7 @@ export default function SettingsPage() {
           <div style={{ maxWidth: 400 }}>
             {changePwSuccess && (
               <div style={{ background: "rgba(39,174,96,0.08)", border: "1px solid rgba(39,174,96,0.25)", borderRadius: 10, padding: "12px 16px", marginBottom: 16 }}>
-                <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, color: "#1B7A3E" }}>✅ Contraseña actualizada exitosamente.</p>
+                <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, color: "#1B7A3E" }}>✅ Contraseña actualizada. Redirigiendo al login...</p>
               </div>
             )}
             {changePwError && (
