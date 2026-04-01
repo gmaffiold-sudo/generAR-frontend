@@ -168,6 +168,7 @@ function ConfirmContent() {
             maxWidth: 380, margin: "0 auto 36px",
           }}>
             Tu cuenta ha sido eliminada exitosamente. Lamentamos verte partir.
+            Si cambias de opinión puedes contactarnos en soporte@generar.co
           </p>
 
           <HomeButton />
