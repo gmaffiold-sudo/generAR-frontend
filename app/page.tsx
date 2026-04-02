@@ -715,7 +715,6 @@ function Footer() {
             {[
               { label: "Características", href: "#beneficios" },
               { label: "Precios", href: "#precios" },
-              { label: "Guía de uso", href: "/guia-de-uso" },
             ].map(l => (
               <a key={l.label} href={l.href} style={{
                 display: "block", fontFamily: "'Plus Jakarta Sans', sans-serif",

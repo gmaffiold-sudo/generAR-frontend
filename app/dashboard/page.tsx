@@ -637,6 +637,23 @@ function DashboardNav({ email, onLogout }: { email: string; onLogout: () => void
             </div>
           )}
 
+          <a href="/guia-de-uso" style={{
+            padding: "8px 16px", borderRadius: 8,
+            border: "1.5px solid rgba(27,58,92,0.15)",
+            background: "#fff",
+            color: "#5A7080",
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            fontSize: 13, fontWeight: 600,
+            textDecoration: "none",
+            display: "flex", alignItems: "center", gap: 6,
+            transition: "all 0.2s ease",
+          }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = "#2E86AB"; e.currentTarget.style.color = "#2E86AB"; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(27,58,92,0.15)"; e.currentTarget.style.color = "#5A7080"; }}
+          >
+            📖 Guía
+          </a>
+
           <button
             onClick={onLogout}
             onMouseEnter={() => setHovered(true)}
