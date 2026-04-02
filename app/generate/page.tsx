@@ -175,7 +175,7 @@ function Grid3({ children }: { children: React.ReactNode }) {
   return <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0 18px" }}>{children}</div>;
 }
 
-function RamBadge({ code, label }: { code: string; label: string }) {
+function RamBadge({ code, label, fullCode }: { code: string; label: string; fullCode?: string }) {
   const c = RAM_COLOR[code] ?? { bg: "#F5F5F5", color: "#666", label: code };
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5, flex: 1 }}>
@@ -188,7 +188,9 @@ function RamBadge({ code, label }: { code: string; label: string }) {
         background: c.bg, border: `2px solid ${c.color}30`,
         display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
       }}>
-        <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 32, fontWeight: 400, color: c.color, lineHeight: 1 }}>{code}</span>
+        <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: fullCode ? 22 : 32, fontWeight: 400, color: c.color, lineHeight: 1 }}>
+          {fullCode ?? code}
+        </span>
         <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 10, fontWeight: 700, color: c.color, opacity: 0.8 }}>{c.label}</span>
       </div>
     </div>
@@ -543,13 +545,17 @@ function Step2({ result, equipoInicial, onReset }: {
   const [contacto,     setContacto]     = useState("");
   const [gravedad,     setGravedad]     = useState(3);
   const [probabilidad, setProbabilidad] = useState("C");
+  const [categoria,    setCategoria]    = useState("P");
   const [spEvento,     setSpEvento]     = useState("NO");
   const [medidasOps,   setMedidasOps]   = useState("");
   const [equipo,       setEquipo]       = useState(equipoInicial);
   const [ecoFieldErrs, setEcoFieldErrs] = useState<Record<string, string>>({});
 
-  const inherente = calcularRiesgo(gravedad, probabilidad);
-  const residual  = calcularRiesgo(gravedad, bajarProbabilidad(probabilidad));
+  const nivelInherente   = calcularRiesgo(gravedad, probabilidad);
+  const gravedadResidual = Math.max(0, gravedad - 1);
+  const nivelResidual    = calcularRiesgo(gravedadResidual, probabilidad);
+  const codigoInherente  = `${categoria}${gravedad}${probabilidad}-${nivelInherente}`;
+  const codigoResidual   = `${categoria}${gravedadResidual}${probabilidad}-${nivelResidual}`;
 
   useEffect(() => {
     if (daysBetween(inicio, fin) > 30) setFin(addDays(inicio, 30));
@@ -606,7 +612,7 @@ function Step2({ result, equipoInicial, onReset }: {
         ot: ot.trim() || undefined, proc: proc.trim() || undefined,
         contacto: contacto.trim() || undefined, sp_evento: spEvento,
         medidas_ops: medidasOps.trim() || undefined,
-        equipo: equipo.trim(), gravedad, probabilidad,
+        equipo: equipo.trim(), gravedad, probabilidad, categoria,
       };
 
       const res = await fetch(`${API}/ar/export/ecopetrol`, {
@@ -790,6 +796,15 @@ function Step2({ result, equipoInicial, onReset }: {
                 color: "#7A8EA0", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 14,
               }}>Calculadora RAM</p>
               <Grid2>
+                <FieldWrap label="Categoría">
+                  <SelectInput value={categoria} onChange={setCategoria} options={[
+                    { value: "P", label: "P — Personas"  },
+                    { value: "E", label: "E — Económica" },
+                    { value: "A", label: "A — Ambiental" },
+                    { value: "C", label: "C — Cliente"   },
+                    { value: "I", label: "I — Imagen"    },
+                  ]} />
+                </FieldWrap>
                 <FieldWrap label="Gravedad (0–5)">
                   <SelectInput value={String(gravedad)} onChange={v => setGravedad(Number(v))}
                     options={[0,1,2,3,4,5].map(n => ({
@@ -808,9 +823,9 @@ function Step2({ result, equipoInicial, onReset }: {
                 </FieldWrap>
               </Grid2>
               <div style={{ display: "flex", gap: 14, alignItems: "center", marginTop: 8 }}>
-                <RamBadge code={inherente} label="Riesgo Inherente" />
+                <RamBadge code={nivelInherente} label="Riesgo Inherente" fullCode={codigoInherente} />
                 <span style={{ color: "#7A8EA0", fontSize: 20, paddingBottom: 18 }}>→</span>
-                <RamBadge code={residual}  label="Riesgo Residual"  />
+                <RamBadge code={nivelResidual}  label="Riesgo Residual"  fullCode={codigoResidual}  />
               </div>
             </div>
 
