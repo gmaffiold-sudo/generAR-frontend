@@ -167,13 +167,12 @@ export default function GuiaDeUso() {
             <span style={{ fontFamily: font.serif, fontSize: 26, letterSpacing: "-0.02em", color: C.blue,  lineHeight: 1 }}>AR</span>
           </a>
           <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
-            <a href="/pricing"  style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", fontWeight: 500 }}>Precios</a>
-            <a href="/register" style={{
+            <a href="/dashboard" style={{
               fontSize: 13, fontWeight: 600, color: C.navy,
               background: C.blue, borderRadius: 6, padding: "7px 16px",
-              textDecoration: "none",
+              textDecoration: "none", display: "flex", alignItems: "center", gap: 6,
             }}>
-              Empezar
+              ← Dashboard
             </a>
           </div>
         </nav>
