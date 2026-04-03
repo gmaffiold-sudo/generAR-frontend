@@ -391,7 +391,20 @@ function CheckoutForm() {
             "Content-Type":  "application/json",
             "Authorization": `Bearer ${getToken()}`,
           },
-          body: JSON.stringify({ plan_id: planId }),
+          body: JSON.stringify({
+            plan_id:            planId,
+            ...(() => {
+              try {
+                const fd = JSON.parse(localStorage.getItem("factura_datos") || "{}");
+                return {
+                  factura_tipo_doc:   fd.tipo_doc   || null,
+                  factura_numero_doc: fd.numero_doc || null,
+                  factura_nombre:     fd.nombre     || null,
+                  factura_email:      fd.email      || null,
+                };
+              } catch { return {}; }
+            })(),
+          }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data?.detail || "Error al crear sesión de pago.");
