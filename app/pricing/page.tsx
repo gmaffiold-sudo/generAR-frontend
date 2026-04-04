@@ -100,13 +100,23 @@ function useFadeIn(threshold = 0.12) {
 
 // ─── Navbar ───────────────────────────────────────────────────────────────────
 function Navbar() {
+  const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [hov,      setHov]      = useState(false);
+
   useEffect(() => {
     const h = () => setScrolled(window.scrollY > 16);
     window.addEventListener("scroll", h);
     return () => window.removeEventListener("scroll", h);
   }, []);
+
+  // Protección de ruta — redirige al login si no hay sesión activa
+  useEffect(() => {
+    if (!localStorage.getItem("generar_token")) {
+      router.replace("/login");
+    }
+  }, [router]);
+
   return (
     <nav style={{
       position:        "fixed", top: 0, left: 0, right: 0, zIndex: 100,
@@ -133,7 +143,7 @@ function Navbar() {
             Gener<span style={{ color: "#2E86AB" }}>AR</span>
           </span>
         </a>
-        <a href="/login"
+        <a href="/dashboard"
           onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
           style={{
             fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, fontWeight: 700,
@@ -143,7 +153,7 @@ function Navbar() {
             background: hov ? "rgba(46,134,171,0.05)" : "#fff",
             transition: "all 0.2s ease",
           }}>
-          Iniciar sesión
+          ← Volver al dashboard
         </a>
       </div>
     </nav>
