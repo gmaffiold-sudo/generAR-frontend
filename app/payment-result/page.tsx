@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 
 // ─── Status config ─────────────────────────────────────────────────────────────
@@ -67,15 +67,87 @@ const STATUS_CONFIG: Record<PaymentStatus, StatusConfig> = {
 
 // ─── Result card (uses useSearchParams) ───────────────────────────────────────
 function ResultCard() {
-  const searchParams = useSearchParams();
-  const rawStatus = (searchParams.get("status") ?? "").toUpperCase() as PaymentStatus;
+  const searchParams  = useSearchParams();
+  const rawStatus     = (searchParams.get("status") ?? "").toUpperCase() as PaymentStatus;
   const transactionId = searchParams.get("id") ?? "";
+  const reference     = searchParams.get("reference") ?? "";
+  const id            = searchParams.get("id") ?? "";
 
-  const status     = (rawStatus in STATUS_CONFIG ? rawStatus : "unknown") as PaymentStatus;
-  const reference  = searchParams.get("reference") ?? "";
-  const id         = searchParams.get("id") ?? "";
+  const hasStatus = rawStatus in STATUS_CONFIG;
 
-  const cfg = STATUS_CONFIG[status];
+  // Si status viene en URL usarlo directo; si no, arranca en null hasta resolverlo
+  const [status, setStatus] = useState<PaymentStatus | null>(
+    hasStatus ? (rawStatus as PaymentStatus) : null
+  );
+  const [fetching, setFetching] = useState(!hasStatus && !!transactionId);
+
+  useEffect(() => {
+    // Si ya tenemos status desde la URL no hacer nada
+    if (hasStatus || !transactionId) {
+      if (!hasStatus) setStatus("unknown");
+      return;
+    }
+
+    let cancelled = false;
+
+    const timeout = setTimeout(() => {
+      if (!cancelled) {
+        setStatus("unknown");
+        setFetching(false);
+      }
+    }, 10000);
+
+    (async () => {
+      try {
+        const res = await fetch(
+          `https://production.wompi.co/v1/transactions/${transactionId}`
+        );
+        const data = await res.json();
+        const realStatus = data?.data?.status?.toUpperCase() as PaymentStatus;
+        if (!cancelled) {
+          setStatus(realStatus in STATUS_CONFIG ? realStatus : "unknown");
+          setFetching(false);
+        }
+      } catch {
+        if (!cancelled) {
+          setStatus("unknown");
+          setFetching(false);
+        }
+      } finally {
+        clearTimeout(timeout);
+      }
+    })();
+
+    return () => { cancelled = true; clearTimeout(timeout); };
+  }, [transactionId, hasStatus]);
+
+  // Spinner mientras consulta a Wompi
+  if (fetching) {
+    return (
+      <div style={{
+        display: "flex", flexDirection: "column",
+        alignItems: "center", gap: 16, padding: "60px 0",
+        animation: "fadeUp 0.4s ease both",
+      }}>
+        <span style={{
+          width: 40, height: 40,
+          border: "3px solid rgba(27,58,92,0.15)",
+          borderTopColor: "#2E86AB",
+          borderRadius: "50%", display: "inline-block",
+          animation: "spin 0.7s linear infinite",
+        }} />
+        <p style={{
+          fontFamily: "'Plus Jakarta Sans', sans-serif",
+          fontSize: 15, color: "#7A8EA0", fontWeight: 500,
+        }}>
+          Verificando estado del pago...
+        </p>
+      </div>
+    );
+  }
+
+  const resolvedStatus = status ?? "unknown";
+  const cfg = STATUS_CONFIG[resolvedStatus];
 
   return (
     <div style={{
@@ -135,7 +207,7 @@ function ResultCard() {
         </ActionButton>
 
         {/* Extra info for APPROVED */}
-        {status === "APPROVED" && (
+        {resolvedStatus === "APPROVED" && (
           <p style={{
             fontFamily: "'Plus Jakarta Sans', sans-serif",
             fontSize: 13, color: "#7A8EA0",
@@ -147,7 +219,7 @@ function ResultCard() {
         )}
 
         {/* Extra action for DECLINED */}
-        {status === "DECLINED" && (
+        {resolvedStatus === "DECLINED" && (
           <div style={{ marginTop: 16 }}>
             <a href="/dashboard" style={{
               fontFamily: "'Plus Jakarta Sans', sans-serif",
