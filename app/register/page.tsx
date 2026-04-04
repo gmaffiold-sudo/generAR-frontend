@@ -15,10 +15,8 @@ interface Field {
 }
 
 const FIELDS: Field[] = [
-  { name: "nombre",            label: "Nombre completo",     type: "text",     placeholder: "Juan Pérez",               required: true  },
-  { name: "email",             label: "Correo electrónico",  type: "email",    placeholder: "juan@empresa.com",          required: true  },
-  { name: "empresa",           label: "Empresa",             type: "text",     placeholder: "Constructora XYZ S.A.S.",   required: false },
-  { name: "cargo",             label: "Cargo",               type: "text",     placeholder: "Ingeniero HSE",             required: false },
+  { name: "nombre",            label: "Nombre completo / Razón social", type: "text",  placeholder: "Juan Pérez o Constructora XYZ S.A.S.", required: true  },
+  { name: "email",             label: "Correo electrónico",             type: "email", placeholder: "juan@empresa.com",                    required: true  },
   { name: "password",          label: "Contraseña",          type: "password", placeholder: "Mínimo 8 caracteres",       required: true  },
   { name: "confirmPassword",   label: "Confirmar contraseña",type: "password", placeholder: "Repite tu contraseña",      required: true  },
 ];
@@ -126,7 +124,7 @@ export default function RegisterPage() {
   const router = useRouter();
 
   const [form,      setForm]      = useState<Record<string, string>>({
-    nombre: "", email: "", empresa: "", cargo: "", password: "", confirmPassword: "",
+    nombre: "", email: "", password: "", confirmPassword: "",
   });
   const [errors,    setErrors]    = useState<Record<string, string>>({});
   const [loading,   setLoading]   = useState(false);
@@ -188,8 +186,6 @@ export default function RegisterPage() {
           email:    form.email.trim().toLowerCase(),
           password: form.password,
           nombre:   form.nombre.trim(),
-          empresa:  form.empresa.trim() || undefined,
-          cargo:    form.cargo.trim()   || undefined,
           acepto_politica: aceptaPolitica,
           recaptcha_token: recaptchaToken,
         }),
