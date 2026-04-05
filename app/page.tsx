@@ -38,21 +38,21 @@ const PLANS: Plan[] = [
     price:     "$79.900",
     ars:       "30 AR mensuales",
     highlight: false,
-    features:  ["30 análisis por mes", "Exportación a Excel", "Soporte por email", "Acceso a plantillas base"],
+    features:  ["30 análisis por mes", "Exportación a Excel", "Soporte por email", "Acceso a plantillas base","1 Usuario"],
   },
   {
     name:      "Professional",
     price:     "$179.900",
     ars:       "100 AR mensuales",
     highlight: true,
-    features:  ["100 análisis por mes", "Exportación a Excel y PDF", "Soporte prioritario", "Plantillas personalizadas", "Historial completo"],
+    features:  ["100 análisis por mes", "Exportación a Excel y PDF", "Soporte prioritario", "Plantillas personalizadas", "Historial completo","Hasta 3 usuarios"],
   },
   {
     name:      "Business",
     price:     "$399.900",
     ars:       "300 AR mensuales",
     highlight: false,
-    features:  ["300 análisis por mes", "Todos los formatos de exportación", "Soporte dedicado 24/7", "API access", "Gestión de equipo", "Reportes avanzados"],
+    features:  ["300 análisis por mes", "Todos los formatos de exportación", "Soporte dedicado 24/7", "API access", "Gestión de equipo", "Reportes avanzados","Hasta 10 usuarios"],
   },
 ];
 
