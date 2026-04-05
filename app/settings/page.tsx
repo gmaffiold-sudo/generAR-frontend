@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-
-const API = "https://hse-risk-analyzer-production.up.railway.app";
+import { API, apiFetch, useAuthGuard, clearSession } from "@/lib/api";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Profile {
@@ -38,10 +37,6 @@ interface Miembro {
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-function getToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem("generar_token");
-}
 function formatDate(iso: string): string {
   try {
     const n = iso.replace(" UTC", "").replace(" ", "T") + "Z";
@@ -197,29 +192,18 @@ export default function SettingsPage() {
   const [changePwSuccess, setChangePwSuccess] = useState(false);
   const [changePwError,   setChangePwError]   = useState("");
 
-  // Route protection
-  useEffect(() => {
-    const token = getToken();
-    if (!token) { router.replace("/login"); return; }
+  const ready = useAuthGuard();
 
-    // Verificar que no es sub-usuario
-    fetch("https://hse-risk-analyzer-production.up.railway.app/user/profile", {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-    .then(r => r.json())
-    .then(d => {
-      if (d.rol === "usuario") router.replace("/dashboard");
-    })
-    .catch(() => {});
-  }, [router]);
+  // Redirect sub-users to dashboard once role is known
+  useEffect(() => {
+    if (!ready) return;
+    if (rol === "usuario") router.replace("/dashboard");
+  }, [ready, rol, router]);
 
   const fetchAll = useCallback(async () => {
-    const token = getToken();
-    if (!token) return;
-
     // Profile (also captures rol)
     setLoadingProfile(true);
-    fetch(`${API}/user/profile`, { headers: { Authorization: `Bearer ${token}` } })
+    apiFetch(`${API}/user/profile`)
       .then(r => r.ok ? r.json() : null)
       .then(d => {
         if (d) {
@@ -232,7 +216,7 @@ export default function SettingsPage() {
 
     // Credits
     setLoadingCredits(true);
-    fetch(`${API}/user/credits`, { headers: { Authorization: `Bearer ${token}` } })
+    apiFetch(`${API}/user/credits`)
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d) setCredits(d); })
       .catch(() => {})
@@ -240,7 +224,7 @@ export default function SettingsPage() {
 
     // Transacciones
     setLoadingTx(true);
-    fetch(`${API}/user/transacciones`, { headers: { Authorization: `Bearer ${token}` } })
+    apiFetch(`${API}/user/transacciones`)
       .then(r => r.ok ? r.json() : [])
       .then(d => setTransacciones(Array.isArray(d) ? d : []))
       .catch(() => {})
@@ -248,23 +232,25 @@ export default function SettingsPage() {
 
     // Equipo (solo para admins — el backend devolverá 403 para sub-usuarios, ignoramos)
     setLoadingEquipo(true);
-    fetch(`${API}/user/equipo`, { headers: { Authorization: `Bearer ${token}` } })
+    apiFetch(`${API}/user/equipo`)
       .then(r => r.ok ? r.json() : [])
       .then(d => setEquipo(Array.isArray(d) ? d : []))
       .catch(() => {})
       .finally(() => setLoadingEquipo(false));
   }, []);
 
-  useEffect(() => { fetchAll(); }, [fetchAll]);
+  useEffect(() => {
+    if (!ready) return;
+    fetchAll();
+  }, [ready, fetchAll]);
 
   const handleChangePw = async () => {
     if (newPw !== confirmPw) { setChangePwError("Las contraseñas no coinciden."); return; }
     if (newPw.length < 8)    { setChangePwError("Mínimo 8 caracteres."); return; }
     setChangingPw(true); setChangePwError(""); setChangePwSuccess(false);
     try {
-      const res  = await fetch(`${API}/user/change-password`, {
+      const res  = await apiFetch(`${API}/user/change-password`, {
         method:  "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
         body:    JSON.stringify({ current_password: currentPw, new_password: newPw }),
       });
       const data = await res.json();
@@ -272,7 +258,7 @@ export default function SettingsPage() {
         setChangePwSuccess(true);
         setCurrentPw(""); setNewPw(""); setConfirmPw("");
         setTimeout(() => {
-          localStorage.removeItem("generar_token");
+          clearSession();
           router.replace("/login");
         }, 3000);
       } else {
@@ -288,9 +274,8 @@ export default function SettingsPage() {
   const handleDeleteRequest = async () => {
     setDeleting(true); setDeleteError("");
     try {
-      const res  = await fetch(`${API}/user/request-deletion`, {
+      const res  = await apiFetch(`${API}/user/request-deletion`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${getToken()}` },
       });
       const data = await res.json();
       if (res.ok) {
@@ -309,9 +294,8 @@ export default function SettingsPage() {
     }
     setInviting(true); setInviteError(""); setInviteSuccess("");
     try {
-      const res  = await fetch(`${API}/user/invite`, {
+      const res  = await apiFetch(`${API}/user/invite`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
         body: JSON.stringify({ nombre: inviteNombre.trim(), email: inviteEmail.trim() }),
       });
       const data = await res.json();
@@ -319,7 +303,7 @@ export default function SettingsPage() {
         setInviteSuccess(`Invitación enviada a ${inviteEmail.trim()}.`);
         setInviteNombre(""); setInviteEmail("");
         // Refresh equipo list
-        fetch(`${API}/user/equipo`, { headers: { Authorization: `Bearer ${getToken()}` } })
+        apiFetch(`${API}/user/equipo`)
           .then(r => r.ok ? r.json() : [])
           .then(d => setEquipo(Array.isArray(d) ? d : []))
           .catch(() => {});
@@ -333,9 +317,8 @@ export default function SettingsPage() {
   const handleRemoveMember = async (memberId: string) => {
     setRemovingId(memberId);
     try {
-      const res  = await fetch(`${API}/user/equipo/${memberId}`, {
+      const res  = await apiFetch(`${API}/user/equipo/${memberId}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${getToken()}` },
       });
       if (res.ok) {
         setEquipo(prev => prev.map(m => m.id === memberId ? { ...m, activo: false } : m));
@@ -348,6 +331,8 @@ export default function SettingsPage() {
     ? Math.round((credits.creditos_usados / credits.creditos_totales) * 100)
     : 0;
   const barColor = pct >= 90 ? "#E05252" : pct >= 70 ? "#F4A261" : "#2E86AB";
+
+  if (!ready) return null;
 
   return (
     <>
