@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import React from "react";
+import { useAuthGuard } from "@/lib/api";
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const C = {
@@ -130,11 +130,8 @@ const FAQS = [
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function GuiaDeUso() {
-  const router = useRouter();
-  useEffect(() => {
-    const token = localStorage.getItem("generar_token");
-    if (!token) router.replace("/login");
-  }, [router]);
+  const ready = useAuthGuard();
+  if (!ready) return null;
 
   return (
     <>
