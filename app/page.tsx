@@ -728,7 +728,13 @@ function Footer() {
           </div>
         </div>
 
-        <div style={{ borderTop: "1px solid rgba(255,255,255,0.07)", paddingTop: 28, display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.07)", paddingTop: 28 }}>
+          <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 11, color: "rgba(255,255,255,0.20)", lineHeight: 1.8, marginBottom: 16, textAlign: "center" }}>
+            GenerAR no está afiliado ni es producto oficial de Ecopetrol S.A.{" "}
+            El formato HSE-F-160 es un requisito de Ecopetrol para sus contratistas.{" "}
+            GenerAR es una herramienta independiente que facilita su elaboración.
+          </p>
+          <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
           <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "rgba(255,255,255,0.30)" }}>
             © 2026 GenerAR. Todos los derechos reservados.{" "}
               
@@ -736,6 +742,7 @@ function Footer() {
           <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "rgba(255,255,255,0.25)" }}>
             Hecho con IA para profesionales HSE 🛡️
           </span>
+          </div>
         </div>
       </div>
     </footer>

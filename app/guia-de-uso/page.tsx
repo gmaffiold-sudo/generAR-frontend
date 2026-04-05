@@ -74,7 +74,7 @@ const STEPS = [
     items: [
       { icon: "🔍", text: "Revisa la tabla de riesgos generada directamente en pantalla." },
       { icon: "📊", text: <><strong style={{ color: C.navy }}>Excel básico</strong> — tabla simple generada en el navegador, lista para editar. Disponible en todo momento desde el historial.</> },
-      { icon: "🏭", text: <><strong style={{ color: C.navy }}>Formato Ecopetrol</strong> — completa datos adicionales (tipo de análisis, fecha, lugar, empresa, calculadora RAM, equipo) y descarga el formato oficial HSE-F-160.</> },
+      { icon: "🏭", text: <><strong style={{ color: C.navy }}>Formato HSE-F-160</strong> — completa datos adicionales (tipo de análisis, fecha, lugar, empresa, calculadora RAM, equipo) y descarga el formato HSE-F-160 requerido por Ecopetrol.</> },
       { icon: "📄", text: <><strong style={{ color: C.navy }}>PDF</strong> — descarga directa en formato A4 horizontal con todos los riesgos del AR.</> },
       { icon: "💾", text: "El AR queda guardado automáticamente en tu historial con los tres formatos disponibles." },
     ],
@@ -112,7 +112,7 @@ const FAQS = [
   },
   {
     q: "¿El formato cumple con los estándares de Ecopetrol?",
-    a: "Sí. GenerAR utiliza el formato oficial HSE-F-160 de Ecopetrol, listo para presentar sin modificaciones de estructura.",
+    a: "Sí. GenerAR genera el formato HSE-F-160 requerido por Ecopetrol a sus contratistas, con todas las secciones necesarias para presentar.",
   },
   {
     q: "¿Puedo editar el AR después de generarlo?",
@@ -369,6 +369,11 @@ export default function GuiaDeUso() {
             <a href="mailto:soporte@generar.co" style={{ color: C.blue }}>soporte@generar.co</a>
           </p>
           <p>Cali, Valle del Cauca, Colombia</p>
+          <p style={{ marginTop: 8, fontSize: 11, color: "rgba(255,255,255,0.20)", lineHeight: 1.8 }}>
+            GenerAR no está afiliado ni es producto oficial de Ecopetrol S.A.{" "}
+            El formato HSE-F-160 es un requisito de Ecopetrol para sus contratistas.{" "}
+            GenerAR es una herramienta independiente que facilita su elaboración.
+          </p>
           <p style={{ marginTop: 8, fontSize: 11, color: "rgba(255,255,255,0.25)" }}>
             © {new Date().getFullYear()} GenerAR. Todos los derechos reservados.
             {" · "}

@@ -74,7 +74,7 @@ const FAQS = [
   },
   {
     q: "¿El formato cumple con los estándares de Ecopetrol?",
-    a: "Sí, GenerAR usa exactamente el formato HSE-F-160 de Ecopetrol, con todas las secciones requeridas: encabezado, tabla de riesgos RAM y sección de firmas.",
+    a: "Sí, GenerAR genera el formato HSE-F-160 exigido por Ecopetrol a sus contratistas, con todas las secciones requeridas: encabezado, tabla de riesgos RAM y sección de firmas.",
   },
   {
     q: "¿Qué pasa si me quedo sin AR?",
@@ -559,7 +559,13 @@ function CtaSection() {
 function Footer() {
   return (
     <footer style={{ background: "#0F2236", padding: "36px 24px" }}>
-      <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+        <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 11, color: "rgba(255,255,255,0.20)", lineHeight: 1.8, marginBottom: 20, textAlign: "center" }}>
+          GenerAR no está afiliado ni es producto oficial de Ecopetrol S.A.{" "}
+          El formato HSE-F-160 es un requisito de Ecopetrol para sus contratistas.{" "}
+          GenerAR es una herramienta independiente que facilita su elaboración.
+        </p>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
         <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "rgba(255,255,255,0.30)" }}>
           © 2026 GenerAR · generar.co
         </span>
@@ -574,6 +580,7 @@ function Footer() {
               onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.40)"}
             >{l.label}</a>
           ))}
+        </div>
         </div>
       </div>
     </footer>
