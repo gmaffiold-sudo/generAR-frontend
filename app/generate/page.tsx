@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-
-const API = "https://hse-risk-analyzer-production.up.railway.app";
+import { API, apiFetch, useAuthGuard, clearSession } from "@/lib/api";
 
 // ─── Matriz RAM ───────────────────────────────────────────────────────────────
 const MATRIZ_RAM: Record<number, Record<string, string>> = {
@@ -40,7 +39,6 @@ interface ARResponse {
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-function getToken() { return typeof window !== "undefined" ? localStorage.getItem("generar_token") : null; }
 function today() { return new Date().toISOString().split("T")[0]; }
 function addDays(d: string, n: number) {
   const dt = new Date(d); dt.setDate(dt.getDate() + n); return dt.toISOString().split("T")[0];
@@ -335,16 +333,13 @@ function Step1({ onResult }: { onResult: (r: ARResponse, equipo: string) => void
       if (validPasos.length >= 1) body.pasos = validPasos;
       if (pdfBase64)              body.pdf_procedimiento = pdfBase64;
 
-      const res  = await fetch(`${API}/ar/generate`, {
+      const res  = await apiFetch(`${API}/ar/generate`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${getToken()}` },
         body: JSON.stringify(body),
       });
       const data = await res.json();
       if (res.ok) {
         onResult(data, equipo.trim());
-      } else if (res.status === 401) {
-        localStorage.removeItem("generar_token"); window.location.href = "/login";
       } else {
         setApiError(data?.detail || "Error al generar el análisis.");
       }
@@ -615,18 +610,16 @@ function Step2({ result, equipoInicial, onReset }: {
         equipo: equipo.trim(), gravedad, probabilidad, categoria,
       };
 
-      const res = await fetch(`${API}/ar/export/ecopetrol`, {
+      const res = await apiFetch(`${API}/ar/export/ecopetrol`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${getToken()}` },
         body: JSON.stringify(body),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.detail || "Error al generar el Excel.");
 
       // Guardar datos Ecopetrol en el registro (silencioso si falla)
-      fetch(`${API}/ar/registro/${result.registro_id}/datos-ecopetrol`, {
+      apiFetch(`${API}/ar/registro/${result.registro_id}/datos-ecopetrol`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${getToken()}` },
         body: JSON.stringify(body),
       }).catch(() => {});
 
@@ -642,9 +635,8 @@ function Step2({ result, equipoInicial, onReset }: {
   const downloadPDF = async () => {
     setPdfLoading(true); setPdfError("");
     try {
-      const res = await fetch(`${API}/ar/export/pdf`, {
+      const res = await apiFetch(`${API}/ar/export/pdf`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${getToken()}` },
         body: JSON.stringify({
           registro_id: result.registro_id,
           analisis: result.analisis,
@@ -934,8 +926,8 @@ function Step2({ result, equipoInicial, onReset }: {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function GeneratePage() {
-  const router = useRouter();
-  useEffect(() => { if (!getToken()) router.replace("/login"); }, [router]);
+  const router  = useRouter();
+  const ready   = useAuthGuard();
 
   const [result,        setResult]        = useState<ARResponse | null>(null);
   const [equipoInicial, setEquipoInicial] = useState("");
@@ -946,6 +938,8 @@ export default function GeneratePage() {
     setEquipoInicial(eq);
     setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
   };
+
+  if (!ready) return null;
 
   return (
     <>
