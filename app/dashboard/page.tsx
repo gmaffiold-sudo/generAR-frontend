@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-
-const API = "https://hse-risk-analyzer-production.up.railway.app";
+import { API, apiFetch, useAuthGuard, clearSession } from "@/lib/api";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Credits {
@@ -24,11 +23,6 @@ interface RegistroAR {
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-function getToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem("generar_token");
-}
-
 function formatDate(iso: string): string {
   try {
     // Normalizar formato con espacio y UTC
@@ -394,14 +388,12 @@ function TableRow({ registro, isLast }: { registro: RegistroAR; isLast: boolean 
   const slugTitle = registro.titulo_actividad.replace(/\s+/g, "_").slice(0, 40);
   const fechaFmt  = formatDate(registro.fecha).replace(/\s/g, "_").replace(/\./g, "");
 
-  // 📊 Excel básico — GET /ar/{id}/download
+  // 📊 Excel básico — GET /ar/{id}/analisis → SheetJS frontend
   const handleXls = async () => {
     setDlXls(true); setErrorMsg("");
     try {
       // 1. Obtener array de riesgos del backend
-      const res  = await fetch(`${API}/ar/${registro.id}/analisis`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
+      const res  = await apiFetch(`${API}/ar/${registro.id}/analisis`);
       const data = await res.json();
       if (res.status === 404) { setErrorMsg("Este AR no tiene análisis guardado"); return; }
       if (!res.ok)            { setErrorMsg(data?.detail || "Error al obtener el análisis"); return; }
@@ -439,13 +431,11 @@ function TableRow({ registro, isLast }: { registro: RegistroAR; isLast: boolean 
     finally { setDlXls(false); }
   };
 
-  // 🏭 Ecopetrol — GET /ar/{id}/download (mismo endpoint, nombre distinto)
+  // 🏭 Ecopetrol — GET /ar/{id}/download
   const handleEco = async () => {
     setDlEco(true); setErrorMsg("");
     try {
-      const res  = await fetch(`${API}/ar/${registro.id}/download`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
+      const res  = await apiFetch(`${API}/ar/${registro.id}/download`);
       const data = await res.json();
       if (res.status === 422) { setErrorMsg("Este AR fue generado antes de que se activara esta función"); return; }
       if (!res.ok)            { setErrorMsg(data?.detail || "Error al descargar"); return; }
@@ -459,17 +449,14 @@ function TableRow({ registro, isLast }: { registro: RegistroAR; isLast: boolean 
     setDlPdf(true); setErrorMsg("");
     try {
       // 1. Obtener array de riesgos del backend
-      const resAnalisis = await fetch(`${API}/ar/${registro.id}/analisis`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
+      const resAnalisis = await apiFetch(`${API}/ar/${registro.id}/analisis`);
       const dataAnalisis = await resAnalisis.json();
       if (resAnalisis.status === 404) { setErrorMsg("Este AR no tiene análisis guardado"); return; }
       if (!resAnalisis.ok)            { setErrorMsg(dataAnalisis?.detail || "Error al obtener el análisis"); return; }
 
       // 2. Generar PDF en el backend con los riesgos reales
-      const res  = await fetch(`${API}/ar/export/pdf`, {
+      const res  = await apiFetch(`${API}/ar/export/pdf`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
         body: JSON.stringify({
           registro_id:      registro.id,
           analisis:         dataAnalisis.analisis,
@@ -682,31 +669,27 @@ function DashboardNav({ email, onLogout }: { email: string; onLogout: () => void
 // ─── Main Dashboard Page ──────────────────────────────────────────────────────
 export default function DashboardPage() {
   const router = useRouter();
+  const ready  = useAuthGuard();
 
-  const [email,               setEmail]              = useState("");
+  const [email,          setEmail]         = useState("");
   const [credits,        setCredits]       = useState<Credits | null>(null);
   const [registros,      setRegistros]     = useState<RegistroAR[]>([]);
   const [rol,            setRol]           = useState<"admin" | "usuario" | null>(null);
   const [loadingCredits, setLoadingCredits]= useState(true);
   const [loadingHistory, setLoadingHistory]= useState(true);
 
-  // ── Route protection ──
+  // ── Decode email from JWT once auth is confirmed ──
   useEffect(() => {
-    const token = getToken();
-    if (!token) { router.replace("/login"); return; }
-    setEmail(decodeEmail(token));
-  }, [router]);
+    if (!ready) return;
+    const token = localStorage.getItem("generar_token");
+    if (token) setEmail(decodeEmail(token));
+  }, [ready]);
 
   // ── Fetch credits ──
   const fetchCredits = useCallback(async () => {
-    const token = getToken();
-    if (!token) return;
     setLoadingCredits(true);
     try {
-      const res = await fetch(`${API}/user/credits`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.status === 401) { handleLogout(); return; }
+      const res = await apiFetch(`${API}/user/credits`);
       if (res.ok) setCredits(await res.json());
     } catch {
       console.error("Error fetching credits");
@@ -717,13 +700,9 @@ export default function DashboardPage() {
 
   // ── Fetch history ──
   const fetchHistory = useCallback(async () => {
-    const token = getToken();
-    if (!token) return;
     setLoadingHistory(true);
     try {
-      const res = await fetch(`${API}/registro_ar`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await apiFetch(`${API}/registro_ar`);
       if (res.ok) {
         const data = await res.json();
         // Sort newest first; derive tiene_datos_ecopetrol from presence of "lugar" in datos_formulario
@@ -745,22 +724,19 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    const token = getToken();
-    if (!token) return;
+    if (!ready) return;
     fetchCredits();
     fetchHistory();
     // Fetch role to conditionally show admin links
-    fetch(`${API}/user/profile`, { headers: { Authorization: `Bearer ${token}` } })
+    apiFetch(`${API}/user/profile`)
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d) setRol(d.rol === "usuario" ? "usuario" : "admin"); })
       .catch(() => {});
-  }, [fetchCredits, fetchHistory]);
+  }, [ready, fetchCredits, fetchHistory]);
 
   // ── Logout ──
   const handleLogout = () => {
-    localStorage.removeItem("generar_token");
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
+    clearSession();
     router.push("/login");
   };
 
@@ -769,8 +745,9 @@ export default function DashboardPage() {
     router.push("/generate");
   };
 
-  return (
-    <>
+  if (!ready) return null;
+
+  return (    <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
