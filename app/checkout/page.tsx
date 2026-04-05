@@ -3,8 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Script from "next/script";
-
-const API = "https://hse-risk-analyzer-production.up.railway.app";
+import { API, apiFetch, useAuthGuard, clearSession } from "@/lib/api";
 
 // ─── Plan metadata ─────────────────────────────────────────────────────────────
 interface PlanInfo {
@@ -91,11 +90,6 @@ function formatCOP(centavos: number): string {
     currency: "COP",
     maximumFractionDigits: 0,
   }).format(centavos / 100);
-}
-
-function getToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem("generar_token");
 }
 
 // ─── Spinner ──────────────────────────────────────────────────────────────────
@@ -330,6 +324,7 @@ function FacturacionForm({
 // ─── Inner checkout (uses useSearchParams) ────────────────────────────────────
 function CheckoutForm() {
   const router       = useRouter();
+  const ready        = useAuthGuard();
   const searchParams = useSearchParams();
 
   const planId = searchParams.get("plan") ?? "";
@@ -347,10 +342,9 @@ function CheckoutForm() {
   const [scriptOk,        setScriptOk]        = useState(false);
   const [facturaCompleta, setFacturaCompleta] = useState(false);
 
-  // Route protection & plan validation
+  // Plan validation — redirect if no valid plan in query params
   useEffect(() => {
-    if (!getToken()) { router.replace("/login"); return; }
-    if (!plan)       { router.replace("/dashboard"); return; }
+    if (!plan) router.replace("/dashboard");
   }, [plan, router]);
 
   // Precargar datos de facturación guardados si existen
@@ -368,15 +362,13 @@ function CheckoutForm() {
 
   // Fetch session from backend
   useEffect(() => {
-    if (!plan || !getToken()) return;
+    if (!ready || !plan) return;
     (async () => {
       setLoading(true);
       try {
         // Si es top-up verificar suscripción activa primero
         if (planId.startsWith("topup_")) {
-          const resCredits = await fetch(`${API}/user/credits`, {
-            headers: { "Authorization": `Bearer ${getToken()}` },
-          });
+          const resCredits = await apiFetch(`${API}/user/credits`);
           const dataCredits = await resCredits.json();
           if (!resCredits.ok || dataCredits.estado_suscripcion !== "activa") {
             setError("Necesitas un plan activo para comprar créditos adicionales. Adquiere un plan primero.");
@@ -385,12 +377,8 @@ function CheckoutForm() {
           }
         }
 
-        const res = await fetch(`${API}/payments/create-session`, {
-          method:  "POST",
-          headers: {
-            "Content-Type":  "application/json",
-            "Authorization": `Bearer ${getToken()}`,
-          },
+        const res = await apiFetch(`${API}/payments/create-session`, {
+          method: "POST",
           body: JSON.stringify({
             plan_id:            planId,
             ...(() => {
@@ -415,9 +403,9 @@ function CheckoutForm() {
         setLoading(false);
       }
     })();
-  }, [planId, plan]);
+  }, [ready, planId, plan]);
 
-  if (!plan) return null;
+  if (!ready || !plan) return null;
 
   return (
     <div style={{
