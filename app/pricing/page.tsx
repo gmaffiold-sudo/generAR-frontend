@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { API, apiFetch, useAuthGuard } from "@/lib/api";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 const PLANS = [
@@ -109,13 +110,6 @@ function Navbar() {
     window.addEventListener("scroll", h);
     return () => window.removeEventListener("scroll", h);
   }, []);
-
-  // Protección de ruta — redirige al login si no hay sesión activa
-  useEffect(() => {
-    if (!localStorage.getItem("generar_token")) {
-      router.replace("/login");
-    }
-  }, [router]);
 
   return (
     <nav style={{
@@ -589,25 +583,24 @@ function Footer() {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function PricingPage() {
   const router = useRouter();
-  const [autorizado, setAutorizado] = useState(false);
+  const ready  = useAuthGuard();
+  const [rol,  setRol] = useState<string | null>(null);
 
+  // Fetch role once auth is confirmed
   useEffect(() => {
-    const token = localStorage.getItem("generar_token");
-    if (!token) { router.replace("/login"); return; }
-    
-    // Verificar que no es sub-usuario
-    fetch("https://hse-risk-analyzer-production.up.railway.app/user/profile", {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-    .then(r => r.json())
-    .then(d => {
-      if (d.rol === "usuario") router.replace("/dashboard");
-      else setAutorizado(true);
-    })
-    .catch(() => setAutorizado(true));
-}, [router]);
+    if (!ready) return;
+    apiFetch(`${API}/user/profile`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) setRol(d.rol); })
+      .catch(() => setRol("admin")); // fallback: mostrar página
+  }, [ready]);
 
-  if (!autorizado) return null;
+  // Redirect sub-users to dashboard
+  useEffect(() => {
+    if (rol === "usuario") router.replace("/dashboard");
+  }, [rol, router]);
+
+  if (!ready || rol === null) return null;
 
   return (
     <>
