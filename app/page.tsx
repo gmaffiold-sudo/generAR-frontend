@@ -100,6 +100,8 @@ function Navbar() {
         backdropFilter:  scrolled ? "blur(12px)"              : "none",
         boxShadow:       scrolled ? "0 1px 24px rgba(27,58,92,0.10)" : "none",
         borderBottom:    scrolled ? "1px solid rgba(27,58,92,0.08)"  : "none",
+        // FIX: safe area iOS para notch / Dynamic Island
+        paddingTop:      "env(safe-area-inset-top, 0px)",
       }}
     >
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px", height: 68, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -145,7 +147,8 @@ function Navbar() {
             fontWeight:     600,
             color:          "#1B3A5C",
             textDecoration: "none",
-            padding:        "8px 18px",
+            // FIX: padding vertical mínimo 12px para tap target ≥ 44px
+            padding:        "12px 18px",
             borderRadius:   8,
             border:         "1.5px solid rgba(27,58,92,0.2)",
             transition:     "all 0.2s",
@@ -160,7 +163,8 @@ function Navbar() {
             fontWeight:      600,
             color:           "#fff",
             textDecoration:  "none",
-            padding:         "9px 20px",
+            // FIX: padding vertical mínimo 12px
+            padding:         "12px 20px",
             borderRadius:    8,
             background:      "linear-gradient(135deg, #1B3A5C 0%, #2E86AB 100%)",
             boxShadow:       "0 2px 12px rgba(46,134,171,0.35)",
@@ -175,7 +179,8 @@ function Navbar() {
         <button
           onClick={() => setMenuOpen(!menuOpen)}
           className="mobile-burger"
-          style={{ background: "none", border: "none", cursor: "pointer", padding: 8, display: "none" }}
+          // FIX: padding 12 para tap target ≥ 44px
+          style={{ background: "none", border: "none", cursor: "pointer", padding: 12, display: "none" }}
           aria-label="Menú"
         >
           <div style={{ width: 22, height: 2, background: "#1B3A5C", marginBottom: 5, borderRadius: 2 }} />
@@ -186,7 +191,8 @@ function Navbar() {
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div style={{ background: "#fff", padding: "16px 24px 24px", borderTop: "1px solid #edf0f4", boxShadow: "0 8px 24px rgba(0,0,0,0.08)" }}>
+        // FIX: maxHeight y overflowY para que el menú sea scrollable si crece
+        <div style={{ background: "#fff", padding: "16px 24px 24px", borderTop: "1px solid #edf0f4", boxShadow: "0 8px 24px rgba(0,0,0,0.08)", maxHeight: "80vh", overflowY: "auto" }}>
           {NAV_LINKS.map(l => (
             <a key={l.label} href={l.href} onClick={() => setMenuOpen(false)} style={{
               display: "block", padding: "12px 0",
@@ -217,7 +223,8 @@ function Hero() {
       alignItems:      "center",
       justifyContent:  "center",
       textAlign:       "center",
-      padding:         "120px 24px 80px",
+      // FIX: paddingTop adaptativo con safe area iOS
+      padding:         "max(120px, calc(68px + env(safe-area-inset-top, 0px) + 16px)) 24px 80px",
       position:        "relative",
       overflow:        "hidden",
       background:      "#fff",
@@ -418,7 +425,8 @@ function BenefitCard({ benefit, delay, visible }: { benefit: Benefit; delay: num
       style={{
         background:   "#fff",
         borderRadius: 16,
-        padding:      "40px 36px",
+        // FIX: padding adaptativo con clamp para móvil
+        padding:      "clamp(24px, 5vw, 40px) clamp(20px, 4vw, 36px)",
         border:       hovered ? "1.5px solid rgba(46,134,171,0.35)" : "1.5px solid rgba(27,58,92,0.07)",
         boxShadow:    hovered ? "0 16px 48px rgba(27,58,92,0.12)" : "0 2px 16px rgba(27,58,92,0.05)",
         transform:    hovered ? "translateY(-6px)" : "translateY(0)",
@@ -481,55 +489,57 @@ function Pricing() {
         </div>
 
         {/* Top-up informativo */}
-<div style={{
-  marginTop: 48, padding: "28px 32px",
-  background: "rgba(46,134,171,0.05)",
-  border: "1.5px solid rgba(46,134,171,0.15)",
-  borderRadius: 16, textAlign: "center",
-}}>
-  <p style={{
-    fontFamily: "'Plus Jakarta Sans', sans-serif",
-    fontSize: 13, fontWeight: 700, color: "#2E86AB",
-    letterSpacing: "0.08em", textTransform: "uppercase",
-    marginBottom: 8,
-  }}>¿Necesitas más AR este mes?</p>
-  <p style={{
-    fontFamily: "'Plus Jakarta Sans', sans-serif",
-    fontSize: 15, color: "#4A6070", marginBottom: 20,
-  }}>
-    Compra créditos adicionales sin cambiar de plan
-  </p>
-  <div style={{ display: "flex", justifyContent: "center", gap: 16, flexWrap: "wrap" }}>
-    {[
-      { label: "Paquete S", ars: "10 AR", price: "$35.000" },
-      { label: "Paquete M", ars: "30 AR", price: "$95.000" },
-      { label: "Paquete L", ars: "100 AR", price: "$220.000" },
-    ].map(t => (
-      <div key={t.label} style={{
-        background: "#fff", borderRadius: 12,
-        padding: "16px 24px", textAlign: "center",
-        border: "1.5px solid rgba(27,58,92,0.09)",
-        minWidth: 140,
-      }}>
-        <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 11, fontWeight: 700, color: "#2E86AB", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4 }}>{t.label}</p>
-        <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22, color: "#1B3A5C", marginBottom: 2 }}>{t.ars}</p>
-        <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 16, fontWeight: 800, color: "#1B3A5C" }}>{t.price} <span style={{ fontSize: 11, fontWeight: 500, color: "#7A8EA0" }}>COP</span></p>
-      </div>
-    ))}
-  </div>
-  <p style={{
-    fontFamily: "'Plus Jakarta Sans', sans-serif",
-    fontSize: 12, color: "#A0B0BC", marginTop: 16,
-  }}>
-    * Disponible para usuarios con suscripción activa. 
-  </p>
-</div>
+        <div style={{
+          marginTop: 48, padding: "28px 32px",
+          background: "rgba(46,134,171,0.05)",
+          border: "1.5px solid rgba(46,134,171,0.15)",
+          borderRadius: 16, textAlign: "center",
+        }}>
+          <p style={{
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            fontSize: 13, fontWeight: 700, color: "#2E86AB",
+            letterSpacing: "0.08em", textTransform: "uppercase",
+            marginBottom: 8,
+          }}>¿Necesitas más AR este mes?</p>
+          <p style={{
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            fontSize: 15, color: "#4A6070", marginBottom: 20,
+          }}>
+            Compra créditos adicionales sin cambiar de plan
+          </p>
+          <div style={{ display: "flex", justifyContent: "center", gap: 16, flexWrap: "wrap" }}>
+            {[
+              { label: "Paquete S", ars: "10 AR", price: "$35.000" },
+              { label: "Paquete M", ars: "30 AR", price: "$95.000" },
+              { label: "Paquete L", ars: "100 AR", price: "$220.000" },
+            ].map(t => (
+              <div key={t.label} style={{
+                background: "#fff", borderRadius: 12,
+                padding: "16px 24px", textAlign: "center",
+                border: "1.5px solid rgba(27,58,92,0.09)",
+                minWidth: 140,
+                // FIX: flex para distribución correcta en móvil
+                flex: "1 1 120px",
+              }}>
+                <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 11, fontWeight: 700, color: "#2E86AB", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4 }}>{t.label}</p>
+                <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22, color: "#1B3A5C", marginBottom: 2 }}>{t.ars}</p>
+                <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 16, fontWeight: 800, color: "#1B3A5C" }}>{t.price} <span style={{ fontSize: 11, fontWeight: 500, color: "#7A8EA0" }}>COP</span></p>
+              </div>
+            ))}
+          </div>
+          <p style={{
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            fontSize: 12, color: "#A0B0BC", marginTop: 16,
+          }}>
+            * Disponible para usuarios con suscripción activa.
+          </p>
+        </div>
 
       </div>
     </section>
   );
 }
- 
+
 
 function PricingCard({ plan, delay, visible }: { plan: Plan; delay: number; visible: boolean }) {
   const [hovered, setHovered] = useState(false);
@@ -585,7 +595,8 @@ function PricingCard({ plan, delay, visible }: { plan: Plan; delay: number; visi
       <div style={{ marginBottom: 6 }}>
         <span style={{
           fontFamily: "'DM Serif Display', Georgia, serif",
-          fontSize: 42, fontWeight: 400,
+          // FIX: fontSize adaptativo para pantallas pequeñas
+          fontSize: "clamp(32px, 8vw, 42px)", fontWeight: 400,
           color: plan.highlight ? "#fff" : "#1B3A5C",
           letterSpacing: "-0.03em",
         }}>{plan.price}</span>
@@ -737,7 +748,6 @@ function Footer() {
           <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
           <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "rgba(255,255,255,0.30)" }}>
             © 2026 GenerAR. Todos los derechos reservados.{" "}
-              
           </span>
           <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "rgba(255,255,255,0.25)" }}>
             Hecho con IA para profesionales HSE 🛡️

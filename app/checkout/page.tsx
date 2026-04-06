@@ -143,13 +143,14 @@ function FacturacionForm({
     onComplete(datos);
   }
 
+  // FIX: fontSize 16 para evitar zoom automático en iOS
   const inputStyle = (hasError: boolean): React.CSSProperties => ({
     width: "100%",
     padding: "11px 14px",
     borderRadius: 9,
     border: `1.5px solid ${hasError ? "rgba(224,82,82,0.5)" : "rgba(27,58,92,0.14)"}`,
     fontFamily: "'Plus Jakarta Sans', sans-serif",
-    fontSize: 14,
+    fontSize: 16,
     color: "#1B3A5C",
     background: "#fff",
     outline: "none",
@@ -168,12 +169,13 @@ function FacturacionForm({
   };
 
   return (
+    // FIX: padding adaptativo con clamp para móvil
     <div style={{
       background: "#fff",
       borderRadius: 18,
       border: "1.5px solid rgba(46,134,171,0.18)",
       boxShadow: "0 4px 24px rgba(27,58,92,0.07)",
-      padding: "28px 32px",
+      padding: "clamp(20px, 4vw, 28px) clamp(20px, 4vw, 32px)",
       marginBottom: 20,
       animation: "fadeUp 0.4s ease both",
     }}>
@@ -199,8 +201,9 @@ function FacturacionForm({
       </p>
 
       {/* Fila: Tipo doc + Número doc */}
+      {/* FIX: flex: "1 1 120px" en ambos elementos para distribución correcta en móvil */}
       <div style={{ display: "flex", gap: 14, marginBottom: 16, flexWrap: "wrap" }}>
-        <div style={{ flex: "0 0 140px" }}>
+        <div style={{ flex: "1 1 120px" }}>
           <label style={labelStyle}>Tipo de documento</label>
           <select
             value={datos.tipo_doc}
@@ -221,7 +224,7 @@ function FacturacionForm({
             <option value="Pasaporte">Pasaporte</option>
           </select>
         </div>
-        <div style={{ flex: 1, minWidth: 160 }}>
+        <div style={{ flex: "1 1 120px" }}>
           <label style={labelStyle}>Número de documento</label>
           <input
             type="text"
@@ -282,11 +285,12 @@ function FacturacionForm({
       </div>
 
       {/* Botón continuar */}
+      {/* FIX: padding vertical 15px para tap target ≥ 44px */}
       <button
         onClick={handleContinuar}
         style={{
           width: "100%",
-          padding: "13px 0",
+          padding: "15px 0",
           borderRadius: 11,
           border: "none",
           cursor: isComplete ? "pointer" : "not-allowed",
@@ -416,9 +420,10 @@ function CheckoutForm() {
 
       {/* ── Left: Plan summary ── */}
       <div style={{ flex: "1 1 340px" }}>
+        {/* FIX: padding adaptativo con clamp para móvil */}
         <div style={{
           background: "linear-gradient(160deg, #1B3A5C 0%, #1e4d74 55%, #2E86AB 100%)",
-          borderRadius: 18, padding: "36px 36px",
+          borderRadius: 18, padding: "clamp(24px, 5vw, 36px)",
           position: "relative", overflow: "hidden",
           boxShadow: "0 20px 60px rgba(27,58,92,0.28)",
         }}>
@@ -444,7 +449,8 @@ function CheckoutForm() {
             <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 34, fontWeight: 400, color: "#fff", letterSpacing: "-0.02em", marginBottom: 4 }}>
               {plan.nombre}
             </h2>
-            <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: 44, fontWeight: 400, color: "#fff", letterSpacing: "-0.03em", marginBottom: 4, lineHeight: 1.1 }}>
+            {/* FIX: fontSize adaptativo para pantallas pequeñas */}
+            <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: "clamp(32px, 8vw, 44px)", fontWeight: 400, color: "#fff", letterSpacing: "-0.03em", marginBottom: 4, lineHeight: 1.1 }}>
               {formatCOP(plan.precio)}
             </p>
             <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "rgba(255,255,255,0.55)", marginBottom: 28 }}>
@@ -514,6 +520,7 @@ function CheckoutForm() {
                     </p>
                   </div>
                 </div>
+                {/* FIX: padding para ampliar área táctil del botón Editar */}
                 <button
                   onClick={() => {
                     localStorage.removeItem("factura_datos");
@@ -523,7 +530,7 @@ function CheckoutForm() {
                     background: "none", border: "none", cursor: "pointer",
                     fontFamily: "'Plus Jakarta Sans', sans-serif",
                     fontSize: 12, color: "#2E86AB", fontWeight: 600,
-                    textDecoration: "underline", padding: 0, flexShrink: 0,
+                    textDecoration: "underline", padding: "8px 4px", flexShrink: 0,
                   }}
                 >
                   Editar
@@ -535,11 +542,12 @@ function CheckoutForm() {
 
         {/* ── Widget de pago Wompi (solo si factura completa) ── */}
         {facturaCompleta && (
+          // FIX: padding adaptativo con clamp para móvil
           <div style={{
             background: "#fff", borderRadius: 18,
             border: "1.5px solid rgba(27,58,92,0.08)",
             boxShadow: "0 4px 24px rgba(27,58,92,0.07)",
-            padding: "36px 36px",
+            padding: "clamp(24px, 5vw, 36px)",
             flex: 1,
             animation: "fadeUp 0.35s ease both",
           }}>
@@ -626,6 +634,7 @@ function CheckoutForm() {
                 )}
 
                 {/* Wompi form button */}
+                {/* FIX: box-sizing:border-box explícito en el botón Wompi inyectado */}
                 {sessionData && (
                   scriptOk ? (
                     <div dangerouslySetInnerHTML={{
@@ -637,7 +646,7 @@ function CheckoutForm() {
                           <input type="hidden" name="reference"          value="${sessionData.referencia}" />
                           <input type="hidden" name="signature:integrity" value="${sessionData.firma}" />
                           <input type="hidden" name="redirect-url"       value="https://generar.co/payment-result" />
-                          <button type="submit" style="width:100%;padding:15px;border-radius:11px;border:none;cursor:pointer;background:linear-gradient(135deg,#1B3A5C,#2E86AB);color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:16px;font-weight:800;letter-spacing:-0.01em;box-shadow:0 3px 14px rgba(46,134,171,0.30);transition:all 0.22s ease;">
+                          <button type="submit" style="box-sizing:border-box;width:100%;padding:15px;border-radius:11px;border:none;cursor:pointer;background:linear-gradient(135deg,#1B3A5C,#2E86AB);color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:16px;font-weight:800;letter-spacing:-0.01em;box-shadow:0 3px 14px rgba(46,134,171,0.30);transition:all 0.22s ease;">
                             🔒 Pagar ${formatCOP(sessionData.precio)}
                           </button>
                         </form>
@@ -666,11 +675,13 @@ function CheckoutForm() {
           </div>
         )}
 
+        {/* FIX: padding para ampliar área táctil del link cancelar */}
         <p style={{ textAlign: "center", marginTop: 20, fontSize: 13 }}>
           <a href="/dashboard" style={{
             fontFamily: "'Plus Jakarta Sans', sans-serif",
             color: "#7A8EA0", textDecoration: "none", fontWeight: 500,
             display: "inline-flex", alignItems: "center", gap: 5,
+            padding: "8px 4px",
           }}
             onMouseEnter={e => e.currentTarget.style.color = "#2E86AB"}
             onMouseLeave={e => e.currentTarget.style.color = "#7A8EA0"}

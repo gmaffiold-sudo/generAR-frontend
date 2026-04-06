@@ -85,7 +85,8 @@ function SectionCard({
           color: danger ? "#C62828" : "#1B3A5C",
         }}>{title}</h2>
       </div>
-      <div style={{ padding: "24px 28px" }}>{children}</div>
+      {/* FIX: padding adaptativo con clamp para móvil */}
+      <div style={{ padding: "clamp(16px, 4vw, 24px) clamp(16px, 4vw, 28px)" }}>{children}</div>
     </div>
   );
 }
@@ -145,7 +146,9 @@ function Nav() {
           onClick={() => router.push("/dashboard")}
           onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)}
           style={{
-            display: "flex", alignItems: "center", gap: 7, padding: "8px 18px", borderRadius: 8,
+            display: "flex", alignItems: "center", gap: 7,
+            // FIX: padding vertical mínimo 12px
+            padding: "12px 18px", borderRadius: 8,
             cursor: "pointer", border: "1.5px solid rgba(27,58,92,0.15)",
             background: h ? "rgba(27,58,92,0.04)" : "#fff", color: "#1B3A5C",
             fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 600,
@@ -361,7 +364,8 @@ export default function SettingsPage() {
         {/* ── SECCIÓN 1: Perfil ── */}
         <div style={{ animation: "fadeUp 0.5s ease 0.05s both" }}>
           <SectionCard title="Perfil" icon="👤">
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 24px" }}>
+            {/* FIX: grid con auto-fit para colapso en móvil */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "0 24px" }}>
               <ProfileField label="Nombre completo" value={profile?.nombre} loading={loadingProfile} />
               <ProfileField label="Correo electrónico" value={profile?.email} loading={loadingProfile} />
               <ProfileField label="Empresa" value={profile?.empresa} loading={loadingProfile} />
@@ -504,8 +508,10 @@ export default function SettingsPage() {
                   ) : (
                     <div style={{ marginBottom: 24 }}>
                       {equipo.map(m => (
+                        // FIX: flexWrap y gap para que email largo no desborde en móvil
                         <div key={m.id} style={{
                           display: "flex", alignItems: "center", justifyContent: "space-between",
+                          flexWrap: "wrap", gap: 8,
                           padding: "12px 14px", borderRadius: 10, marginBottom: 8,
                           background: m.activo ? "#fff" : "rgba(27,58,92,0.03)",
                           border: m.activo ? "1.5px solid rgba(27,58,92,0.10)" : "1.5px solid rgba(27,58,92,0.06)",
@@ -527,15 +533,19 @@ export default function SettingsPage() {
                                 {m.nombre}
                                 {!m.activo && <span style={{ marginLeft: 8, fontSize: 11, color: "#A0B0BC" }}>inactivo</span>}
                               </p>
-                              <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 12, color: "#7A8EA0" }}>{m.email}</p>
+                              <p style={{
+                                fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 12, color: "#7A8EA0",
+                                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                              }}>{m.email}</p>
                             </div>
                           </div>
                           {m.activo && (
+                            // FIX: padding vertical mínimo 10px para tap target
                             <button
                               onClick={() => handleRemoveMember(m.id)}
                               disabled={removingId === m.id}
                               style={{
-                                padding: "6px 12px", borderRadius: 7,
+                                padding: "10px 14px", borderRadius: 7,
                                 border: "1.5px solid rgba(198,40,40,0.25)",
                                 background: "rgba(198,40,40,0.05)", color: "#C62828",
                                 fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 12, fontWeight: 700,
@@ -574,13 +584,15 @@ export default function SettingsPage() {
                           <span style={{ fontSize: 13, color: "#C62828" }}>{inviteError}</span>
                         </div>
                       )}
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 14px", marginBottom: 12 }}>
+                      {/* FIX: grid con auto-fit para colapso en móvil */}
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "0 14px", marginBottom: 12 }}>
                         <div>
                           <label style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 11, fontWeight: 700, color: "#1B3A5C", letterSpacing: "0.06em", textTransform: "uppercase", display: "block", marginBottom: 5 }}>Nombre</label>
                           <input
                             type="text" value={inviteNombre} placeholder="Nombre del miembro"
                             onChange={e => { setInviteNombre(e.target.value); setInviteError(""); setInviteSuccess(""); }}
-                            style={{ width: "100%", padding: "10px 12px", borderRadius: 9, outline: "none", border: "1.5px solid rgba(27,58,92,0.15)", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, color: "#1B3A5C", background: "#fff", boxSizing: "border-box" as const }}
+                            // FIX: fontSize 16 para evitar zoom automático en iOS
+                            style={{ width: "100%", padding: "10px 12px", borderRadius: 9, outline: "none", border: "1.5px solid rgba(27,58,92,0.15)", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 16, color: "#1B3A5C", background: "#fff", boxSizing: "border-box" as const }}
                           />
                         </div>
                         <div>
@@ -588,7 +600,8 @@ export default function SettingsPage() {
                           <input
                             type="email" value={inviteEmail} placeholder="correo@empresa.com"
                             onChange={e => { setInviteEmail(e.target.value); setInviteError(""); setInviteSuccess(""); }}
-                            style={{ width: "100%", padding: "10px 12px", borderRadius: 9, outline: "none", border: "1.5px solid rgba(27,58,92,0.15)", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, color: "#1B3A5C", background: "#fff", boxSizing: "border-box" as const }}
+                            // FIX: fontSize 16 para evitar zoom automático en iOS
+                            style={{ width: "100%", padding: "10px 12px", borderRadius: 9, outline: "none", border: "1.5px solid rgba(27,58,92,0.15)", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 16, color: "#1B3A5C", background: "#fff", boxSizing: "border-box" as const }}
                           />
                         </div>
                       </div>
@@ -596,7 +609,8 @@ export default function SettingsPage() {
                         onClick={handleInvite} disabled={inviting}
                         style={{
                           display: "inline-flex", alignItems: "center", gap: 7,
-                          padding: "10px 20px", borderRadius: 9, border: "none",
+                          // FIX: padding vertical mínimo 12px
+                          padding: "12px 20px", borderRadius: 9, border: "none",
                           cursor: inviting ? "not-allowed" : "pointer",
                           background: inviting ? "rgba(46,134,171,0.40)" : "linear-gradient(135deg, #1B3A5C, #2E86AB)",
                           color: "#fff", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 700,
@@ -652,58 +666,61 @@ export default function SettingsPage() {
                 </p>
               </div>
             ) : (
+              // FIX: minWidth en contenedor para forzar scroll horizontal correcto
               <div style={{ overflowX: "auto" }}>
-                {/* Header */}
-                <div style={{
-                  display: "grid", gridTemplateColumns: "150px 1fr 110px 120px 100px",
-                  padding: "10px 0 10px",
-                  borderBottom: "1px solid rgba(27,58,92,0.08)",
-                  marginBottom: 4,
-                }}>
-                  {["Fecha", "Plan", "Tipo", "Monto", "Estado"].map(col => (
-                    <span key={col} style={{
-                      fontFamily: "'Plus Jakarta Sans', sans-serif",
-                      fontSize: 10, fontWeight: 700, color: "#7A8EA0",
-                      letterSpacing: "0.08em", textTransform: "uppercase",
-                    }}>{col}</span>
+                <div style={{ minWidth: 580 }}>
+                  {/* Header */}
+                  <div style={{
+                    display: "grid", gridTemplateColumns: "150px 1fr 110px 120px 100px",
+                    padding: "10px 0 10px",
+                    borderBottom: "1px solid rgba(27,58,92,0.08)",
+                    marginBottom: 4,
+                  }}>
+                    {["Fecha", "Plan", "Tipo", "Monto", "Estado"].map(col => (
+                      <span key={col} style={{
+                        fontFamily: "'Plus Jakarta Sans', sans-serif",
+                        fontSize: 10, fontWeight: 700, color: "#7A8EA0",
+                        letterSpacing: "0.08em", textTransform: "uppercase",
+                      }}>{col}</span>
+                    ))}
+                  </div>
+                  {/* Rows */}
+                  {transacciones.map((t, i) => (
+                    <div key={t.id} style={{
+                      display: "grid", gridTemplateColumns: "150px 1fr 110px 120px 100px",
+                      padding: "12px 0", alignItems: "center",
+                      borderBottom: i < transacciones.length - 1 ? "1px solid rgba(27,58,92,0.05)" : "none",
+                    }}>
+                      <span style={{ fontSize: 13, color: "#7A8EA0", fontWeight: 500 }}>
+                        {formatDate(t.fecha_pago)}
+                      </span>
+                      <span style={{ fontSize: 13, color: "#1B3A5C", fontWeight: 600 }}>{t.nombre_plan}</span>
+                      <span style={{
+                        fontSize: 11, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 4,
+                        background: t.tipo === "top-up" ? "rgba(46,134,171,0.08)" : "rgba(27,58,92,0.06)",
+                        border: `1px solid ${t.tipo === "top-up" ? "rgba(46,134,171,0.20)" : "rgba(27,58,92,0.12)"}`,
+                        borderRadius: 100, padding: "3px 10px", width: "fit-content",
+                        color: t.tipo === "top-up" ? "#2E86AB" : "#1B3A5C",
+                      }}>
+                        {t.tipo === "top-up" ? "➕" : "📦"} {t.tipo === "top-up" ? "Top-up" : "Suscripción"}
+                      </span>
+                      <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 15, color: "#1B3A5C" }}>
+                        {formatCOP(t.monto)}
+                      </span>
+                      <span style={{
+                        display: "inline-flex", alignItems: "center", gap: 5,
+                        background: t.estado === "APROBADO" ? "rgba(39,174,96,0.10)" : "rgba(244,162,97,0.10)",
+                        border: `1px solid ${t.estado === "APROBADO" ? "rgba(39,174,96,0.25)" : "rgba(244,162,97,0.25)"}`,
+                        borderRadius: 100, padding: "3px 10px",
+                        fontSize: 11, fontWeight: 700, width: "fit-content",
+                        color: t.estado === "APROBADO" ? "#1A7A44" : "#92600A",
+                      }}>
+                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: t.estado === "APROBADO" ? "#27AE60" : "#F4A261", flexShrink: 0 }} />
+                        {t.estado === "APROBADO" ? "Aprobado" : t.estado}
+                      </span>
+                    </div>
                   ))}
                 </div>
-                {/* Rows */}
-                {transacciones.map((t, i) => (
-                  <div key={t.id} style={{
-                    display: "grid", gridTemplateColumns: "150px 1fr 110px 120px 100px",
-                    padding: "12px 0", alignItems: "center",
-                    borderBottom: i < transacciones.length - 1 ? "1px solid rgba(27,58,92,0.05)" : "none",
-                  }}>
-                    <span style={{ fontSize: 13, color: "#7A8EA0", fontWeight: 500 }}>
-                      {formatDate(t.fecha_pago)}
-                    </span>
-                    <span style={{ fontSize: 13, color: "#1B3A5C", fontWeight: 600 }}>{t.nombre_plan}</span>
-                    <span style={{
-                      fontSize: 11, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 4,
-                      background: t.tipo === "top-up" ? "rgba(46,134,171,0.08)" : "rgba(27,58,92,0.06)",
-                      border: `1px solid ${t.tipo === "top-up" ? "rgba(46,134,171,0.20)" : "rgba(27,58,92,0.12)"}`,
-                      borderRadius: 100, padding: "3px 10px", width: "fit-content",
-                      color: t.tipo === "top-up" ? "#2E86AB" : "#1B3A5C",
-                    }}>
-                      {t.tipo === "top-up" ? "➕" : "📦"} {t.tipo === "top-up" ? "Top-up" : "Suscripción"}
-                    </span>
-                    <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 15, color: "#1B3A5C" }}>
-                      {formatCOP(t.monto)}
-                    </span>
-                    <span style={{
-                      display: "inline-flex", alignItems: "center", gap: 5,
-                      background: t.estado === "APROBADO" ? "rgba(39,174,96,0.10)" : "rgba(244,162,97,0.10)",
-                      border: `1px solid ${t.estado === "APROBADO" ? "rgba(39,174,96,0.25)" : "rgba(244,162,97,0.25)"}`,
-                      borderRadius: 100, padding: "3px 10px",
-                      fontSize: 11, fontWeight: 700, width: "fit-content",
-                      color: t.estado === "APROBADO" ? "#1A7A44" : "#92600A",
-                    }}>
-                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: t.estado === "APROBADO" ? "#27AE60" : "#F4A261", flexShrink: 0 }} />
-                      {t.estado === "APROBADO" ? "Aprobado" : t.estado}
-                    </span>
-                  </div>
-                ))}
               </div>
             )}
           </SectionCard>
@@ -725,21 +742,25 @@ export default function SettingsPage() {
             )}
             <div style={{ marginBottom: 16 }}>
               <label style={{ display: "block", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 600, color: "#1B3A5C", marginBottom: 6 }}>Contraseña actual</label>
+              {/* FIX: fontSize 16 para evitar zoom automático en iOS */}
               <input type="password" value={currentPw} onChange={e => setCurrentPw(e.target.value)}
-                style={{ width: "100%", padding: "11px 14px", borderRadius: 9, border: "1.5px solid rgba(27,58,92,0.15)", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, outline: "none", boxSizing: "border-box" as const }} />
+                style={{ width: "100%", padding: "11px 14px", borderRadius: 9, border: "1.5px solid rgba(27,58,92,0.15)", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 16, outline: "none", boxSizing: "border-box" as const }} />
             </div>
             <div style={{ marginBottom: 16 }}>
               <label style={{ display: "block", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 600, color: "#1B3A5C", marginBottom: 6 }}>Nueva contraseña</label>
+              {/* FIX: fontSize 16 para evitar zoom automático en iOS */}
               <input type="password" value={newPw} onChange={e => setNewPw(e.target.value)}
-                style={{ width: "100%", padding: "11px 14px", borderRadius: 9, border: "1.5px solid rgba(27,58,92,0.15)", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, outline: "none", boxSizing: "border-box" as const }} />
+                style={{ width: "100%", padding: "11px 14px", borderRadius: 9, border: "1.5px solid rgba(27,58,92,0.15)", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 16, outline: "none", boxSizing: "border-box" as const }} />
             </div>
             <div style={{ marginBottom: 20 }}>
               <label style={{ display: "block", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 600, color: "#1B3A5C", marginBottom: 6 }}>Confirmar nueva contraseña</label>
+              {/* FIX: fontSize 16 para evitar zoom automático en iOS */}
               <input type="password" value={confirmPw} onChange={e => setConfirmPw(e.target.value)}
-                style={{ width: "100%", padding: "11px 14px", borderRadius: 9, border: "1.5px solid rgba(27,58,92,0.15)", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, outline: "none", boxSizing: "border-box" as const }} />
+                style={{ width: "100%", padding: "11px 14px", borderRadius: 9, border: "1.5px solid rgba(27,58,92,0.15)", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 16, outline: "none", boxSizing: "border-box" as const }} />
             </div>
+            {/* FIX: width 100% para mejor usabilidad en móvil */}
             <button onClick={handleChangePw} disabled={changingPw}
-              style={{ padding: "11px 24px", borderRadius: 9, border: "none", cursor: changingPw ? "not-allowed" : "pointer", background: changingPw ? "rgba(27,58,92,0.2)" : "linear-gradient(135deg, #1B3A5C, #2E86AB)", color: "#fff", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, fontWeight: 700 }}>
+              style={{ width: "100%", padding: "12px 24px", borderRadius: 9, border: "none", cursor: changingPw ? "not-allowed" : "pointer", background: changingPw ? "rgba(27,58,92,0.2)" : "linear-gradient(135deg, #1B3A5C, #2E86AB)", color: "#fff", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, fontWeight: 700 }}>
               {changingPw ? "Actualizando..." : "Cambiar contraseña"}
             </button>
           </div>
@@ -799,7 +820,8 @@ export default function SettingsPage() {
                       Se te enviará un email de confirmación al correo registrado.
                       Tendrás 24 horas para confirmar antes de que el enlace expire.
                     </p>
-                    <div style={{ display: "flex", gap: 10 }}>
+                    {/* FIX: flexWrap para que los botones no se compriman en pantallas < 360px */}
+                    <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                       <DeleteButton
                         label={deleting ? "Enviando..." : "Sí, enviarme el email"}
                         onClick={handleDeleteRequest}

@@ -22,7 +22,6 @@ const PLANS = [
     cta:   "Empezar ahora",
     href:  "/checkout?plan=starter",
     mail:  false,
-
   },
   {
     name:     "Professional",
@@ -53,7 +52,6 @@ const PLANS = [
     cta:   "Empezar ahora",
     href:  "/checkout?plan=business",
     mail:  false,
-
   },
 ];
 
@@ -119,6 +117,8 @@ function Navbar() {
       boxShadow:       scrolled ? "0 1px 20px rgba(27,58,92,0.09)" : "none",
       borderBottom:    scrolled ? "1px solid rgba(27,58,92,0.07)" : "none",
       transition:      "all 0.3s ease",
+      // FIX: safe area iOS para notch / Dynamic Island
+      paddingTop:      "env(safe-area-inset-top, 0px)",
     }}>
       <div style={{
         maxWidth: 1100, margin: "0 auto", padding: "0 24px", height: 66,
@@ -142,7 +142,8 @@ function Navbar() {
           style={{
             fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, fontWeight: 700,
             color: hov ? "#2E86AB" : "#1B3A5C",
-            textDecoration: "none", padding: "8px 20px", borderRadius: 8,
+            // FIX: padding vertical mínimo 12px
+            textDecoration: "none", padding: "12px 20px", borderRadius: 8,
             border: `1.5px solid ${hov ? "#2E86AB" : "rgba(27,58,92,0.18)"}`,
             background: hov ? "rgba(46,134,171,0.05)" : "#fff",
             transition: "all 0.2s ease",
@@ -159,7 +160,8 @@ function Hero() {
   const [in_, setIn] = useState(false);
   useEffect(() => { const t = setTimeout(() => setIn(true), 60); return () => clearTimeout(t); }, []);
   return (
-    <section style={{ paddingTop: 130, paddingBottom: 72, textAlign: "center", background: "#fff", position: "relative", overflow: "hidden" }}>
+    // FIX: paddingTop adaptativo con safe area iOS
+    <section style={{ paddingTop: "max(130px, calc(66px + env(safe-area-inset-top, 0px) + 16px))", paddingBottom: 72, textAlign: "center", background: "#fff", position: "relative", overflow: "hidden" }}>
       {/* Background mesh */}
       <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
         <div style={{ position: "absolute", top: -100, right: -100, width: 480, height: 480, borderRadius: "50%", background: "radial-gradient(circle, rgba(46,134,171,0.09) 0%, transparent 70%)" }} />
@@ -239,7 +241,8 @@ function PlanCard({ plan, delay, visible }: { plan: typeof PLANS[0]; delay: numb
         }}>{plan.badge}</div>
       )}
 
-      <div style={{ padding: "36px 36px 28px" }}>
+      {/* FIX: padding adaptativo con clamp para móvil */}
+      <div style={{ padding: "clamp(24px, 5vw, 36px) clamp(20px, 5vw, 36px) 28px" }}>
         <span style={{
           fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 12, fontWeight: 700,
           color: plan.highlight ? "rgba(255,255,255,0.55)" : "#2E86AB",
@@ -254,9 +257,10 @@ function PlanCard({ plan, delay, visible }: { plan: typeof PLANS[0]; delay: numb
             color: plan.highlight ? "rgba(255,255,255,0.7)" : "#4A6070",
             marginBottom: 6,
           }}>$</span>
+          {/* FIX: fontSize adaptativo para pantallas pequeñas */}
           <span style={{
             fontFamily: "'DM Serif Display', serif",
-            fontSize: 46, fontWeight: 400, lineHeight: 1,
+            fontSize: "clamp(36px, 8vw, 46px)", fontWeight: 400, lineHeight: 1,
             color: plan.highlight ? "#fff" : "#1B3A5C",
             letterSpacing: "-0.03em",
           }}>{plan.price}</span>
@@ -286,7 +290,8 @@ function PlanCard({ plan, delay, visible }: { plan: typeof PLANS[0]; delay: numb
         </div>
       </div>
 
-      <div style={{ padding: "0 36px 36px", marginTop: "auto" }}>
+      {/* FIX: padding adaptativo con clamp para móvil */}
+      <div style={{ padding: "0 clamp(20px, 5vw, 36px) clamp(24px, 5vw, 36px)", marginTop: "auto" }}>
         <PlanCTA plan={plan} />
       </div>
     </div>
@@ -299,7 +304,9 @@ function PlanCTA({ plan }: { plan: typeof PLANS[0] }) {
     <a href={plan.href}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
       style={{
-        display: "block", textAlign: "center", padding: "13px 0",
+        display: "block", textAlign: "center",
+        // FIX: padding vertical 16px para tap target ≥ 44px
+        padding: "16px 0",
         borderRadius: 10, textDecoration: "none",
         fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 15, fontWeight: 800,
         transition: "all 0.22s ease",
@@ -408,9 +415,10 @@ function TopupCard({ item, delay, visible }: { item: typeof TOPUPS[0]; delay: nu
         ${Math.round(parseInt(item.price.replace(".", "")) / parseInt(item.ars)).toLocaleString("es-CO")} por AR
       </p>
 
+      {/* FIX: padding vertical 13px para tap target ≥ 44px */}
       <a href={`/checkout?plan=${item.planId}`} style={{
         display: "block", marginTop: 20,
-        padding: "10px 20px", borderRadius: 9,
+        padding: "13px 20px", borderRadius: 9,
         background: hov ? "linear-gradient(135deg, #1B3A5C, #2E86AB)" : "rgba(27,58,92,0.06)",
         color: hov ? "#fff" : "#1B3A5C",
         fontFamily: "'Plus Jakarta Sans', sans-serif",
@@ -549,7 +557,6 @@ function CtaSection() {
           }}>
           Crear cuenta gratis →
         </a>
-        
       </div>
     </section>
   );
@@ -566,21 +573,22 @@ function Footer() {
           GenerAR es una herramienta independiente que facilita su elaboración.
         </p>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
-        <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "rgba(255,255,255,0.30)" }}>
-          © 2026 GenerAR · generar.co
-        </span>
-        <div style={{ display: "flex", gap: 24 }}>
-          {[
-            { label: "Términos", href: "/terminos-de-servicio" },
-            { label: "Privacidad", href: "/politica-de-datos" },
-            { label: "Contacto", href: "mailto:soporte@generar.co" },
-          ].map(l => (
-            <a key={l.label} href={l.href} style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "rgba(255,255,255,0.40)", textDecoration: "none" }}
-              onMouseEnter={e => e.currentTarget.style.color = "#2E86AB"}
-              onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.40)"}
-            >{l.label}</a>
-          ))}
-        </div>
+          <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "rgba(255,255,255,0.30)" }}>
+            © 2026 GenerAR · generar.co
+          </span>
+          {/* FIX: flexWrap y gap reducido para evitar desborde en pantallas < 340px */}
+          <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+            {[
+              { label: "Términos", href: "/terminos-de-servicio" },
+              { label: "Privacidad", href: "/politica-de-datos" },
+              { label: "Contacto", href: "mailto:soporte@generar.co" },
+            ].map(l => (
+              <a key={l.label} href={l.href} style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "rgba(255,255,255,0.40)", textDecoration: "none" }}
+                onMouseEnter={e => e.currentTarget.style.color = "#2E86AB"}
+                onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.40)"}
+              >{l.label}</a>
+            ))}
+          </div>
         </div>
       </div>
     </footer>

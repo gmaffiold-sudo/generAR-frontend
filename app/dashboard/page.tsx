@@ -71,7 +71,8 @@ function CreditsCard({
     <div style={{
       background:   "linear-gradient(160deg, #1B3A5C 0%, #1e4d74 55%, #2E86AB 100%)",
       borderRadius: 20,
-      padding:      "40px 44px",
+      // FIX: padding adaptativo para móvil
+      padding:      "clamp(24px, 5vw, 40px) clamp(20px, 5vw, 44px)",
       position:     "relative",
       overflow:     "hidden",
       boxShadow:    "0 20px 60px rgba(27,58,92,0.30)",
@@ -111,7 +112,8 @@ function CreditsCard({
               <div style={{ display: "flex", alignItems: "flex-end", gap: 8, marginBottom: 16 }}>
                 <span style={{
                   fontFamily: "'DM Serif Display', Georgia, serif",
-                  fontSize: 72, fontWeight: 400, lineHeight: 1,
+                  // FIX: fontSize adaptativo para pantallas pequeñas
+                  fontSize: "clamp(48px, 12vw, 72px)", fontWeight: 400, lineHeight: 1,
                   color: "#fff", letterSpacing: "-0.04em",
                 }}>{credits.creditos_restantes}</span>
                 <span style={{
@@ -149,24 +151,26 @@ function CreditsCard({
         </div>
 
         {/* Right — CTA buttons */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        {/* FIX: flexWrap para que los botones colapsen en móvil */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
           {!isSubUser && (
           <a href="/pricing" style={{
             fontFamily: "'Plus Jakarta Sans', sans-serif",
             fontSize: 13, fontWeight: 600,
             color: "rgba(255,255,255,0.75)",
             textDecoration: "none",
-            padding: "8px 16px",
+            // FIX: padding vertical mínimo 12px
+            padding: "12px 16px",
             borderRadius: 8,
             border: "1px solid rgba(255,255,255,0.20)",
             transition: "all 0.2s ease",
             whiteSpace: "nowrap",
-        }}
-          onMouseEnter={e => e.currentTarget.style.color = "#fff"}
-          onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.75)"}
-        >
-          Ver planes
-        </a>
+          }}
+            onMouseEnter={e => e.currentTarget.style.color = "#fff"}
+            onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.75)"}
+          >
+            Ver planes
+          </a>
           )}
           {!isSubUser && (
           <a href="/settings" style={{
@@ -174,7 +178,8 @@ function CreditsCard({
             fontSize: 13, fontWeight: 600,
             color: "rgba(255,255,255,0.75)",
             textDecoration: "none",
-            padding: "8px 16px",
+            // FIX: padding vertical mínimo 12px
+            padding: "12px 16px",
             borderRadius: 8,
             border: "1px solid rgba(255,255,255,0.20)",
             transition: "all 0.2s ease",
@@ -244,7 +249,9 @@ function HistoryTable({ registros, loading }: { registros: RegistroAR[]; loading
       <div style={{
         padding: "24px 32px",
         borderBottom: "1px solid rgba(27,58,92,0.07)",
+        // FIX: flexWrap y gap para que no se comprima en móvil
         display: "flex", justifyContent: "space-between", alignItems: "center",
+        flexWrap: "wrap", gap: 12,
       }}>
         <div>
           <h2 style={{
@@ -301,28 +308,31 @@ function HistoryTable({ registros, loading }: { registros: RegistroAR[]; loading
           </p>
         </div>
       ) : (
+        // FIX: minWidth en el contenedor para forzar scroll horizontal correcto
         <div style={{ overflowX: "auto" }}>
-          {/* Table header */}
-          <div style={{
-            display: "grid", gridTemplateColumns: "150px 1fr 130px auto",
-            padding: "12px 32px",
-            background: "#F8FAFC",
-            borderBottom: "1px solid rgba(27,58,92,0.06)",
-          }}>
-            {["Fecha", "Título de actividad", "Creado por", "Descargas"].map(col => (
-              <span key={col} style={{
-                fontFamily: "'Plus Jakarta Sans', sans-serif",
-                fontSize: 11, fontWeight: 700,
-                color: "#7A8EA0", letterSpacing: "0.08em",
-                textTransform: "uppercase",
-              }}>{col}</span>
+          <div style={{ minWidth: 580 }}>
+            {/* Table header */}
+            <div style={{
+              display: "grid", gridTemplateColumns: "150px 1fr 130px auto",
+              padding: "12px 32px",
+              background: "#F8FAFC",
+              borderBottom: "1px solid rgba(27,58,92,0.06)",
+            }}>
+              {["Fecha", "Título de actividad", "Creado por", "Descargas"].map(col => (
+                <span key={col} style={{
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  fontSize: 11, fontWeight: 700,
+                  color: "#7A8EA0", letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                }}>{col}</span>
+              ))}
+            </div>
+
+            {/* Rows */}
+            {registros.map((r, i) => (
+              <TableRow key={r.id} registro={r} isLast={i === registros.length - 1} />
             ))}
           </div>
-
-          {/* Rows */}
-          {registros.map((r, i) => (
-            <TableRow key={r.id} registro={r} isLast={i === registros.length - 1} />
-          ))}
         </div>
       )}
     </div>
@@ -357,7 +367,8 @@ function DlIconButton({
       onClick={onClick} disabled={isDisabled} title={title}
       onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)}
       style={{
-        width: 32, height: 32, borderRadius: 7, flexShrink: 0,
+        // FIX: 40×40 para tap target adecuado en móvil
+        width: 40, height: 40, borderRadius: 7, flexShrink: 0,
         border: `1.5px solid ${h && !isDisabled ? color + "50" : "rgba(27,58,92,0.12)"}`,
         background: isDisabled ? "rgba(27,58,92,0.03)" : h ? color + "12" : "#fff",
         cursor: isDisabled ? "not-allowed" : "pointer",
@@ -522,7 +533,7 @@ function TableRow({ registro, isLast }: { registro: RegistroAR; isLast: boolean 
               <path d="M14 2v6h6M14 2H8C6.9 2 6 2.9 6 4v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z" stroke="#fff" strokeWidth="1.5" fill="none"/>
             </svg>
           </DlIconButton>
-          
+
           {/* 🏭 Ecopetrol — solo si tiene datos Ecopetrol */}
           {registro.tiene_datos_ecopetrol && (
             <DlIconButton title="Descargar formato Ecopetrol" color="#1B3A5C" loading={dlEco} onClick={handleEco}>
@@ -571,11 +582,13 @@ function TableRow({ registro, isLast }: { registro: RegistroAR; isLast: boolean 
 function DashboardNav({ email, onLogout }: { email: string; onLogout: () => void }) {
   const [hovered, setHovered] = useState(false);
   return (
+    // FIX: overflow hidden para contener desborde en pantallas pequeñas
     <nav style={{
       background: "#fff",
       borderBottom: "1px solid rgba(27,58,92,0.08)",
       boxShadow: "0 1px 16px rgba(27,58,92,0.06)",
       position: "sticky", top: 0, zIndex: 100,
+      overflow: "hidden",
     }}>
       <div style={{
         maxWidth: 1100, margin: "0 auto",
@@ -625,7 +638,8 @@ function DashboardNav({ email, onLogout }: { email: string; onLogout: () => void
           )}
 
           <a href="/guia-de-uso" style={{
-            padding: "8px 16px", borderRadius: 8,
+            // FIX: padding vertical mínimo 12px
+            padding: "12px 16px", borderRadius: 8,
             border: "1.5px solid rgba(27,58,92,0.15)",
             background: "#fff",
             color: "#5A7080",
@@ -646,7 +660,8 @@ function DashboardNav({ email, onLogout }: { email: string; onLogout: () => void
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
             style={{
-              padding: "8px 16px", borderRadius: 8,
+              // FIX: padding vertical mínimo 12px
+              padding: "12px 16px", borderRadius: 8,
               border: "1.5px solid rgba(27,58,92,0.15)",
               background: hovered ? "rgba(224,82,82,0.06)" : "#fff",
               borderColor: hovered ? "rgba(224,82,82,0.3)" : "rgba(27,58,92,0.15)",
@@ -747,7 +762,8 @@ export default function DashboardPage() {
 
   if (!ready) return null;
 
-  return (    <>
+  return (
+    <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }

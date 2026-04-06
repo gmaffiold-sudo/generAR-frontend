@@ -102,7 +102,9 @@ function TextInput({ value, onChange, placeholder, hasError, type = "text", disa
       style={{
         width: "100%", padding: "10px 12px", borderRadius: 9, outline: "none",
         border: hasError ? "1.5px solid #C62828" : focused ? "1.5px solid #2E86AB" : "1.5px solid rgba(27,58,92,0.15)",
-        fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, color: "#1B3A5C",
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+        // FIX: fontSize 16 para evitar zoom automático en iOS
+        fontSize: 16, color: "#1B3A5C",
         background: disabled ? "rgba(27,58,92,0.03)" : focused ? "#fff" : "rgba(245,248,251,0.8)",
         boxShadow: focused ? "0 0 0 3px rgba(46,134,171,0.10)" : "none",
         transition: "all 0.18s ease", boxSizing: "border-box",
@@ -123,7 +125,9 @@ function SelectInput({ value, onChange, options }: {
       style={{
         width: "100%", padding: "10px 32px 10px 12px", borderRadius: 9, outline: "none",
         border: focused ? "1.5px solid #2E86AB" : "1.5px solid rgba(27,58,92,0.15)",
-        fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, color: "#1B3A5C",
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+        // FIX: fontSize 16 para evitar zoom automático en iOS
+        fontSize: 16, color: "#1B3A5C",
         background: "#fff", boxShadow: focused ? "0 0 0 3px rgba(46,134,171,0.10)" : "none",
         transition: "all 0.18s ease", cursor: "pointer",
         appearance: "none", boxSizing: "border-box",
@@ -166,11 +170,13 @@ function RadioGroup({ value, onChange, options }: {
   );
 }
 
+// FIX: Grid2 con auto-fit para colapso en móvil
 function Grid2({ children }: { children: React.ReactNode }) {
-  return <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 18px" }}>{children}</div>;
+  return <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "0 18px" }}>{children}</div>;
 }
+// FIX: Grid3 con auto-fit para colapso en móvil
 function Grid3({ children }: { children: React.ReactNode }) {
-  return <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0 18px" }}>{children}</div>;
+  return <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "0 18px" }}>{children}</div>;
 }
 
 function RamBadge({ code, label, fullCode }: { code: string; label: string; fullCode?: string }) {
@@ -220,7 +226,8 @@ function DlButton({ icon, label, color, onClick, loading, active, fullWidth }: {
       onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)}
       style={{
         display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7,
-        padding: "10px 18px", borderRadius: 10,
+        // FIX: padding vertical mínimo 12px
+        padding: "12px 18px", borderRadius: 10,
         border: `1.5px solid ${active ? color : "rgba(27,58,92,0.15)"}`,
         cursor: loading ? "not-allowed" : "pointer",
         background: active ? `${color}15` : h ? `${color}10` : "#fff",
@@ -276,7 +283,9 @@ function Nav({ onBack }: { onBack: () => void }) {
           onClick={onBack}
           onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)}
           style={{
-            display: "flex", alignItems: "center", gap: 7, padding: "8px 18px", borderRadius: 8,
+            display: "flex", alignItems: "center", gap: 7,
+            // FIX: padding vertical mínimo 12px
+            padding: "12px 18px", borderRadius: 8,
             cursor: "pointer", border: "1.5px solid rgba(27,58,92,0.15)",
             background: h ? "rgba(27,58,92,0.04)" : "#fff", color: "#1B3A5C",
             fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 600,
@@ -387,7 +396,8 @@ function Step1({ onResult }: { onResult: (r: ARResponse, equipo: string) => void
             style={{
               border: "2px dashed rgba(46,134,171,0.30)", borderRadius: 10,
               padding: "14px 18px", background: "rgba(46,134,171,0.03)",
-              display: "flex", alignItems: "center", gap: 14,
+              // FIX: flexWrap para que el contenido se reorganice en móvil
+              display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap",
             }}
             onDragOver={e => e.preventDefault()}
             onDrop={e => {
@@ -404,9 +414,10 @@ function Step1({ onResult }: { onResult: (r: ARResponse, equipo: string) => void
                     <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 700, color: "#1B3A5C" }}>{pdfFile.name}</p>
                     <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 11, color: "#7A8EA0" }}>{(pdfFile.size / 1024).toFixed(1)} KB</p>
                   </div>
+                  {/* FIX: padding vertical mínimo 8px para tap target */}
                   <button type="button" onClick={() => setPdfFile(null)} style={{
                     background: "rgba(198,40,40,0.08)", border: "none", borderRadius: 6,
-                    padding: "4px 10px", color: "#C62828", fontSize: 12, fontWeight: 700,
+                    padding: "8px 12px", color: "#C62828", fontSize: 12, fontWeight: 700,
                     cursor: "pointer", fontFamily: "'Plus Jakarta Sans', sans-serif",
                   }}>Quitar</button>
                 </div>
@@ -458,8 +469,9 @@ function Step1({ onResult }: { onResult: (r: ARResponse, equipo: string) => void
                   <TextInput value={paso} onChange={v => setPaso(i, v)} placeholder={`Paso ${i + 1}...`} />
                 </div>
                 {pasos.length > 3 && (
+                  // FIX: 40×40 para tap target adecuado en móvil
                   <button type="button" onClick={() => removePaso(i)} style={{
-                    width: 30, height: 30, borderRadius: 7, flexShrink: 0, marginTop: 5,
+                    width: 40, height: 40, borderRadius: 7, flexShrink: 0, marginTop: 2,
                     background: "rgba(198,40,40,0.07)", border: "1px solid rgba(198,40,40,0.18)",
                     color: "#C62828", cursor: "pointer", fontSize: 15,
                     display: "flex", alignItems: "center", justifyContent: "center",
@@ -468,9 +480,10 @@ function Step1({ onResult }: { onResult: (r: ARResponse, equipo: string) => void
               </div>
             ))}
           </div>
+          {/* FIX: padding vertical mínimo 10px */}
           <button type="button" onClick={addPaso} style={{
             marginTop: 10, display: "flex", alignItems: "center", gap: 6,
-            padding: "7px 14px", borderRadius: 8,
+            padding: "10px 14px", borderRadius: 8,
             border: "1.5px dashed rgba(46,134,171,0.35)",
             background: "rgba(46,134,171,0.04)", color: "#2E86AB",
             fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 700, cursor: "pointer",
@@ -814,7 +827,8 @@ function Step2({ result, equipoInicial, onReset }: {
                   ]} />
                 </FieldWrap>
               </Grid2>
-              <div style={{ display: "flex", gap: 14, alignItems: "center", marginTop: 8 }}>
+              {/* FIX: flexWrap y justifyContent para colapso en móvil */}
+              <div style={{ display: "flex", gap: 14, alignItems: "center", marginTop: 8, flexWrap: "wrap", justifyContent: "center" }}>
                 <RamBadge code={nivelInherente} label="Riesgo Inherente" fullCode={codigoInherente} />
                 <span style={{ color: "#7A8EA0", fontSize: 20, paddingBottom: 18 }}>→</span>
                 <RamBadge code={nivelResidual}  label="Riesgo Residual"  fullCode={codigoResidual}  />
@@ -839,7 +853,9 @@ function Step2({ result, equipoInicial, onReset }: {
                   style={{
                     width: "100%", padding: "10px 12px", borderRadius: 9, outline: "none",
                     border: "1.5px solid rgba(27,58,92,0.15)",
-                    fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, color: "#1B3A5C",
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                    // FIX: fontSize 16 para evitar zoom automático en iOS
+                    fontSize: 16, color: "#1B3A5C",
                     background: "rgba(245,248,251,0.8)", resize: "vertical", boxSizing: "border-box",
                   }}
                 />
