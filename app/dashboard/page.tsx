@@ -690,6 +690,7 @@ export default function DashboardPage() {
   const [credits,        setCredits]       = useState<Credits | null>(null);
   const [registros,      setRegistros]     = useState<RegistroAR[]>([]);
   const [rol,            setRol]           = useState<"admin" | "usuario" | null>(null);
+  const [creditoPruebaUsado, setCreditoPruebaUsado] = useState<boolean | null>(null);
   const [loadingCredits, setLoadingCredits]= useState(true);
   const [loadingHistory, setLoadingHistory]= useState(true);
 
@@ -745,7 +746,12 @@ export default function DashboardPage() {
     // Fetch role to conditionally show admin links
     apiFetch(`${API}/user/profile`)
       .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d) setRol(d.rol === "usuario" ? "usuario" : "admin"); })
+      .then(d => {
+        if (d) {
+          setRol(d.rol === "usuario" ? "usuario" : "admin");
+          setCreditoPruebaUsado(Boolean(d.credito_prueba_usado));
+        }
+      })
       .catch(() => {});
   }, [ready, fetchCredits, fetchHistory]);
 
@@ -808,6 +814,72 @@ export default function DashboardPage() {
 
         {/* Credits card */}
         <div style={{ marginBottom: 28, animation: "fadeUp 0.5s ease 0.1s both" }}>
+
+          {/* Banner sin suscripción — solo cuando créditos cargaron y no hay plan activo */}
+          {!loadingCredits && !credits && (
+            <div style={{
+              background: "#FFF8EE",
+              border: "1.5px solid #F4A261",
+              borderRadius: 16, padding: "24px 28px", marginBottom: 20,
+              display: "flex", alignItems: "flex-start", justifyContent: "space-between",
+              flexWrap: "wrap", gap: 20,
+            }}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+                <span style={{ fontSize: 24, flexShrink: 0 }}>⚡</span>
+                <div>
+                  <p style={{
+                    fontFamily: "'DM Serif Display', Georgia, serif",
+                    fontSize: 20, fontWeight: 400, color: "#92600A",
+                    letterSpacing: "-0.02em", marginBottom: 8,
+                  }}>
+                    {creditoPruebaUsado
+                      ? "Tu análisis de prueba ya fue utilizado"
+                      : "Bienvenido a GenerAR"
+                    }
+                  </p>
+                  <p style={{
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                    fontSize: 14, color: "#7A5520", lineHeight: 1.7, maxWidth: 480,
+                  }}>
+                    {creditoPruebaUsado
+                      ? "Ya generaste tu AR de prueba. Adquiere un plan para continuar generando y descargando análisis."
+                      : "Tienes 1 análisis de riesgo gratuito disponible. Prueba la plataforma sin costo y descubre cómo GenerAR transforma tu trabajo HSE."
+                    }
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+                {!creditoPruebaUsado && (
+                  <a href="/generate" style={{
+                    display: "inline-flex", alignItems: "center", gap: 6,
+                    padding: "12px 22px", borderRadius: 10, textDecoration: "none",
+                    background: "linear-gradient(135deg, #1B3A5C, #2E86AB)",
+                    color: "#fff", fontFamily: "'Plus Jakarta Sans', sans-serif",
+                    fontSize: 14, fontWeight: 800, whiteSpace: "nowrap",
+                    boxShadow: "0 4px 16px rgba(27,58,92,0.25)",
+                  }}>
+                    ⚡ Generar mi AR gratuito →
+                  </a>
+                )}
+                <a href="/pricing" style={{
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  padding: "12px 20px", borderRadius: 10, textDecoration: "none",
+                  background: creditoPruebaUsado
+                    ? "linear-gradient(135deg, #1B3A5C, #2E86AB)"
+                    : "rgba(146,96,10,0.08)",
+                  border: creditoPruebaUsado ? "none" : "1.5px solid rgba(244,162,97,0.5)",
+                  color: creditoPruebaUsado ? "#fff" : "#92600A",
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  fontSize: 14, fontWeight: 700, whiteSpace: "nowrap",
+                  boxShadow: creditoPruebaUsado ? "0 4px 16px rgba(27,58,92,0.25)" : "none",
+                }}>
+                  Ver planes →
+                </a>
+              </div>
+            </div>
+          )}
+
           <CreditsCard
             credits={credits}
             loading={loadingCredits}
