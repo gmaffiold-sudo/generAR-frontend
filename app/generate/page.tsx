@@ -36,6 +36,7 @@ interface ARResponse {
   message: string; registro_id: string; titulo_actividad: string;
   creditos_usados: number; creditos_restantes: number; fecha: string;
   analisis: RiesgoItem[];
+  es_prueba: boolean;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -682,6 +683,32 @@ function Step2({ result, equipoInicial, onReset }: {
   return (
     <div style={{ animation: "fadeUp 0.5s ease both" }}>
 
+      {/* Banner AR de prueba */}
+      {result.es_prueba && (
+        <div style={{
+          background: "#FFF8EE",
+          border: "1.5px solid #F4A261",
+          borderRadius: 14, padding: "16px 22px", marginBottom: 20,
+          display: "flex", alignItems: "flex-start", gap: 12,
+        }}>
+          <span style={{ fontSize: 20, flexShrink: 0 }}>⚡</span>
+          <div>
+            <p style={{
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              fontSize: 14, fontWeight: 800, color: "#92600A", marginBottom: 4,
+            }}>
+              Estás viendo tu análisis de prueba gratuito
+            </p>
+            <p style={{
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              fontSize: 13, color: "#7A5520", lineHeight: 1.6,
+            }}>
+              Este es tu único AR gratuito. Adquiere un plan para generar y descargar análisis ilimitados.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Banner éxito */}
       <div style={{
         background: "linear-gradient(160deg, #1B3A5C 0%, #1e4d74 55%, #2E86AB 100%)",
@@ -697,7 +724,10 @@ function Step2({ result, equipoInicial, onReset }: {
               </p>
             </div>
             <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "rgba(255,255,255,0.60)" }}>
-              {result.creditos_restantes} créditos restantes · {result.titulo_actividad}
+              {result.es_prueba
+                ? `AR de prueba · ${result.titulo_actividad}`
+                : `${result.creditos_restantes} créditos restantes · ${result.titulo_actividad}`
+              }
             </p>
           </div>
           <button onClick={onReset} style={{
@@ -710,11 +740,54 @@ function Step2({ result, equipoInicial, onReset }: {
       </div>
 
       {/* Botones de descarga */}
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 20 }}>
-        <DlButton icon="📊" label="Excel básico"       color="#217346" onClick={downloadBasicExcel} loading={false} />
-        <DlButton icon="🏭" label="Formato Ecopetrol"  color="#1B3A5C" onClick={() => { setShowEco(s => !s); setEcoError(""); }} loading={false} active={showEco} />
-        <DlButton icon="📄" label="Descargar PDF"      color="#C04040" onClick={downloadPDF}         loading={pdfLoading} />
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: result.es_prueba ? 12 : 20 }}>
+        <div style={{ opacity: result.es_prueba ? 0.5 : 1, pointerEvents: result.es_prueba ? "none" : "auto" }}>
+          <DlButton icon="📊" label="Excel básico"       color="#217346" onClick={downloadBasicExcel} loading={false} />
+        </div>
+        <div style={{ opacity: result.es_prueba ? 0.5 : 1, pointerEvents: result.es_prueba ? "none" : "auto" }}>
+          <DlButton icon="🏭" label="Formato Ecopetrol"  color="#1B3A5C" onClick={() => { setShowEco(s => !s); setEcoError(""); }} loading={false} active={showEco} />
+        </div>
+        <div style={{ opacity: result.es_prueba ? 0.5 : 1, pointerEvents: result.es_prueba ? "none" : "auto" }}>
+          <DlButton icon="📄" label="Descargar PDF"      color="#C04040" onClick={downloadPDF} loading={pdfLoading} />
+        </div>
       </div>
+
+      {/* Banner de bloqueo de descarga */}
+      {result.es_prueba && (
+        <div style={{
+          background: "#FFF8EE",
+          border: "1.5px solid #F4A261",
+          borderRadius: 14, padding: "16px 22px", marginBottom: 20,
+          display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16,
+        }}>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+            <span style={{ fontSize: 18, flexShrink: 0 }}>🔒</span>
+            <div>
+              <p style={{
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                fontSize: 14, fontWeight: 800, color: "#92600A", marginBottom: 3,
+              }}>
+                Descarga disponible con plan activo
+              </p>
+              <p style={{
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                fontSize: 13, color: "#7A5520", lineHeight: 1.6,
+              }}>
+                Viste cómo funciona GenerAR. Adquiere un plan para descargar este y todos tus próximos análisis de riesgo.
+              </p>
+            </div>
+          </div>
+          <a href="/pricing" style={{
+            display: "inline-flex", alignItems: "center", gap: 6,
+            padding: "10px 20px", borderRadius: 9, textDecoration: "none",
+            background: "linear-gradient(135deg, #1B3A5C, #2E86AB)",
+            color: "#fff", fontFamily: "'Plus Jakarta Sans', sans-serif",
+            fontSize: 13, fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0,
+          }}>
+            Ver planes →
+          </a>
+        </div>
+      )}
 
       {pdfError && <ErrorBanner msg={pdfError} onClose={() => setPdfError("")} />}
 
