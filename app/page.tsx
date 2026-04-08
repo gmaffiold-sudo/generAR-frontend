@@ -333,7 +333,7 @@ function Hero() {
             ))}
           </div>
           <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, color: "#7A8EA0", fontWeight: 500 }}>
-            Más de <strong style={{ color: "#1B3A5C" }}>500 profesionales</strong> HSE ya usan GenerAR
+            Unete <strong style={{ color: "#1B3A5C" }}>a los profesionales</strong> HSE que ya usan GenerAR
           </span>
         </div>
       </div>
