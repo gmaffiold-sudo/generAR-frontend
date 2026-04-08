@@ -759,8 +759,6 @@ export default function DashboardPage() {
   useEffect(() => {
     const handleVisibility = () => {
       if (document.visibilityState !== "visible") return;
-      const token = getToken();
-      if (!token) return;
       apiFetch(`${API}/user/profile`)
         .then(r => r.ok ? r.json() : null)
         .then(d => {
