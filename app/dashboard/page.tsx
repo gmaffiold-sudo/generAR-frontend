@@ -755,9 +755,12 @@ export default function DashboardPage() {
       .catch(() => {});
   }, [ready, fetchCredits, fetchHistory]);
 
-  // ── Re-fetch profile on window focus (e.g. returning from /generate) ──
+  // ── Re-fetch profile cuando el usuario regresa al dashboard ──
   useEffect(() => {
-    const handleFocus = () => {
+    const handleVisibility = () => {
+      if (document.visibilityState !== "visible") return;
+      const token = getToken();
+      if (!token) return;
       apiFetch(`${API}/user/profile`)
         .then(r => r.ok ? r.json() : null)
         .then(d => {
@@ -769,9 +772,11 @@ export default function DashboardPage() {
         .catch(() => {});
     };
 
-    window.addEventListener("focus", handleFocus);
-    return () => window.removeEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
   }, []);
+
+    
 
   // ── Logout ──
   const handleLogout = () => {
