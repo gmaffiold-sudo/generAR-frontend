@@ -755,6 +755,24 @@ export default function DashboardPage() {
       .catch(() => {});
   }, [ready, fetchCredits, fetchHistory]);
 
+  // ── Re-fetch profile on window focus (e.g. returning from /generate) ──
+  useEffect(() => {
+    const handleFocus = () => {
+      apiFetch(`${API}/user/profile`)
+        .then(r => r.ok ? r.json() : null)
+        .then(d => {
+          if (d) {
+            setRol(d.rol === "usuario" ? "usuario" : "admin");
+            setCreditoPruebaUsado(Boolean(d.credito_prueba_usado));
+          }
+        })
+        .catch(() => {});
+    };
+
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
+  }, []);
+
   // ── Logout ──
   const handleLogout = () => {
     clearSession();
