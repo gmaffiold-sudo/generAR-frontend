@@ -318,9 +318,6 @@ function Hero() {
           <CTAButton href="/register" primary>
             Empieza gratis →
           </CTAButton>
-          <CTAButton href="#demo" primary={false}>
-            ▶ Ver demo
-          </CTAButton>
         </div>
 
         {/* Trust bar */}
@@ -380,6 +377,106 @@ function CTAButton({ href, primary, children }: { href: string; primary: boolean
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >{children}</a>
+  );
+}
+
+// ─── Demo ─────────────────────────────────────────────────────────────────────
+function Demo() {
+  return (
+    <section id="demo" style={{ background: "#FFFFFF", padding: "80px 24px", textAlign: "center" }}>
+      <div style={{ maxWidth: 700, margin: "0 auto" }}>
+
+        {/* Heading */}
+        <h2 style={{
+          fontFamily:    "'DM Serif Display', Georgia, serif",
+          fontSize:      "clamp(28px, 4vw, 42px)",
+          fontWeight:    400,
+          color:         "#1B3A5C",
+          letterSpacing: "-0.02em",
+          marginBottom:  16,
+        }}>
+          ¿Cómo funciona?
+        </h2>
+        <p style={{
+          fontFamily:   "'Plus Jakarta Sans', sans-serif",
+          fontSize:     18,
+          color:        "#5A7080",
+          lineHeight:   1.6,
+          marginBottom: 48,
+          maxWidth:     480,
+          margin:       "0 auto 48px",
+        }}>
+          Genera tu Análisis de Riesgos HSE completo en menos de 30 segundos
+        </p>
+
+        {/* Phone frame */}
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 40 }}>
+          <div style={{
+            width:        320,
+            borderRadius: 40,
+            padding:      12,
+            background:   "#1a1a1a",
+            boxShadow:    "0 40px 80px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.08) inset, 0 2px 4px rgba(255,255,255,0.12) inset",
+            position:     "relative",
+          }}>
+            {/* Notch */}
+            <div style={{
+              position:     "absolute",
+              top:          16,
+              left:         "50%",
+              transform:    "translateX(-50%)",
+              width:        90,
+              height:       26,
+              background:   "#1a1a1a",
+              borderRadius: 14,
+              zIndex:       10,
+            }} />
+
+            {/* Video container */}
+            <div style={{
+              borderRadius: 32,
+              overflow:     "hidden",
+              aspectRatio:  "9/16",
+              width:        "100%",
+              position:     "relative",
+            }}>
+              <iframe
+                src="https://www.youtube.com/embed/YOyxznJ81Yk"
+                title="Demo GenerAR"
+                style={{
+                  width:   "100%",
+                  height:  "100%",
+                  border:  "none",
+                  display: "block",
+                }}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* CTA */}
+        <a href="/register" style={{
+          display:        "inline-flex",
+          alignItems:     "center",
+          gap:            8,
+          padding:        "16px 32px",
+          borderRadius:   12,
+          textDecoration: "none",
+          background:     "linear-gradient(135deg, #1B3A5C, #2E86AB)",
+          color:          "#fff",
+          fontFamily:     "'Plus Jakarta Sans', sans-serif",
+          fontSize:       16,
+          fontWeight:     800,
+          letterSpacing:  "-0.01em",
+          boxShadow:      "0 8px 28px rgba(46,134,171,0.35)",
+        }}>
+          Pruébalo gratis →
+        </a>
+
+      </div>
+    </section>
   );
 }
 
@@ -779,6 +876,7 @@ export default function LandingPage() {
       <Navbar />
       <main>
         <Hero />
+        <Demo />
         <Benefits />
         <Pricing />
       </main>
