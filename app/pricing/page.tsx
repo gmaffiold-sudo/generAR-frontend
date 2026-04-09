@@ -11,6 +11,7 @@ const PLANS = [
     price:    "79.900",
     badge:    null,
     highlight: false,
+    desc:     "Para el profesional independiente. Incluye 30 ARs mensuales, 1 usuario y soporte por email. Renovación manual cada mes.",
     features: [
       "30 AR por mes",
       "1 usuario",
@@ -28,6 +29,7 @@ const PLANS = [
     price:    "179.900",
     badge:    "Más popular",
     highlight: true,
+    desc:     "Para coordinadores y equipos pequeños que manejan múltiples frentes de trabajo. Incluye 100 ARs mensuales, 3 usuarios y soporte por email. Renovación manual cada mes.",
     features: [
       "100 AR por mes",
       "Hasta 3 usuarios",
@@ -43,6 +45,7 @@ const PLANS = [
     price:    "399.900",
     badge:    null,
     highlight: false,
+    desc:     "Para empresas contratistas con operaciones de gran escala. Incluye 300 ARs mensuales, 7 usuarios y soporte prioritario. Renovación manual cada mes.",
     features: [
       "300 AR por mes",
       "Hasta 10 usuarios",
@@ -268,8 +271,15 @@ function PlanCard({ plan, delay, visible }: { plan: typeof PLANS[0]; delay: numb
         <span style={{
           fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13,
           color: plan.highlight ? "rgba(255,255,255,0.50)" : "#7A8EA0",
-          display: "block", marginBottom: 28,
+          display: "block", marginBottom: 16,
         }}>COP / mes</span>
+
+        {/* CAMBIO 2 — Plan description */}
+        <p style={{
+          fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13,
+          color: plan.highlight ? "rgba(255,255,255,0.65)" : "#5A7080",
+          lineHeight: 1.6, marginBottom: 20,
+        }}>{plan.desc}</p>
 
         <div style={{ borderTop: plan.highlight ? "1px solid rgba(255,255,255,0.12)" : "1px solid rgba(27,58,92,0.07)", paddingTop: 24 }}>
           {plan.features.map(f => (
@@ -293,6 +303,13 @@ function PlanCard({ plan, delay, visible }: { plan: typeof PLANS[0]; delay: numb
       {/* FIX: padding adaptativo con clamp para móvil */}
       <div style={{ padding: "0 clamp(20px, 5vw, 36px) clamp(24px, 5vw, 36px)", marginTop: "auto" }}>
         <PlanCTA plan={plan} />
+        <p style={{
+          fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 12,
+          color: plan.highlight ? "rgba(255,255,255,0.45)" : "#A0B0BC",
+          textAlign: "center", marginTop: 10,
+        }}>
+          🔄 Renovación manual cada mes
+        </p>
       </div>
     </div>
   );
@@ -338,7 +355,7 @@ function PlansSection() {
           textAlign: "center", marginTop: 28,
           fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "#7A8EA0",
         }}>
-          Todos los planes incluyen acceso inmediato · Facturación mensual · Precios en COP + IVA
+          Todos los planes incluyen acceso inmediato · Renovación manual cada mes · Precios en COP + IVA
         </p>
       </div>
     </section>
@@ -357,14 +374,13 @@ function TopupSection() {
           transition: "all 0.6s ease",
         }}>
           <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 12, fontWeight: 700, color: "#2E86AB", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-            Top-up
+            Paquetes de créditos
           </span>
           <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: "clamp(26px, 4vw, 38px)", fontWeight: 400, color: "#1B3A5C", marginTop: 10, letterSpacing: "-0.02em" }}>
-            ¿Necesitas más AR este mes?
+            Paquetes de créditos
           </h2>
           <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 15, color: "#5A7080", marginTop: 12, lineHeight: 1.6, maxWidth: 520, margin: "12px auto 0" }}>
-            Compra paquetes adicionales sin cambiar de plan.{" "}
-            <strong style={{ color: "#1B3A5C" }}>Tip:</strong> subir de plan es más económico por AR.
+            ¿No quieres un plan mensual? Compra solo los créditos que necesitas, sin compromisos.
           </p>
         </div>
 
