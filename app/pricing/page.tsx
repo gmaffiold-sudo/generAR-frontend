@@ -11,11 +11,11 @@ const PLANS = [
     price:    "79.900",
     badge:    null,
     highlight: false,
-    desc:     "Para el profesional independiente. Incluye 30 ARs mensuales, 1 usuario y soporte por email. Renovación manual cada mes.",
+    desc:     "",
     features: [
       "30 AR por mes",
       "1 usuario",
-      "Formato Ecopetrol HSE",
+      "Formato HSE",
       "Historial completo",
       "Descarga Excel",
       "Soporte por email",
@@ -29,7 +29,7 @@ const PLANS = [
     price:    "179.900",
     badge:    "Más popular",
     highlight: true,
-    desc:     "Para coordinadores y equipos pequeños que manejan múltiples frentes de trabajo. Incluye 100 ARs mensuales, 3 usuarios y soporte por email. Renovación manual cada mes.",
+    desc:     "",
     features: [
       "100 AR por mes",
       "Hasta 3 usuarios",
@@ -45,7 +45,7 @@ const PLANS = [
     price:    "399.900",
     badge:    null,
     highlight: false,
-    desc:     "Para empresas contratistas con operaciones de gran escala. Incluye 300 ARs mensuales, 7 usuarios y soporte prioritario. Renovación manual cada mes.",
+    desc:     "",
     features: [
       "300 AR por mes",
       "Hasta 10 usuarios",
