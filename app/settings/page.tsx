@@ -46,6 +46,13 @@ function formatDate(iso: string): string {
 function formatCOP(centavos: number): string {
   return new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(centavos / 100);
 }
+function daysBetween(iso: string): number {
+  try {
+    const target = new Date(iso.includes("T") ? iso : iso + "T00:00:00Z");
+    const now    = new Date();
+    return Math.ceil((target.getTime() - now.getTime()) / 86400000);
+  } catch { return 99; }
+}
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 function Skeleton({ w = "100%", h = 18, radius = 8 }: { w?: string | number; h?: number; radius?: number }) {
@@ -195,6 +202,12 @@ export default function SettingsPage() {
   const [changePwSuccess, setChangePwSuccess] = useState(false);
   const [changePwError,   setChangePwError]   = useState("");
 
+  // Cancel subscription state
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [canceling,         setCanceling]         = useState(false);
+  const [cancelSuccess,     setCancelSuccess]     = useState(false);
+  const [cancelError,       setCancelError]       = useState("");
+
   const ready = useAuthGuard();
 
   // Redirect sub-users to dashboard once role is known
@@ -291,6 +304,23 @@ export default function SettingsPage() {
     finally { setDeleting(false); }
   };
 
+  const handleCancelSubscription = async () => {
+    setCanceling(true); setCancelError("");
+    try {
+      const res  = await apiFetch(`${API}/user/cancel-subscription`, { method: "POST" });
+      const data = await res.json();
+      if (res.ok) {
+        setCancelSuccess(true);
+        setShowCancelConfirm(false);
+        // Update credits state locally — keep fecha_vencimiento, change estado
+        setCredits(prev => prev ? { ...prev, estado_suscripcion: "cancelada" } : prev);
+      } else {
+        setCancelError(data?.detail || "Error al cancelar la suscripción.");
+      }
+    } catch { setCancelError("No se pudo conectar con el servidor."); }
+    finally { setCanceling(false); }
+  };
+
   const handleInvite = async () => {
     if (!inviteNombre.trim() || !inviteEmail.trim()) {
       setInviteError("Completa nombre y email para invitar."); return;
@@ -385,57 +415,172 @@ export default function SettingsPage() {
                 <Skeleton w={120} h={14} />
               </div>
             ) : credits ? (
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 24 }}>
-                <div style={{ flex: 1, minWidth: 200 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                    <span style={{
-                      fontFamily: "'DM Serif Display', serif", fontSize: 28, color: "#1B3A5C", fontWeight: 400,
-                    }}>{credits.creditos_restantes}</span>
-                    <span style={{ fontSize: 14, color: "#7A8EA0", fontWeight: 500 }}>
-                      / {credits.creditos_totales} créditos
-                    </span>
+              <>
+                {/* CAMBIO 3 — Banner plan cancelado/vencido */}
+                {credits.estado_suscripcion !== "activa" && (
+                  <div style={{
+                    background: "#FFF8EE", border: "1.5px solid #F4A261",
+                    borderRadius: 12, padding: "14px 18px", marginBottom: 20,
+                    display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12,
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 16 }}>⚠️</span>
+                      <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, color: "#92600A" }}>
+                        Tu plan está <strong>{credits.estado_suscripcion}</strong>. Renuévalo para seguir generando ARs.
+                      </p>
+                    </div>
+                    <a href="/pricing" style={{
+                      display: "inline-flex", alignItems: "center",
+                      padding: "8px 16px", borderRadius: 8, textDecoration: "none",
+                      background: "linear-gradient(135deg, #1B3A5C, #2E86AB)",
+                      color: "#fff", fontFamily: "'Plus Jakarta Sans', sans-serif",
+                      fontSize: 13, fontWeight: 700, whiteSpace: "nowrap",
+                    }}>Renovar plan →</a>
                   </div>
-                  {/* Progress bar */}
-                  <div style={{ height: 6, background: "rgba(27,58,92,0.10)", borderRadius: 3, overflow: "hidden", marginBottom: 8 }}>
-                    <div style={{ height: "100%", width: `${pct}%`, background: barColor, borderRadius: 3, transition: "width 0.8s ease" }} />
+                )}
+
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 24 }}>
+                  <div style={{ flex: 1, minWidth: 200 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                      <span style={{
+                        fontFamily: "'DM Serif Display', serif", fontSize: 28, color: "#1B3A5C", fontWeight: 400,
+                      }}>{credits.creditos_restantes}</span>
+                      <span style={{ fontSize: 14, color: "#7A8EA0", fontWeight: 500 }}>
+                        / {credits.creditos_totales} créditos
+                      </span>
+                    </div>
+                    {/* Progress bar */}
+                    <div style={{ height: 6, background: "rgba(27,58,92,0.10)", borderRadius: 3, overflow: "hidden", marginBottom: 8 }}>
+                      <div style={{ height: "100%", width: `${pct}%`, background: barColor, borderRadius: 3, transition: "width 0.8s ease" }} />
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
+                      <span style={{ fontSize: 12, color: "#7A8EA0" }}>{credits.creditos_usados} usados</span>
+                      {/* CAMBIO 1 — Fecha con alerta si ≤3 días */}
+                      {(() => {
+                        const dias = daysBetween(credits.fecha_vencimiento);
+                        const urgente = dias <= 3;
+                        return (
+                          <span style={{ fontSize: 12, color: urgente ? "#F4A261" : "#7A8EA0", fontWeight: urgente ? 700 : 400 }}>
+                            {urgente && "⚠️ "}Vence {formatDate(credits.fecha_vencimiento)}
+                            {urgente && dias > 0 && ` (en ${dias} día${dias === 1 ? "" : "s"})`}
+                          </span>
+                        );
+                      })()}
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{
+                        fontSize: 12, fontWeight: 700, color: "#7A8EA0",
+                        letterSpacing: "0.07em", textTransform: "uppercase",
+                      }}>Plan</span>
+                      <span style={{
+                        background: "rgba(46,134,171,0.09)", border: "1px solid rgba(46,134,171,0.20)",
+                        borderRadius: 100, padding: "2px 10px",
+                        fontSize: 12, fontWeight: 700, color: "#2E86AB",
+                      }}>{credits.plan}</span>
+                      <span style={{
+                        background: credits.estado_suscripcion === "activa" ? "rgba(39,174,96,0.12)" : "rgba(224,82,82,0.12)",
+                        border: `1px solid ${credits.estado_suscripcion === "activa" ? "rgba(39,174,96,0.25)" : "rgba(224,82,82,0.25)"}`,
+                        borderRadius: 100, padding: "2px 10px",
+                        fontSize: 12, fontWeight: 700,
+                        color: credits.estado_suscripcion === "activa" ? "#1A7A44" : "#C62828",
+                      }}>{credits.estado_suscripcion}</span>
+                    </div>
                   </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
-                    <span style={{ fontSize: 12, color: "#7A8EA0" }}>{credits.creditos_usados} usados</span>
-                    <span style={{ fontSize: 12, color: "#7A8EA0" }}>Vence {formatDate(credits.fecha_vencimiento)}</span>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{
-                      fontSize: 12, fontWeight: 700, color: "#7A8EA0",
-                      letterSpacing: "0.07em", textTransform: "uppercase",
-                    }}>Plan</span>
-                    <span style={{
-                      background: "rgba(46,134,171,0.09)", border: "1px solid rgba(46,134,171,0.20)",
-                      borderRadius: 100, padding: "2px 10px",
-                      fontSize: 12, fontWeight: 700, color: "#2E86AB",
-                    }}>{credits.plan}</span>
-                    <span style={{
-                      background: credits.estado_suscripcion === "activa" ? "rgba(39,174,96,0.12)" : "rgba(224,82,82,0.12)",
-                      border: `1px solid ${credits.estado_suscripcion === "activa" ? "rgba(39,174,96,0.25)" : "rgba(224,82,82,0.25)"}`,
-                      borderRadius: 100, padding: "2px 10px",
-                      fontSize: 12, fontWeight: 700,
-                      color: credits.estado_suscripcion === "activa" ? "#1A7A44" : "#C62828",
-                    }}>{credits.estado_suscripcion}</span>
+
+                  {/* CAMBIO 2 — Botones de acción */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10, alignSelf: "flex-start" }}>
+                    <a href="/pricing" style={{
+                      display: "inline-flex", alignItems: "center", gap: 6,
+                      padding: "10px 20px", borderRadius: 9, textDecoration: "none",
+                      border: "1.5px solid rgba(27,58,92,0.18)",
+                      background: "#fff", color: "#1B3A5C",
+                      fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 700,
+                      transition: "all 0.18s ease", whiteSpace: "nowrap",
+                    }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(46,134,171,0.06)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(46,134,171,0.30)"; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "#fff"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(27,58,92,0.18)"; }}
+                    >
+                      📦 {credits.estado_suscripcion === "activa" ? "Cambiar plan" : "Renovar plan"}
+                    </a>
+
+                    {/* Botón cancelar — solo si activa y no ya cancelado */}
+                    {credits.estado_suscripcion === "activa" && !cancelSuccess && (
+                      <button
+                        onClick={() => { setShowCancelConfirm(true); setCancelError(""); }}
+                        style={{
+                          padding: "9px 20px", borderRadius: 9, border: "1.5px solid rgba(198,40,40,0.25)",
+                          background: "rgba(198,40,40,0.04)", color: "#C62828",
+                          fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 600,
+                          cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.18s ease",
+                        }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(198,40,40,0.08)"; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(198,40,40,0.04)"; }}
+                      >
+                        Cancelar plan
+                      </button>
+                    )}
                   </div>
                 </div>
-                <a href="/pricing" style={{
-                  display: "inline-flex", alignItems: "center", gap: 6,
-                  padding: "10px 20px", borderRadius: 9, textDecoration: "none",
-                  border: "1.5px solid rgba(27,58,92,0.18)",
-                  background: "#fff", color: "#1B3A5C",
-                  fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 700,
-                  transition: "all 0.18s ease", whiteSpace: "nowrap", alignSelf: "flex-start",
-                }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(46,134,171,0.06)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(46,134,171,0.30)"; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "#fff"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(27,58,92,0.18)"; }}
-                >
-                  📦 Cambiar plan
-                </a>
-              </div>
+
+                {/* Éxito de cancelación */}
+                {cancelSuccess && (
+                  <div style={{
+                    background: "rgba(39,174,96,0.08)", border: "1.5px solid rgba(39,174,96,0.22)",
+                    borderRadius: 12, padding: "14px 18px", marginTop: 16,
+                    display: "flex", alignItems: "center", gap: 8,
+                  }}>
+                    <span>✅</span>
+                    <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, color: "#1A7A44" }}>
+                      Tu plan ha sido cancelado. Tienes acceso hasta {formatDate(credits.fecha_vencimiento)}.
+                    </p>
+                  </div>
+                )}
+
+                {/* Confirmación de cancelación inline */}
+                {showCancelConfirm && !cancelSuccess && (
+                  <div style={{
+                    background: "rgba(198,40,40,0.04)", border: "1.5px solid rgba(198,40,40,0.20)",
+                    borderRadius: 12, padding: "18px 20px", marginTop: 16,
+                  }}>
+                    <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, fontWeight: 700, color: "#C62828", marginBottom: 6 }}>
+                      ¿Estás seguro?
+                    </p>
+                    <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "#7A8EA0", marginBottom: 16, lineHeight: 1.5 }}>
+                      Tu plan se cancelará pero conservarás acceso hasta el {formatDate(credits.fecha_vencimiento)}.
+                    </p>
+                    {cancelError && (
+                      <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "#C62828", marginBottom: 12 }}>⚠️ {cancelError}</p>
+                    )}
+                    <div style={{ display: "flex", gap: 10 }}>
+                      <button
+                        onClick={handleCancelSubscription} disabled={canceling}
+                        style={{
+                          padding: "10px 18px", borderRadius: 9, border: "none",
+                          background: canceling ? "rgba(198,40,40,0.40)" : "#C62828",
+                          color: "#fff", fontFamily: "'Plus Jakarta Sans', sans-serif",
+                          fontSize: 13, fontWeight: 700, cursor: canceling ? "not-allowed" : "pointer",
+                          display: "flex", alignItems: "center", gap: 6, transition: "all 0.18s ease",
+                        }}
+                      >
+                        {canceling && <span style={{ width: 12, height: 12, border: "2px solid rgba(255,255,255,0.4)", borderTopColor: "#fff", borderRadius: "50%", display: "inline-block", animation: "spin 0.7s linear infinite" }} />}
+                        {canceling ? "Cancelando..." : "Confirmar cancelación"}
+                      </button>
+                      <button
+                        onClick={() => { setShowCancelConfirm(false); setCancelError(""); }}
+                        style={{
+                          padding: "10px 18px", borderRadius: 9,
+                          border: "1.5px solid rgba(27,58,92,0.18)",
+                          background: "#fff", color: "#1B3A5C",
+                          fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 600,
+                          cursor: "pointer", transition: "all 0.18s ease",
+                        }}
+                      >
+                        No, mantener plan
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
             ) : (
               <p style={{ fontSize: 14, color: "#7A8EA0" }}>No tienes una suscripción activa. <a href="/pricing" style={{ color: "#2E86AB", fontWeight: 600 }}>Ver planes →</a></p>
             )}
