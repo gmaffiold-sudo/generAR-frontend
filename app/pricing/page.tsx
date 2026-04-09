@@ -429,13 +429,6 @@ function TopupCard({ item, delay, visible }: { item: typeof TOPUPS[0]; delay: nu
       }}>
         Comprar ahora
       </a>
-      <p style={{
-        fontFamily: "'Plus Jakarta Sans', sans-serif",
-        fontSize: 11, color: "#A0B0BC",
-        marginTop: 12, lineHeight: 1.5,
-      }}>
-        * Requiere suscripción activa
-      </p>
     </div>
   );
 }
