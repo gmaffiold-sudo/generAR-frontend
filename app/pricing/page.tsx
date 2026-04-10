@@ -15,7 +15,7 @@ const PLANS = [
     features: [
       "30 AR por mes",
       "1 usuario",
-      "Formato HSE",
+      "Formato HSE-F-160",
       "Historial completo",
       "Descarga Excel",
       "Soporte por email",
