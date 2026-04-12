@@ -571,7 +571,67 @@ function Step2({ result, equipoInicial, onReset }: {
     if (daysBetween(inicio, fin) < 0)  setFin(addDays(inicio, 1));
   }, [inicio]);
 
-  // SheetJS — Excel básico sin backend
+  // ── Edición de tabla ──────────────────────────────────────────────────────
+  const FUENTES_PELIGRO = [
+    "Peligros asociados con la actividad",
+    "Peligros asociados con herramientas y equipos",
+    "Peligros asociados con materiales",
+    "Peligros asociados con factores humanos",
+    "Peligros asociados con el ambiente de trabajo",
+  ];
+
+  const PELIGROS_ANEXO1 = [
+    "Mecánico", "Eléctrico", "Químico", "Físico-Ruido",
+    "Físico-Vibración", "Físico-Iluminación", "Físico-Temperatura",
+    "Ergonómico", "Psicosocial", "Locativo", "Trabajo en alturas",
+    "Espacios confinados", "Incendio/Explosión", "Ambiental",
+    "Biológico", "Radiación", "Tránsito", "Público",
+  ];
+
+  const ORDEN_FUENTES = [
+    "Peligros asociados con la actividad",
+    "Peligros asociados con herramientas y equipos",
+    "Peligros asociados con materiales",
+    "Peligros asociados con factores humanos",
+    "Peligros asociados con el ambiente de trabajo",
+  ];
+
+  function ordenarPorFuente(riesgos: any[]) {
+    return [...riesgos].sort((a, b) => {
+      const ia = ORDEN_FUENTES.findIndex(f =>
+        a.Fuente.toLowerCase().includes(f.toLowerCase())
+      );
+      const ib = ORDEN_FUENTES.findIndex(f =>
+        b.Fuente.toLowerCase().includes(f.toLowerCase())
+      );
+      return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+    });
+  }
+
+  function handleEditCelda(index: number, campo: string, valor: string) {
+    setRiesgosEditados(prev => prev.map((r, i) =>
+      i === index ? { ...r, [campo]: valor } : r
+    ));
+  }
+
+  function handleEliminarFila(index: number) {
+    if (riesgosEditados.length <= 1) return;
+    setRiesgosEditados(prev => prev.filter((_, i) => i !== index));
+  }
+
+  function handleAgregarFila() {
+    setRiesgosEditados(prev => [...prev, {
+      Fuente:       FUENTES_PELIGRO[0],
+      Detalle:      "",
+      Peligro:      PELIGROS_ANEXO1[0],
+      Consecuencia: "",
+      Controles:    "",
+      Responsable:  "",
+      _esNueva:     true,
+    }]);
+  }
+
+  // ── Descargas ─────────────────────────────────────────────────────────────
   const downloadBasicExcel = useCallback(async () => {
     if (!(window as any).XLSX) {
       await new Promise<void>((res, rej) => {
@@ -584,7 +644,8 @@ function Step2({ result, equipoInicial, onReset }: {
     }
     const XLSX = (window as any).XLSX;
     const headers = ["Fuente", "Detalle", "Peligro", "Consecuencia", "Controles", "Responsable"];
-    const rows = result.analisis.map(r => [r.Fuente, r.Detalle, r.Peligro, r.Consecuencia, r.Controles, r.Responsable]);
+    const analisisExportar = ordenarPorFuente(riesgosEditados);
+    const rows = analisisExportar.map(r => [r.Fuente, r.Detalle, r.Peligro, r.Consecuencia, r.Controles, r.Responsable]);
     const ws = XLSX.utils.aoa_to_sheet([
       [`ANÁLISIS DE RIESGOS HSE — ${result.titulo_actividad.toUpperCase()}`],
       [`GenerAR (generar.co) — ${new Date().toLocaleDateString("es-CO")}`],
@@ -615,7 +676,7 @@ function Step2({ result, equipoInicial, onReset }: {
     setEcoLoading(true); setEcoError("");
     try {
       const body = {
-        registro_id: result.registro_id, analisis: result.analisis,
+        registro_id: result.registro_id, analisis: ordenarPorFuente(riesgosEditados),
         tipo_analisis: tipoAnalisis, fecha, inicio, fin,
         lugar: lugar.trim(), area: area.trim(), empresa: empresa.trim(),
         ot: ot.trim() || undefined, proc: proc.trim() || undefined,
@@ -653,7 +714,7 @@ function Step2({ result, equipoInicial, onReset }: {
         method: "POST",
         body: JSON.stringify({
           registro_id: result.registro_id,
-          analisis: result.analisis,
+          analisis: ordenarPorFuente(riesgosEditados),
           titulo_actividad: result.titulo_actividad,
         }),
       });
@@ -963,7 +1024,7 @@ function Step2({ result, equipoInicial, onReset }: {
             background: "rgba(46,134,171,0.08)", border: "1px solid rgba(46,134,171,0.15)",
             borderRadius: 100, padding: "4px 14px",
             fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 700, color: "#2E86AB",
-          }}>{result.analisis.length} riesgos</span>
+          }}>{riesgosEditados.length} riesgos</span>
         </div>
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 900 }}>
@@ -977,34 +1038,115 @@ function Step2({ result, equipoInicial, onReset }: {
                     borderBottom: "1px solid rgba(27,58,92,0.07)", whiteSpace: "nowrap",
                   }}>{col}</th>
                 ))}
+                <th style={{
+                  padding: "11px 8px", borderBottom: "1px solid rgba(27,58,92,0.07)", width: 36,
+                }} />
               </tr>
             </thead>
             <tbody>
-              {result.analisis.map((r, i) => {
+              {riesgosEditados.map((r, i) => {
                 const pc = peligroColor(r.Peligro);
                 return (
                   <tr
                     key={i}
-                    style={{ borderBottom: i < result.analisis.length - 1 ? "1px solid rgba(27,58,92,0.05)" : "none" }}
+                    style={{ borderBottom: i < riesgosEditados.length - 1 ? "1px solid rgba(27,58,92,0.05)" : "none" }}
                     onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "rgba(46,134,171,0.025)"}
                     onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}
                   >
-                    <td style={{ padding: "13px", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "#2A4A60", lineHeight: 1.5, verticalAlign: "top" }}>{r.Fuente}</td>
-                    <td style={{ padding: "13px", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "#2A4A60", lineHeight: 1.5, verticalAlign: "top", maxWidth: 220 }}>{r.Detalle}</td>
-                    <td style={{ padding: "13px", verticalAlign: "top" }}>
-                      <span style={{
-                        background: pc.bg, color: pc.color,
-                        borderRadius: 100, padding: "3px 10px",
-                        fontSize: 11, fontWeight: 700,
-                        fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: "nowrap",
-                      }}>{r.Peligro}</span>
+                    {/* Fuente — select si _esNueva, texto plano si no */}
+                    <td style={{ padding: "10px 13px", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "#2A4A60", lineHeight: 1.5, verticalAlign: "top" }}>
+                      {r._esNueva ? (
+                        <select
+                          value={r.Fuente}
+                          onChange={e => handleEditCelda(i, "Fuente", e.target.value)}
+                          style={{ width: "100%", fontSize: 12, border: "1px solid #CBD5E0", borderRadius: 4, padding: "4px 6px", fontFamily: "inherit", background: "#FAFBFC" }}
+                        >
+                          {FUENTES_PELIGRO.map(f => <option key={f} value={f}>{f}</option>)}
+                        </select>
+                      ) : r.Fuente}
                     </td>
-                    <td style={{ padding: "13px", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "#2A4A60", lineHeight: 1.5, verticalAlign: "top", maxWidth: 200 }}>{r.Consecuencia}</td>
-                    <td style={{ padding: "13px", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "#2A4A60", lineHeight: 1.5, verticalAlign: "top", maxWidth: 240 }}>{r.Controles}</td>
-                    <td style={{ padding: "13px", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "#2A4A60", lineHeight: 1.5, verticalAlign: "top" }}>{r.Responsable}</td>
+                    <td style={{ padding: "10px 13px", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "#2A4A60", lineHeight: 1.5, verticalAlign: "top", maxWidth: 220 }}>{r.Detalle}</td>
+                    {/* Peligro — select si _esNueva, badge si no */}
+                    <td style={{ padding: "10px 13px", verticalAlign: "top" }}>
+                      {r._esNueva ? (
+                        <select
+                          value={r.Peligro}
+                          onChange={e => handleEditCelda(i, "Peligro", e.target.value)}
+                          style={{ width: "100%", fontSize: 12, border: "1px solid #CBD5E0", borderRadius: 4, padding: "4px 6px", fontFamily: "inherit", background: "#FAFBFC" }}
+                        >
+                          {PELIGROS_ANEXO1.map(p => <option key={p} value={p}>{p}</option>)}
+                        </select>
+                      ) : (
+                        <span style={{
+                          background: pc.bg, color: pc.color,
+                          borderRadius: 100, padding: "3px 10px",
+                          fontSize: 11, fontWeight: 700,
+                          fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: "nowrap",
+                        }}>{r.Peligro}</span>
+                      )}
+                    </td>
+                    <td style={{ padding: "10px 13px", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "#2A4A60", lineHeight: 1.5, verticalAlign: "top", maxWidth: 200 }}>{r.Consecuencia}</td>
+                    {/* Controles — textarea editable */}
+                    <td style={{ padding: "10px 13px", verticalAlign: "top", maxWidth: 240 }}>
+                      <textarea
+                        value={r.Controles}
+                        onChange={e => handleEditCelda(i, "Controles", e.target.value)}
+                        style={{
+                          width: "100%", minHeight: 60, fontSize: 12,
+                          border: "1px solid #CBD5E0", borderRadius: 4,
+                          padding: "4px 6px", resize: "vertical",
+                          fontFamily: "inherit", lineHeight: 1.4,
+                          background: "#FAFBFC",
+                        }}
+                      />
+                    </td>
+                    {/* Responsable — textarea editable */}
+                    <td style={{ padding: "10px 13px", verticalAlign: "top" }}>
+                      <textarea
+                        value={r.Responsable}
+                        onChange={e => handleEditCelda(i, "Responsable", e.target.value)}
+                        style={{
+                          width: "100%", minHeight: 60, fontSize: 12,
+                          border: "1px solid #CBD5E0", borderRadius: 4,
+                          padding: "4px 6px", resize: "vertical",
+                          fontFamily: "inherit", lineHeight: 1.4,
+                          background: "#FAFBFC",
+                        }}
+                      />
+                    </td>
+                    {/* Botón eliminar fila */}
+                    <td style={{ textAlign: "center", padding: "4px", verticalAlign: "middle" }}>
+                      <button
+                        onClick={() => handleEliminarFila(i)}
+                        title="Eliminar este peligro"
+                        style={{
+                          background: "none", border: "none",
+                          color: "#E05252", fontSize: 18,
+                          cursor: "pointer", padding: "4px 8px",
+                          borderRadius: 4,
+                        }}
+                      >✕</button>
+                    </td>
                   </tr>
                 );
               })}
+              {/* C5 — Agregar nueva fila */}
+              <tr>
+                <td colSpan={7} style={{ padding: "8px 12px" }}>
+                  <button
+                    onClick={handleAgregarFila}
+                    style={{
+                      background: "none", border: "1px dashed #2E86AB",
+                      color: "#2E86AB", borderRadius: 6,
+                      padding: "6px 16px", cursor: "pointer",
+                      fontSize: 13, display: "flex",
+                      alignItems: "center", gap: 6,
+                    }}
+                  >
+                    + Agregar peligro
+                  </button>
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -1019,11 +1161,13 @@ export default function GeneratePage() {
   const ready   = useAuthGuard();
 
   const [result,        setResult]        = useState<ARResponse | null>(null);
+  const [riesgosEditados, setRiesgosEditados] = useState<any[]>([]);
   const [equipoInicial, setEquipoInicial] = useState("");
   const resultRef = useRef<HTMLDivElement>(null);
 
   const handleResult = (r: ARResponse, eq: string) => {
     setResult(r);
+    setRiesgosEditados([...r.analisis]);
     setEquipoInicial(eq);
     setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
   };
