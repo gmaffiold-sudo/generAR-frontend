@@ -541,6 +541,9 @@ function Step2({ result, equipoInicial, onReset }: {
   const [ecoError,   setEcoError]   = useState("");
   const [pdfError,   setPdfError]   = useState("");
 
+  // Estado editable de la tabla — inicializado desde result.analisis
+  const [riesgosEditados, setRiesgosEditados] = useState<any[]>(() => [...result.analisis]);
+
   // Ecopetrol form state
   const [tipoAnalisis, setTipoAnalisis] = useState("Análisis de riesgos de un trabajo");
   const [fecha,        setFecha]        = useState(today());
@@ -1161,13 +1164,11 @@ export default function GeneratePage() {
   const ready   = useAuthGuard();
 
   const [result,        setResult]        = useState<ARResponse | null>(null);
-  const [riesgosEditados, setRiesgosEditados] = useState<any[]>([]);
   const [equipoInicial, setEquipoInicial] = useState("");
   const resultRef = useRef<HTMLDivElement>(null);
 
   const handleResult = (r: ARResponse, eq: string) => {
     setResult(r);
-    setRiesgosEditados([...r.analisis]);
     setEquipoInicial(eq);
     setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
   };
