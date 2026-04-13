@@ -540,6 +540,7 @@ function Step2({ result, equipoInicial, onReset }: {
   const [pdfLoading, setPdfLoading] = useState(false);
   const [ecoError,   setEcoError]   = useState("");
   const [pdfError,   setPdfError]   = useState("");
+  const [excelError, setExcelError] = useState("");
 
   // Estado editable de la tabla — inicializado desde result.analisis
   const [riesgosEditados, setRiesgosEditados] = useState<any[]>(() => [...result.analisis]);
@@ -645,31 +646,37 @@ function Step2({ result, equipoInicial, onReset }: {
 
   // ── Descargas ─────────────────────────────────────────────────────────────
   const downloadBasicExcel = useCallback(async () => {
-    if (!(window as any).XLSX) {
-      await new Promise<void>((res, rej) => {
-        const s = document.createElement("script");
-        s.src     = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
-        s.onload  = () => res();
-        s.onerror = () => rej(new Error("No se pudo cargar SheetJS"));
-        document.head.appendChild(s);
-      });
+    setExcelError("");
+    try {
+      if (!(window as any).XLSX) {
+        await new Promise<void>((res, rej) => {
+          const s = document.createElement("script");
+          s.src     = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+          s.onload  = () => res();
+          s.onerror = () => rej(new Error("No se pudo cargar SheetJS"));
+          document.head.appendChild(s);
+        });
+      }
+      const XLSX = (window as any).XLSX;
+      const headers = ["Fuente", "Detalle", "Peligro", "Consecuencia", "Controles", "Responsable"];
+      const analisisExportar = ordenarPorFuente(riesgosEditados);
+      const rows = analisisExportar.map(r => [r.Fuente, r.Detalle, r.Peligro, r.Consecuencia, r.Controles, r.Responsable]);
+      const ws = XLSX.utils.aoa_to_sheet([
+        [`ANÁLISIS DE RIESGOS HSE — ${result.titulo_actividad.toUpperCase()}`],
+        [`GenerAR (generar.co) — ${new Date().toLocaleDateString("es-CO")}`],
+        [],
+        headers,
+        ...rows,
+      ]);
+      ws["!cols"]   = [{ wch: 22 }, { wch: 40 }, { wch: 20 }, { wch: 35 }, { wch: 40 }, { wch: 22 }];
+      ws["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 5 } }, { s: { r: 1, c: 0 }, e: { r: 1, c: 5 } }];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Análisis de Riesgos");
+      XLSX.writeFile(wb, `AR_${result.titulo_actividad.replace(/\s+/g, "_").slice(0, 40)}.xlsx`);
+    } catch (err) {
+      console.error("Error descarga Excel:", err);
+      setExcelError("Error al generar el Excel. Verifica tu conexión e intenta de nuevo.");
     }
-    const XLSX = (window as any).XLSX;
-    const headers = ["Fuente", "Detalle", "Peligro", "Consecuencia", "Controles", "Responsable"];
-    const analisisExportar = ordenarPorFuente(riesgosEditados);
-    const rows = analisisExportar.map(r => [r.Fuente, r.Detalle, r.Peligro, r.Consecuencia, r.Controles, r.Responsable]);
-    const ws = XLSX.utils.aoa_to_sheet([
-      [`ANÁLISIS DE RIESGOS HSE — ${result.titulo_actividad.toUpperCase()}`],
-      [`GenerAR (generar.co) — ${new Date().toLocaleDateString("es-CO")}`],
-      [],
-      headers,
-      ...rows,
-    ]);
-    ws["!cols"]   = [{ wch: 22 }, { wch: 40 }, { wch: 20 }, { wch: 35 }, { wch: 40 }, { wch: 22 }];
-    ws["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 5 } }, { s: { r: 1, c: 0 }, e: { r: 1, c: 5 } }];
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Análisis de Riesgos");
-    XLSX.writeFile(wb, `AR_${result.titulo_actividad.replace(/\s+/g, "_").slice(0, 40)}.xlsx`);
   }, [result, riesgosEditados]);
 
   const validateEco = () => {
@@ -862,6 +869,7 @@ function Step2({ result, equipoInicial, onReset }: {
         </div>
       )}
 
+      {excelError && <ErrorBanner msg={excelError} onClose={() => setExcelError("")} />}
       {pdfError && <ErrorBanner msg={pdfError} onClose={() => setPdfError("")} />}
 
       {/* Panel Ecopetrol expandible */}
