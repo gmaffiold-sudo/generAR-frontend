@@ -446,7 +446,10 @@ function TableRow({ registro, isLast }: { registro: RegistroAR; isLast: boolean 
   const handleEco = async () => {
     setDlEco(true); setErrorMsg("");
     try {
-      const res  = await apiFetch(`${API}/ar/${registro.id}/download`);
+      const res  = await apiFetch(`${API}/ar/${registro.id}/download`, {
+        method: "POST",
+        body: JSON.stringify({}),
+      });
       const data = await res.json();
       if (res.status === 422) { setErrorMsg("Este AR fue generado antes de que se activara esta función"); return; }
       if (!res.ok)            { setErrorMsg(data?.detail || "Error al descargar"); return; }
