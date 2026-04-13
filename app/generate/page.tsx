@@ -670,7 +670,7 @@ function Step2({ result, equipoInicial, onReset }: {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Análisis de Riesgos");
     XLSX.writeFile(wb, `AR_${result.titulo_actividad.replace(/\s+/g, "_").slice(0, 40)}.xlsx`);
-  }, [result]);
+  }, [result, riesgosEditados]);
 
   const validateEco = () => {
     const errs: Record<string, string> = {};
