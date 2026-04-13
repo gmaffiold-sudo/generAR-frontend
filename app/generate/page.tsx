@@ -574,6 +574,15 @@ function Step2({ result, equipoInicial, onReset }: {
     if (daysBetween(inicio, fin) < 0)  setFin(addDays(inicio, 1));
   }, [inicio]);
 
+  // Auto-resize todos los textareas al montar y cuando cambia el contenido
+  useEffect(() => {
+    const textareas = document.querySelectorAll<HTMLTextAreaElement>("textarea[data-autoresize]");
+    textareas.forEach(el => {
+      el.style.height = "auto";
+      el.style.height = el.scrollHeight + "px";
+    });
+  }, [riesgosEditados]);
+
   // ── Edición de tabla ──────────────────────────────────────────────────────
   const FUENTES_PELIGRO = [
     "Peligros asociados con la actividad",
@@ -1072,6 +1081,7 @@ function Step2({ result, equipoInicial, onReset }: {
                     <td style={{ padding: "10px 13px", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "#2A4A60", lineHeight: 1.5, verticalAlign: "top", maxWidth: 220 }}>
                       {r._esNueva ? (
                         <textarea
+                          data-autoresize
                           value={r.Detalle}
                           onChange={e => handleEditCelda(i, "Detalle", e.target.value)}
                           style={{
@@ -1113,6 +1123,7 @@ function Step2({ result, equipoInicial, onReset }: {
                     <td style={{ padding: "10px 13px", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "#2A4A60", lineHeight: 1.5, verticalAlign: "top", maxWidth: 200 }}>
                       {r._esNueva ? (
                         <textarea
+                          data-autoresize
                           value={r.Consecuencia}
                           onChange={e => handleEditCelda(i, "Consecuencia", e.target.value)}
                           style={{
@@ -1134,6 +1145,7 @@ function Step2({ result, equipoInicial, onReset }: {
                     {/* Controles — textarea editable */}
                     <td style={{ padding: "10px 13px", verticalAlign: "top", maxWidth: 240 }}>
                       <textarea
+                        data-autoresize
                         value={r.Controles}
                         onChange={e => handleEditCelda(i, "Controles", e.target.value)}
                         style={{
@@ -1154,6 +1166,7 @@ function Step2({ result, equipoInicial, onReset }: {
                     {/* Responsable — textarea editable */}
                     <td style={{ padding: "10px 13px", verticalAlign: "top" }}>
                       <textarea
+                        data-autoresize
                         value={r.Responsable}
                         onChange={e => handleEditCelda(i, "Responsable", e.target.value)}
                         style={{
