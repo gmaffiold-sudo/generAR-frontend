@@ -645,9 +645,23 @@ function Step2({ result, equipoInicial, onReset }: {
   }
 
   // ── Descargas ─────────────────────────────────────────────────────────────
+  const guardarEdicionesEnBD = async () => {
+    try {
+      await apiFetch(`${API}/ar/registro/${result.registro_id}/analisis_json`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          analisis: ordenarPorFuente(riesgosEditados),
+        }),
+      });
+    } catch {
+      // Fallo silencioso — no bloquear la descarga
+    }
+  };
+
   const downloadBasicExcel = useCallback(async () => {
     setExcelError("");
     try {
+      await guardarEdicionesEnBD();
       if (!(window as any).XLSX) {
         await new Promise<void>((res, rej) => {
           const s = document.createElement("script");
@@ -694,6 +708,7 @@ function Step2({ result, equipoInicial, onReset }: {
     if (Object.keys(errs).length > 0) { setEcoFieldErrs(errs); return; }
     setEcoLoading(true); setEcoError("");
     try {
+      await guardarEdicionesEnBD();
       const body = {
         registro_id: result.registro_id, analisis: ordenarPorFuente(riesgosEditados),
         tipo_analisis: tipoAnalisis, fecha, inicio, fin,
@@ -729,6 +744,7 @@ function Step2({ result, equipoInicial, onReset }: {
   const downloadPDF = async () => {
     setPdfLoading(true); setPdfError("");
     try {
+      await guardarEdicionesEnBD();
       const res = await apiFetch(`${API}/ar/export/pdf`, {
         method: "POST",
         body: JSON.stringify({
