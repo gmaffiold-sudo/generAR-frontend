@@ -574,6 +574,15 @@ function Step2({ result, equipoInicial, onReset }: {
     if (daysBetween(inicio, fin) < 0)  setFin(addDays(inicio, 1));
   }, [inicio]);
 
+  // Auto-resize todos los textareas al montar y cuando cambia riesgosEditados
+  useEffect(() => {
+    const textareas = document.querySelectorAll<HTMLTextAreaElement>("textarea[data-autoresize]");
+    textareas.forEach(el => {
+      el.style.height = "auto";
+      el.style.height = el.scrollHeight + "px";
+    });
+  }, [riesgosEditados]);
+
   // ── Edición de tabla ──────────────────────────────────────────────────────
   const FUENTES_PELIGRO = [
     "Peligros asociados con la actividad",
@@ -1068,7 +1077,29 @@ function Step2({ result, equipoInicial, onReset }: {
                         </select>
                       ) : r.Fuente}
                     </td>
-                    <td style={{ padding: "10px 13px", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "#2A4A60", lineHeight: 1.5, verticalAlign: "top", maxWidth: 220 }}>{r.Detalle}</td>
+                    {/* Detalle — textarea si _esNueva, texto plano si no */}
+                    <td style={{ padding: "10px 13px", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "#2A4A60", lineHeight: 1.5, verticalAlign: "top", maxWidth: 220 }}>
+                      {r._esNueva ? (
+                        <textarea
+                          data-autoresize
+                          value={r.Detalle}
+                          onChange={e => handleEditCelda(i, "Detalle", e.target.value)}
+                          style={{
+                            width: "100%", fontSize: 12,
+                            border: "1px solid #CBD5E0", borderRadius: 4,
+                            padding: "4px 6px", resize: "none",
+                            fontFamily: "inherit", lineHeight: 1.4,
+                            background: "#FAFBFC", color: "#1A202C",
+                            height: "auto", minHeight: 40, overflow: "hidden",
+                          }}
+                          onInput={(e) => {
+                            const el = e.target as HTMLTextAreaElement;
+                            el.style.height = "auto";
+                            el.style.height = el.scrollHeight + "px";
+                          }}
+                        />
+                      ) : r.Detalle}
+                    </td>
                     {/* Peligro — select si _esNueva, badge si no */}
                     <td style={{ padding: "10px 13px", verticalAlign: "top" }}>
                       {r._esNueva ? (
@@ -1088,32 +1119,68 @@ function Step2({ result, equipoInicial, onReset }: {
                         }}>{r.Peligro}</span>
                       )}
                     </td>
-                    <td style={{ padding: "10px 13px", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "#2A4A60", lineHeight: 1.5, verticalAlign: "top", maxWidth: 200 }}>{r.Consecuencia}</td>
+                    {/* Consecuencia — textarea si _esNueva, texto plano si no */}
+                    <td style={{ padding: "10px 13px", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "#2A4A60", lineHeight: 1.5, verticalAlign: "top", maxWidth: 200 }}>
+                      {r._esNueva ? (
+                        <textarea
+                          data-autoresize
+                          value={r.Consecuencia}
+                          onChange={e => handleEditCelda(i, "Consecuencia", e.target.value)}
+                          style={{
+                            width: "100%", fontSize: 12,
+                            border: "1px solid #CBD5E0", borderRadius: 4,
+                            padding: "4px 6px", resize: "none",
+                            fontFamily: "inherit", lineHeight: 1.4,
+                            background: "#FAFBFC", color: "#1A202C",
+                            height: "auto", minHeight: 40, overflow: "hidden",
+                          }}
+                          onInput={(e) => {
+                            const el = e.target as HTMLTextAreaElement;
+                            el.style.height = "auto";
+                            el.style.height = el.scrollHeight + "px";
+                          }}
+                        />
+                      ) : r.Consecuencia}
+                    </td>
                     {/* Controles — textarea editable */}
                     <td style={{ padding: "10px 13px", verticalAlign: "top", maxWidth: 240 }}>
                       <textarea
+                        data-autoresize
                         value={r.Controles}
                         onChange={e => handleEditCelda(i, "Controles", e.target.value)}
                         style={{
-                          width: "100%", minHeight: 60, fontSize: 12,
+                          width: "100%", fontSize: 12,
                           border: "1px solid #CBD5E0", borderRadius: 4,
-                          padding: "4px 6px", resize: "vertical",
+                          padding: "4px 6px", resize: "none",
                           fontFamily: "inherit", lineHeight: 1.4,
-                          background: "#FAFBFC",
+                          background: "#FAFBFC", color: "#1A202C",
+                          height: "auto", minHeight: 40, overflow: "hidden",
+                        }}
+                        onInput={(e) => {
+                          const el = e.target as HTMLTextAreaElement;
+                          el.style.height = "auto";
+                          el.style.height = el.scrollHeight + "px";
                         }}
                       />
                     </td>
                     {/* Responsable — textarea editable */}
                     <td style={{ padding: "10px 13px", verticalAlign: "top" }}>
                       <textarea
+                        data-autoresize
                         value={r.Responsable}
                         onChange={e => handleEditCelda(i, "Responsable", e.target.value)}
                         style={{
-                          width: "100%", minHeight: 60, fontSize: 12,
+                          width: "100%", fontSize: 12,
                           border: "1px solid #CBD5E0", borderRadius: 4,
-                          padding: "4px 6px", resize: "vertical",
+                          padding: "4px 6px", resize: "none",
                           fontFamily: "inherit", lineHeight: 1.4,
-                          background: "#FAFBFC",
+                          background: "#FAFBFC", color: "#1A202C",
+                          height: "auto", minHeight: 40, overflow: "hidden",
+                        }}
+                        onInput={(e) => {
+                          const el = e.target as HTMLTextAreaElement;
+                          el.style.height = "auto";
+                          el.style.height = el.scrollHeight + "px";
                         }}
                       />
                     </td>
