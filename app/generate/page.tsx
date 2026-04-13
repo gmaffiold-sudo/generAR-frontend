@@ -1062,20 +1062,27 @@ function Step2({ result, equipoInicial, onReset }: {
             fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 700, color: "#2E86AB",
           }}>{riesgosEditados.length} riesgos</span>
         </div>
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 900 }}>
+        <div style={{ overflowX: "auto", width: "100%" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 1200 }}>
             <thead>
               <tr style={{ background: "#F8FAFC" }}>
-                {COLS.map(col => (
+                {[
+                  { col: "Fuente",       w: 160 },
+                  { col: "Detalle",      w: 180 },
+                  { col: "Peligro",      w: 120 },
+                  { col: "Consecuencia", w: 160 },
+                  { col: "Controles",    w: 220 },
+                  { col: "Responsable",  w: 160 },
+                ].map(({ col, w }) => (
                   <th key={col} style={{
-                    padding: "11px 13px", textAlign: "left",
+                    padding: "11px 13px", textAlign: "left", width: w,
                     fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 10, fontWeight: 700,
                     color: "#7A8EA0", letterSpacing: "0.08em", textTransform: "uppercase",
                     borderBottom: "1px solid rgba(27,58,92,0.07)", whiteSpace: "nowrap",
                   }}>{col}</th>
                 ))}
                 <th style={{
-                  padding: "11px 8px", borderBottom: "1px solid rgba(27,58,92,0.07)", width: 36,
+                  padding: "11px 8px", borderBottom: "1px solid rgba(27,58,92,0.07)", width: 40,
                 }} />
               </tr>
             </thead>
@@ -1090,7 +1097,7 @@ function Step2({ result, equipoInicial, onReset }: {
                     onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}
                   >
                     {/* Fuente — select si _esNueva, texto plano si no */}
-                    <td style={{ padding: "10px 13px", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "#2A4A60", lineHeight: 1.5, verticalAlign: "top" }}>
+                    <td style={{ padding: "10px 13px", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "#2A4A60", lineHeight: 1.5, verticalAlign: "top", width: 160 }}>
                       {r._esNueva ? (
                         <select
                           value={r.Fuente}
@@ -1102,7 +1109,7 @@ function Step2({ result, equipoInicial, onReset }: {
                       ) : r.Fuente}
                     </td>
                     {/* Detalle — textarea si _esNueva, texto plano si no */}
-                    <td style={{ padding: "10px 13px", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "#2A4A60", lineHeight: 1.5, verticalAlign: "top", maxWidth: 220 }}>
+                    <td style={{ padding: "10px 13px", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "#2A4A60", lineHeight: 1.5, verticalAlign: "top", width: 180 }}>
                       {r._esNueva ? (
                         <textarea
                           data-autoresize
@@ -1111,7 +1118,7 @@ function Step2({ result, equipoInicial, onReset }: {
                           style={{
                             width: "100%", fontSize: 12,
                             border: "1px solid #CBD5E0", borderRadius: 4,
-                            padding: "4px 6px", resize: "none",
+                            padding: "6px 8px", resize: "none",
                             fontFamily: "inherit", lineHeight: 1.4,
                             background: "#FAFBFC", color: "#1A202C",
                             height: "auto", minHeight: 40, overflow: "hidden",
@@ -1125,7 +1132,7 @@ function Step2({ result, equipoInicial, onReset }: {
                       ) : r.Detalle}
                     </td>
                     {/* Peligro — select si _esNueva, badge si no */}
-                    <td style={{ padding: "10px 13px", verticalAlign: "top" }}>
+                    <td style={{ padding: "10px 13px", verticalAlign: "top", width: 120 }}>
                       {r._esNueva ? (
                         <select
                           value={r.Peligro}
@@ -1144,7 +1151,7 @@ function Step2({ result, equipoInicial, onReset }: {
                       )}
                     </td>
                     {/* Consecuencia — textarea si _esNueva, texto plano si no */}
-                    <td style={{ padding: "10px 13px", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "#2A4A60", lineHeight: 1.5, verticalAlign: "top", maxWidth: 200 }}>
+                    <td style={{ padding: "10px 13px", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "#2A4A60", lineHeight: 1.5, verticalAlign: "top", width: 160 }}>
                       {r._esNueva ? (
                         <textarea
                           data-autoresize
@@ -1153,7 +1160,7 @@ function Step2({ result, equipoInicial, onReset }: {
                           style={{
                             width: "100%", fontSize: 12,
                             border: "1px solid #CBD5E0", borderRadius: 4,
-                            padding: "4px 6px", resize: "none",
+                            padding: "6px 8px", resize: "none",
                             fontFamily: "inherit", lineHeight: 1.4,
                             background: "#FAFBFC", color: "#1A202C",
                             height: "auto", minHeight: 40, overflow: "hidden",
@@ -1167,7 +1174,7 @@ function Step2({ result, equipoInicial, onReset }: {
                       ) : r.Consecuencia}
                     </td>
                     {/* Controles — textarea editable */}
-                    <td style={{ padding: "10px 13px", verticalAlign: "top", maxWidth: 240 }}>
+                    <td style={{ padding: "10px 13px", verticalAlign: "top", width: 220 }}>
                       <textarea
                         data-autoresize
                         value={r.Controles}
@@ -1175,7 +1182,7 @@ function Step2({ result, equipoInicial, onReset }: {
                         style={{
                           width: "100%", fontSize: 12,
                           border: "1px solid #CBD5E0", borderRadius: 4,
-                          padding: "4px 6px", resize: "none",
+                          padding: "6px 8px", resize: "none",
                           fontFamily: "inherit", lineHeight: 1.4,
                           background: "#FAFBFC", color: "#1A202C",
                           height: "auto", minHeight: 40, overflow: "hidden",
@@ -1188,7 +1195,7 @@ function Step2({ result, equipoInicial, onReset }: {
                       />
                     </td>
                     {/* Responsable — textarea editable */}
-                    <td style={{ padding: "10px 13px", verticalAlign: "top" }}>
+                    <td style={{ padding: "10px 13px", verticalAlign: "top", width: 160 }}>
                       <textarea
                         data-autoresize
                         value={r.Responsable}
@@ -1196,7 +1203,7 @@ function Step2({ result, equipoInicial, onReset }: {
                         style={{
                           width: "100%", fontSize: 12,
                           border: "1px solid #CBD5E0", borderRadius: 4,
-                          padding: "4px 6px", resize: "none",
+                          padding: "6px 8px", resize: "none",
                           fontFamily: "inherit", lineHeight: 1.4,
                           background: "#FAFBFC", color: "#1A202C",
                           height: "auto", minHeight: 40, overflow: "hidden",
@@ -1209,7 +1216,7 @@ function Step2({ result, equipoInicial, onReset }: {
                       />
                     </td>
                     {/* Botón eliminar fila */}
-                    <td style={{ textAlign: "center", padding: "4px", verticalAlign: "middle" }}>
+                    <td style={{ textAlign: "center", padding: "4px", verticalAlign: "middle", width: 40 }}>
                       <button
                         onClick={() => handleEliminarFila(i)}
                         title="Eliminar este peligro"
