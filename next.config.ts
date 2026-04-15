@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 
 const securityHeaders = [
+  
+  {
+  key: "Color-Scheme",
+  value: "light",
+  }
   {
     key: "X-DNS-Prefetch-Control",
     value: "on",
