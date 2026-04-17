@@ -46,7 +46,7 @@ const STEPS = [
     items: [
       { icon: "📊", text: "Visualiza tus créditos disponibles en tiempo real." },
       { icon: "📋", text: "Consulta el historial completo de Análisis de Riesgos generados." },
-      { icon: "⬇️", text: "Descarga AR anteriores directamente desde el historial en 3 formatos: Excel básico, Ecopetrol o PDF." },
+      { icon: "⬇️", text: "Descarga AR anteriores directamente desde el historial en 3 formatos: Excel básico, Formato Ecopetrol HSE-F-160 o PDF." },
       { icon: "⚡", text: "Accede al generador con un solo clic desde el panel principal." },
       { icon: "⚙️", text: <>Usa el botón <strong style={{ color: C.navy }}>Configuración</strong> para gestionar tu perfil, equipo, suscripción e historial de pagos.</> },
     ],
