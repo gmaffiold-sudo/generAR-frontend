@@ -320,17 +320,10 @@ function Hero() {
           transition:  "all 0.7s ease 0.25s",
         }}>
           🏗️ Construcción &nbsp;·&nbsp; 🛢️ Oil &amp; Gas &nbsp;·&nbsp; ⚒️ Minería &nbsp;·&nbsp; 🏭 Manufactura &nbsp;·&nbsp; ⚡ Sector eléctrico &nbsp;·&nbsp; 🚛 Transporte
-        </p>
-        
-        <p style={{
-          fontSize: 12,
-          color: "#A0AEC0",
-          textAlign: "center",
-          marginTop: 0,
-          marginBottom: 6,
-        }}>
           Metodología alineada con ISO 45001:2018 · ISO 31000:2018 · GTC 45 · Decreto 1072 de 2015
         </p>
+        
+        
 
 
 
