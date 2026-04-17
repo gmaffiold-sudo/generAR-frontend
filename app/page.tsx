@@ -322,17 +322,19 @@ function Hero() {
           🏗️ Construcción &nbsp;·&nbsp; 🛢️ Oil &amp; Gas &nbsp;·&nbsp; ⚒️ Minería &nbsp;·&nbsp; 🏭 Manufactura &nbsp;·&nbsp; ⚡ Sector eléctrico &nbsp;·&nbsp; 🚛 Transporte
           
         </p>
-        
+
         <p style={{
-          fontSize: 12,
-          color: "#A0AEC0",
-          textAlign: "center",
-          
-       }}>
+          fontFamily:  "'Plus Jakarta Sans', sans-serif",
+          fontSize:    12,
+          color:       "#A0AEC0",
+          textAlign:   "center",
+          marginTop:   6,
+          marginBottom: 32,
+          opacity:     loaded ? 1 : 0,
+          transition:  "all 0.7s ease 0.28s",
+        }}>
           Metodología alineada con ISO 45001:2018 · ISO 31000:2018 · GTC 45 · Decreto 1072 de 2015
         </p>
-
-        {/* CTA Buttons */}
         <div style={{
           display:    "flex", gap: 14, justifyContent: "center", flexWrap: "wrap",
           opacity:    loaded ? 1 : 0,
