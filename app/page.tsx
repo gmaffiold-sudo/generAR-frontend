@@ -327,6 +327,7 @@ function Hero() {
           color: "#A0AEC0",
           textAlign: "center",
           marginTop: 0,
+          marginBottom: 6,
         }}>
           Metodología alineada con ISO 45001:2018 · ISO 31000:2018 · GTC 45 · Decreto 1072 de 2015
         </p>
