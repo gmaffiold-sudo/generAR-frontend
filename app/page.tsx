@@ -28,7 +28,7 @@ const BENEFITS: Benefit[] = [
   {
     icon: "📊",
     title: "Exporta a Excel",
-    desc:  "Descarga tu AR en segundos, formateado y listo para firmar. Compatible con los formatos exigidos por entes de control.",
+    desc:  "Descarga tu AR en segundos, formateado y listo para firmar. Compatible con los formatos mas conocidos.",
   },
 ];
 
@@ -38,7 +38,7 @@ const PLANS: Plan[] = [
     price:     "$79.900",
     ars:       "30 AR mensuales",
     highlight: false,
-    features:  ["30 análisis por mes", "Exportación a Excel", "Soporte por email", "Acceso a plantillas base","1 Usuario"],
+    features:  ["30 análisis por mes", "Exportación a Excel y PDF", "Soporte por email", "Historial completo","1 Usuario"],
   },
   {
     name:      "Professional",
@@ -52,7 +52,7 @@ const PLANS: Plan[] = [
     price:     "$399.900",
     ars:       "300 AR mensuales",
     highlight: false,
-    features:  ["300 análisis por mes", "Todos los formatos de exportación", "Soporte personalizado", "Gestión de equipo", "Reportes avanzados","Hasta 10 usuarios"],
+    features:  ["300 análisis por mes", "Exportación a Excel y PDF", "Soporte personalizado", "Historial completo", "Hasta 10 usuarios"],
   },
 ];
 
@@ -321,6 +321,20 @@ function Hero() {
         }}>
           🏗️ Construcción &nbsp;·&nbsp; 🛢️ Oil &amp; Gas &nbsp;·&nbsp; ⚒️ Minería &nbsp;·&nbsp; 🏭 Manufactura &nbsp;·&nbsp; ⚡ Sector eléctrico &nbsp;·&nbsp; 🚛 Transporte
         </p>
+        
+        <p style={{
+          fontSize: 12,
+          color: "#A0AEC0",
+          textAlign: "center",
+          marginTop: 6,
+        }}>
+          Metodología alineada con ISO 45001:2018 · ISO 31000:2018 · GTC 45 · Decreto 1072 de 2015
+        </p>
+
+
+
+
+
 
         {/* CTA Buttons */}
         <div style={{
