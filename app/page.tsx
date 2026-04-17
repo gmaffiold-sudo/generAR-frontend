@@ -308,6 +308,20 @@ function Hero() {
           completos y profesionales en <strong style={{ color: "#1B3A5C" }}>menos de 2 minutos</strong>.
         </p>
 
+        {/* Industrias soportadas */}
+        <p style={{
+          fontFamily:  "'Plus Jakarta Sans', sans-serif",
+          fontSize:    13,
+          color:       "#718096",
+          textAlign:   "center",
+          marginTop:   0,
+          marginBottom: 32,
+          opacity:     loaded ? 1 : 0,
+          transition:  "all 0.7s ease 0.25s",
+        }}>
+          🏗️ Construcción &nbsp;·&nbsp; 🛢️ Oil &amp; Gas &nbsp;·&nbsp; ⚒️ Minería &nbsp;·&nbsp; 🏭 Manufactura &nbsp;·&nbsp; ⚡ Sector eléctrico &nbsp;·&nbsp; 🚛 Transporte
+        </p>
+
         {/* CTA Buttons */}
         <div style={{
           display:    "flex", gap: 14, justifyContent: "center", flexWrap: "wrap",
