@@ -67,7 +67,7 @@ const TOPUPS = [
 const FAQS = [
   {
     q: "¿Qué es un AR?",
-    a: "Un Análisis de Riesgos HSE requerido por Ecopetrol para ejecutar trabajos de campo. Identifica peligros, consecuencias y controles antes de iniciar una actividad.",
+    a: "Un Análisis de Riesgos HSE que identifica peligros, consecuencias y controles antes de iniciar una actividad. Requerido en sectores como oil & gas, construcción, minería y manufactura.",
   },
   {
     q: "¿Puedo cancelar en cualquier momento?",
@@ -194,7 +194,7 @@ function Hero() {
           <span style={{
             background: "linear-gradient(135deg, #1B3A5C, #2E86AB)",
             WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-          }}>contratistas HSE</span>
+          }}>profesionales HSE</span>
         </h1>
         <p style={{
           fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "clamp(15px, 2vw, 18px)",
