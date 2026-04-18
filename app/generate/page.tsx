@@ -1108,28 +1108,26 @@ function Step2({ result, equipoInicial, onReset }: {
                         </select>
                       ) : r.Fuente}
                     </td>
-                    {/* Detalle — textarea si _esNueva, texto plano si no */}
+                    {/* Detalle — textarea editable */}
                     <td style={{ padding: "10px 13px", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "#2A4A60", lineHeight: 1.5, verticalAlign: "top", width: 180 }}>
-                      {r._esNueva ? (
-                        <textarea
-                          data-autoresize
-                          value={r.Detalle}
-                          onChange={e => handleEditCelda(i, "Detalle", e.target.value)}
-                          style={{
-                            width: "100%", fontSize: 12,
-                            border: "1px solid #CBD5E0", borderRadius: 4,
-                            padding: "6px 8px", resize: "none",
-                            fontFamily: "inherit", lineHeight: 1.4,
-                            background: "#FAFBFC", color: "#1A202C",
-                            height: "auto", minHeight: 40, overflow: "hidden",
-                          }}
-                          onInput={(e) => {
-                            const el = e.target as HTMLTextAreaElement;
-                            el.style.height = "auto";
-                            el.style.height = el.scrollHeight + "px";
-                          }}
-                        />
-                      ) : r.Detalle}
+                      <textarea
+                        data-autoresize
+                        value={r.Detalle}
+                        onChange={e => handleEditCelda(i, "Detalle", e.target.value)}
+                        style={{
+                          width: "100%", fontSize: 12,
+                          border: "1px solid #CBD5E0", borderRadius: 4,
+                          padding: "6px 8px", resize: "none",
+                          fontFamily: "inherit", lineHeight: 1.4,
+                          background: "#FAFBFC", color: "#1A202C",
+                          height: "auto", minHeight: 40, overflow: "hidden",
+                        }}
+                        onInput={(e) => {
+                          const el = e.target as HTMLTextAreaElement;
+                          el.style.height = "auto";
+                          el.style.height = el.scrollHeight + "px";
+                        }}
+                      />
                     </td>
                     {/* Peligro — select si _esNueva, badge si no */}
                     <td style={{ padding: "10px 13px", verticalAlign: "top", width: 120 }}>
