@@ -309,6 +309,11 @@ function Step1({ onResult }: { onResult: (r: ARResponse, equipo: string) => void
   const [loading,  setLoading]  = useState(false);
   const [errors,   setErrors]   = useState<Record<string, string>>({});
   const [apiError, setApiError] = useState("");
+  const [herramientas,           setHerramientas]           = useState("");
+  const [condicionesAmbientales, setCondicionesAmbientales] = useState<string[]>([]);
+  const [condicionesLibres,      setCondicionesLibres]      = useState("");
+  const [fotos,                  setFotos]                  = useState<File[]>([]);
+  const [fotosBase64,            setFotosBase64]            = useState<string[]>([]);
   const [hovBtn,   setHovBtn]   = useState(false);
 
   const addPaso    = () => setPasos(p => [...p, ""]);
@@ -342,6 +347,13 @@ function Step1({ onResult }: { onResult: (r: ARResponse, equipo: string) => void
       };
       if (validPasos.length >= 1) body.pasos = validPasos;
       if (pdfBase64)              body.pdf_procedimiento = pdfBase64;
+      if (herramientas.trim())    body.herramientas = herramientas.trim();
+      if (condicionesAmbientales.length > 0 || condicionesLibres.trim()) {
+        const todas = [...condicionesAmbientales];
+        if (condicionesLibres.trim()) todas.push(condicionesLibres.trim());
+        body.condiciones_ambientales = todas.join(", ");
+      }
+      if (fotosBase64.length > 0) body.fotos = fotosBase64;
 
       const res  = await apiFetch(`${API}/ar/generate`, {
         method: "POST",
@@ -384,14 +396,14 @@ function Step1({ onResult }: { onResult: (r: ARResponse, equipo: string) => void
         </FieldWrap>
       </div>
 
-      {/* PDF + Pasos */}
+      {/* PDF + Fotos + Herramientas + Condiciones + Pasos */}
       <div style={{
         background: "#fff", borderRadius: 16,
         border: "1.5px solid rgba(27,58,92,0.08)",
         boxShadow: "0 2px 16px rgba(27,58,92,0.05)",
         padding: "28px 28px", marginBottom: 24,
       }}>
-        {/* PDF upload */}
+        {/* 1 — PDF upload */}
         <FieldWrap label="PDF de procedimiento" hint="Opcional. Con PDF, los pasos manuales son opcionales.">
           <div
             style={{
@@ -444,7 +456,143 @@ function Step1({ onResult }: { onResult: (r: ARResponse, equipo: string) => void
           </div>
         </FieldWrap>
 
-        {/* Pasos dinámicos */}
+        {/* 2 — Fotografías del sitio */}
+        <FieldWrap
+          label="Fotografías del sitio (opcional)"
+          hint="Máximo 3 fotos. Claude las analizará para identificar riesgos adicionales."
+        >
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {fotos.length < 3 && (
+              <label style={{
+                display: "inline-flex", alignItems: "center", gap: 8,
+                background: "#F7FAFC", border: "2px dashed rgba(46,134,171,0.30)",
+                borderRadius: 10, padding: "12px 18px", cursor: "pointer",
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                fontSize: 14, color: "#2E86AB",
+              }}>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  multiple
+                  style={{ display: "none" }}
+                  onChange={async e => {
+                    const files = Array.from(e.target.files || []);
+                    const remaining = 3 - fotos.length;
+                    const selected = files.slice(0, remaining);
+                    const newBase64s = await Promise.all(selected.map(f => new Promise<string>((res) => {
+                      const reader = new FileReader();
+                      reader.onload = () => res((reader.result as string).split(",")[1]);
+                      reader.readAsDataURL(f);
+                    })));
+                    setFotos(prev => [...prev, ...selected]);
+                    setFotosBase64(prev => [...prev, ...newBase64s]);
+                    e.target.value = "";
+                  }}
+                />
+                📷 {fotos.length === 0 ? "Seleccionar fotos" : `Agregar más (${fotos.length}/3)`}
+              </label>
+            )}
+            {fotos.length > 0 && (
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                {fotos.map((foto, idx) => (
+                  <div key={idx} style={{ position: "relative" }}>
+                    <img
+                      src={URL.createObjectURL(foto)}
+                      alt={`Foto ${idx + 1}`}
+                      style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid #E2E8F0" }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFotos(prev => prev.filter((_, i) => i !== idx));
+                        setFotosBase64(prev => prev.filter((_, i) => i !== idx));
+                      }}
+                      style={{
+                        position: "absolute", top: -6, right: -6,
+                        background: "#E53E3E", color: "white",
+                        border: "none", borderRadius: "50%",
+                        width: 20, height: 20, fontSize: 11,
+                        cursor: "pointer", display: "flex",
+                        alignItems: "center", justifyContent: "center",
+                      }}
+                    >✕</button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </FieldWrap>
+
+        {/* 3 — Herramientas y/o Equipos */}
+        <FieldWrap
+          label="Herramientas y/o Equipos"
+          hint="Lista las herramientas, equipos y maquinaria a utilizar, separados por comas."
+        >
+          <textarea
+            value={herramientas}
+            onChange={e => setHerramientas(e.target.value)}
+            placeholder="Ej: Taladro eléctrico, andamio tubular, arnés de seguridad, llaves de torque..."
+            style={{
+              width: "100%", minHeight: 80, fontSize: 14,
+              border: "1.5px solid #CBD5E0", borderRadius: 8,
+              padding: "10px 14px", resize: "vertical",
+              fontFamily: "'Plus Jakarta Sans', sans-serif", lineHeight: 1.5,
+              background: "white", color: "#1A202C",
+            }}
+          />
+        </FieldWrap>
+
+        {/* 4 — Condiciones Ambientales */}
+        <FieldWrap
+          label="Condiciones Ambientales"
+          hint="Selecciona las condiciones del sitio de trabajo."
+        >
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 12 }}>
+            {[
+              "Diurno", "Nocturno", "Lluvia", "Sol intenso",
+              "Niebla/neblina", "Viento fuerte", "Espacio confinado",
+              "Trabajo en alturas", "Área clasificada", "Zona húmeda",
+            ].map(cond => (
+              <label key={cond} style={{
+                display: "flex", alignItems: "center", gap: 6,
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                fontSize: 13, color: "#2D3748", cursor: "pointer",
+                background: condicionesAmbientales.includes(cond) ? "#EBF8FF" : "#F7FAFC",
+                border: condicionesAmbientales.includes(cond) ? "1.5px solid #2E86AB" : "1.5px solid #E2E8F0",
+                borderRadius: 6, padding: "6px 12px",
+                transition: "all 0.15s ease",
+              }}>
+                <input
+                  type="checkbox"
+                  checked={condicionesAmbientales.includes(cond)}
+                  onChange={e => {
+                    if (e.target.checked) {
+                      setCondicionesAmbientales(prev => [...prev, cond]);
+                    } else {
+                      setCondicionesAmbientales(prev => prev.filter(c => c !== cond));
+                    }
+                  }}
+                  style={{ display: "none" }}
+                />
+                {cond}
+              </label>
+            ))}
+          </div>
+          <input
+            type="text"
+            value={condicionesLibres}
+            onChange={e => setCondicionesLibres(e.target.value)}
+            placeholder="Otras condiciones ambientales..."
+            style={{
+              width: "100%", fontSize: 14,
+              border: "1.5px solid #CBD5E0", borderRadius: 8,
+              padding: "10px 14px", fontFamily: "'Plus Jakarta Sans', sans-serif",
+              background: "white", color: "#1A202C",
+            }}
+          />
+        </FieldWrap>
+
+        {/* 5 — Pasos dinámicos */}
         <div>
           <label style={{
             display: "block", fontFamily: "'Plus Jakarta Sans', sans-serif",
