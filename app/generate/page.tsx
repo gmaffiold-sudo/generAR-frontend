@@ -841,7 +841,7 @@ function Step2({ result, equipoInicial, onReset }: {
           <DlButton icon="📊" label="Excel básico"       color="#217346" onClick={downloadBasicExcel} loading={false} />
         </div>
         <div style={{ opacity: result.es_prueba ? 0.5 : 1, pointerEvents: result.es_prueba ? "none" : "auto" }}>
-          <DlButton icon="🏭" label="Formato Ecopetrol"  color="#1B3A5C" onClick={() => { setShowEco(s => !s); setEcoError(""); }} loading={false} active={showEco} />
+          <DlButton icon="🏭" label="Formato HSE-F-160"  color="#1B3A5C" onClick={() => { setShowEco(s => !s); setEcoError(""); }} loading={false} active={showEco} />
         </div>
         <div style={{ opacity: result.es_prueba ? 0.5 : 1, pointerEvents: result.es_prueba ? "none" : "auto" }}>
           <DlButton icon="📄" label="Descargar PDF"      color="#C04040" onClick={downloadPDF} loading={pdfLoading} />
@@ -944,7 +944,7 @@ function Step2({ result, equipoInicial, onReset }: {
             <Grid2>
               <FieldWrap label="Empresa ejecutora" required error={ecoFieldErrs.empresa}>
                 <TextInput value={empresa} onChange={v => { setEmpresa(v); setEcoFieldErrs(e => ({ ...e, empresa: "" })); }}
-                  placeholder="Ej: Ecopetrol S.A." hasError={!!ecoFieldErrs.empresa} />
+                  placeholder="Ej: Emplear S.A." hasError={!!ecoFieldErrs.empresa} />
               </FieldWrap>
               <FieldWrap label="Orden de Trabajo (OT)">
                 <TextInput value={ot} onChange={setOt} placeholder="Ej: OT-2024-0451" />
@@ -1032,7 +1032,7 @@ function Step2({ result, equipoInicial, onReset }: {
               </FieldWrap>
             )}
 
-            <DlButton icon="⬇" label="Descargar Formato Ecopetrol" color="#1B3A5C"
+            <DlButton icon="⬇" label="Descargar Formato HSE-F-160" color="#1B3A5C"
               onClick={downloadEcopetrol} loading={ecoLoading} fullWidth />
           </div>
         </div>
