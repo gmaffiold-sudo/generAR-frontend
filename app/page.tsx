@@ -30,6 +30,11 @@ const BENEFITS: Benefit[] = [
     title: "Exporta a Excel",
     desc:  "Descarga tu AR en segundos, formateado y listo para firmar. Compatible con los formatos mas conocidos.",
   },
+  {
+    icon: "📸",
+    title: "Análisis visual con IA",
+    desc:  "Adjunta hasta 3 fotos del sitio de trabajo. La IA identifica riesgos adicionales visibles que pueden pasarse por alto en el procedimiento escrito.",
+  },
 ];
 
 const PLANS: Plan[] = [
@@ -305,7 +310,7 @@ function Hero() {
           transition:   "all 0.7s ease 0.2s",
         }}>
           Deja de perder horas creando AR manualmente. GenerAR usa IA para crear análisis
-          completos y profesionales en <strong style={{ color: "#1B3A5C" }}>menos de 2 minutos</strong>.
+          completos y profesionales en <strong style={{ color: "#1B3A5C" }}>menos de un minuto</strong>.
         </p>
 
         {/* Industrias soportadas */}
