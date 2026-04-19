@@ -15,9 +15,8 @@ const PLANS = [
     features: [
       "30 AR por mes",
       "1 usuario",
-      "Formato HSE-F-160",
       "Historial completo",
-      "Descarga Excel",
+      "Descargas",
       "Soporte por email",
     ],
     cta:   "Empezar ahora",
@@ -33,7 +32,8 @@ const PLANS = [
     features: [
       "100 AR por mes",
       "Hasta 3 usuarios",
-      "Todo lo del Starter",
+      "Historial completo",
+      "Descargas",
       "Soporte prioritario",
     ],
     cta:   "Empezar ahora",
@@ -49,7 +49,8 @@ const PLANS = [
     features: [
       "300 AR por mes",
       "Hasta 10 usuarios",
-      "Todo lo del Professional",
+      "Historial competo",
+      "Descargas",
       "Soporte dedicado",
     ],
     cta:   "Empezar ahora",
