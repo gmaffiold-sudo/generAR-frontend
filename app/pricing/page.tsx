@@ -59,9 +59,27 @@ const PLANS = [
 ];
 
 const TOPUPS = [
-  { label: "Paquete S", ars: "10 AR",  price: "35.000",  planId: "topup_s" },
-  { label: "Paquete M", ars: "30 AR",  price: "95.000",  planId: "topup_m" },
-  { label: "Paquete L", ars: "100 AR", price: "220.000", planId: "topup_l" },
+  {
+    label:  "Paquete S",
+    ars:    10,
+    price:  35000,
+    planId: "topup_s",
+    desc:   "Ideal para actividades puntuales o refuerzo ocasional.",
+  },
+  {
+    label:  "Paquete M",
+    ars:    30,
+    price:  95000,
+    planId: "topup_m",
+    desc:   "Para proyectos de mediana duración o equipos pequeños.",
+  },
+  {
+    label:  "Paquete L",
+    ars:    100,
+    price:  220000,
+    planId: "topup_l",
+    desc:   "Para paradas de planta o proyectos de gran escala.",
+  },
 ];
 
 const FAQS = [
@@ -346,6 +364,21 @@ function PlansSection() {
   return (
     <section style={{ background: "#F5F8FB", padding: "80px 24px 96px" }}>
       <div ref={ref} style={{ maxWidth: 1060, margin: "0 auto" }}>
+        <p style={{
+          fontFamily: "'Plus Jakarta Sans', sans-serif",
+          fontSize: 13, fontWeight: 700, color: "#2E86AB",
+          textTransform: "uppercase", letterSpacing: 1,
+          textAlign: "center", marginBottom: 8,
+        }}>
+          Planes mensuales
+        </p>
+        <p style={{
+          fontFamily: "'Plus Jakarta Sans', sans-serif",
+          fontSize: 15, color: "#4A5568",
+          textAlign: "center", marginBottom: 32,
+        }}>
+          Acceso mensual con renovación manual. Incluye ARs, usuarios y soporte.
+        </p>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))", gap: 22, alignItems: "start" }}>
           {PLANS.map((p, i) => (
             <PlanCard key={p.name} plan={p} delay={i * 100} visible={visible} />
@@ -374,13 +407,13 @@ function TopupSection() {
           transition: "all 0.6s ease",
         }}>
           <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 12, fontWeight: 700, color: "#2E86AB", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-            Paquetes de créditos
+            Paquetes de ARs
           </span>
           <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: "clamp(26px, 4vw, 38px)", fontWeight: 400, color: "#1B3A5C", marginTop: 10, letterSpacing: "-0.02em" }}>
-            Paquetes de créditos
+            Paquetes de ARs
           </h2>
           <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 15, color: "#5A7080", marginTop: 12, lineHeight: 1.6, maxWidth: 520, margin: "12px auto 0" }}>
-            ¿No quieres un plan mensual? Compra solo los créditos que necesitas, sin compromisos.
+            ¿No quieres un plan mensual? Compra solo los ARs que necesitas, sin compromisos.
           </p>
         </div>
 
@@ -422,13 +455,16 @@ function TopupCard({ item, delay, visible }: { item: typeof TOPUPS[0]; delay: nu
         {item.label}
       </p>
       <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28, fontWeight: 400, color: "#1B3A5C", letterSpacing: "-0.02em", marginBottom: 4 }}>
-        {item.ars}
+        {item.ars} ARs
       </p>
       <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 22, fontWeight: 800, color: "#1B3A5C", letterSpacing: "-0.01em" }}>
-        ${item.price} <span style={{ fontSize: 13, fontWeight: 500, color: "#7A8EA0" }}>COP</span>
+        ${item.price.toLocaleString("es-CO")} <span style={{ fontSize: 13, fontWeight: 500, color: "#7A8EA0" }}>COP</span>
       </p>
       <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 12, color: "#A0B0BC", marginTop: 4 }}>
-        ${Math.round(parseInt(item.price.replace(".", "")) / parseInt(item.ars)).toLocaleString("es-CO")} por AR
+        ${Math.round(item.price / item.ars).toLocaleString("es-CO")} por AR
+      </p>
+      <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "#5A7080", marginTop: 8, lineHeight: 1.5 }}>
+        {item.desc}
       </p>
 
       {/* FIX: padding vertical 13px para tap target ≥ 44px */}
@@ -637,8 +673,8 @@ export default function PricingPage() {
       <Navbar />
       <main>
         <Hero />
-        <PlansSection />
         <TopupSection />
+        <PlansSection />
         <FaqSection />
         <CtaSection />
       </main>
