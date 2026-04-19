@@ -120,7 +120,7 @@ function CreditsCard({
                   fontFamily: "'Plus Jakarta Sans', sans-serif",
                   fontSize: 16, color: "rgba(255,255,255,0.50)",
                   marginBottom: 10, fontWeight: 500,
-                }}>/ {credits.creditos_totales} créditos</span>
+                }}>/ {credits.creditos_totales} ARs</span>
               </div>
 
               {/* Progress bar */}
