@@ -610,57 +610,107 @@ function Pricing() {
           }}>Sin contratos. Cancela cuando quieras.</p>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))", gap: 24, alignItems: "start" }}>
-          {PLANS.map((plan, i) => (
-            <PricingCard key={plan.name} plan={plan} delay={i * 120} visible={visible} />
-          ))}
-        </div>
-
-        {/* Top-up informativo */}
+        {/* Paquetes de ARs — van primero */}
         <div style={{
-          marginTop: 48, padding: "28px 32px",
+          marginBottom: 56, padding: "28px 32px",
           background: "rgba(46,134,171,0.05)",
           border: "1.5px solid rgba(46,134,171,0.15)",
-          borderRadius: 16, textAlign: "center",
+          borderRadius: 16,
         }}>
           <p style={{
             fontFamily: "'Plus Jakarta Sans', sans-serif",
             fontSize: 13, fontWeight: 700, color: "#2E86AB",
             letterSpacing: "0.08em", textTransform: "uppercase",
-            marginBottom: 8,
-          }}>¿Necesitas más AR este mes?</p>
+            marginBottom: 8, textAlign: "center",
+          }}>Paquetes de ARs</p>
           <p style={{
             fontFamily: "'Plus Jakarta Sans', sans-serif",
-            fontSize: 15, color: "#4A6070", marginBottom: 20,
+            fontSize: 15, color: "#4A6070", marginBottom: 24, textAlign: "center",
           }}>
-            Compra créditos adicionales sin cambiar de plan
+            ¿No quieres un plan mensual? Compra solo los ARs que necesitas, sin compromisos. Disponible para todos los usuarios.
           </p>
           <div style={{ display: "flex", justifyContent: "center", gap: 16, flexWrap: "wrap" }}>
             {[
-              { label: "Paquete S", ars: "10 AR", price: "$35.000" },
-              { label: "Paquete M", ars: "30 AR", price: "$95.000" },
-              { label: "Paquete L", ars: "100 AR", price: "$220.000" },
+              {
+                label: "Paquete S",
+                ars:   "10 ARs",
+                price: "$35.000",
+                desc:  "Ideal para actividades puntuales o refuerzo ocasional.",
+              },
+              {
+                label: "Paquete M",
+                ars:   "30 ARs",
+                price: "$95.000",
+                desc:  "Para proyectos de mediana duración o equipos pequeños.",
+              },
+              {
+                label: "Paquete L",
+                ars:   "100 ARs",
+                price: "$220.000",
+                desc:  "Para paradas de planta o proyectos de gran escala.",
+              },
             ].map(t => (
               <div key={t.label} style={{
-                background: "#fff", borderRadius: 12,
-                padding: "16px 24px", textAlign: "center",
-                border: "1.5px solid rgba(27,58,92,0.09)",
-                minWidth: 140,
-                // FIX: flex para distribución correcta en móvil
-                flex: "1 1 120px",
+                background:    "white",
+                borderRadius:  12,
+                padding:       "24px 20px",
+                boxShadow:     "0 2px 12px rgba(0,0,0,0.06)",
+                border:        "1px solid #E2E8F0",
+                display:       "flex",
+                flexDirection: "column",
+                gap:           10,
+                textAlign:     "center",
+                flex:          "1 1 180px",
+                maxWidth:      240,
               }}>
-                <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 11, fontWeight: 700, color: "#2E86AB", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4 }}>{t.label}</p>
-                <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22, color: "#1B3A5C", marginBottom: 2 }}>{t.ars}</p>
-                <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 16, fontWeight: 800, color: "#1B3A5C" }}>{t.price} <span style={{ fontSize: 11, fontWeight: 500, color: "#7A8EA0" }}>COP</span></p>
+                <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 15, fontWeight: 700, color: "#0F2236" }}>{t.label}</p>
+                <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28, fontWeight: 800, color: "#2E86AB" }}>{t.price}</p>
+                <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, color: "#2E86AB", fontWeight: 600 }}>{t.ars}</p>
+                <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "#718096", lineHeight: 1.5 }}>{t.desc}</p>
+                <a
+                  href="/register"
+                  style={{
+                    display:        "block",
+                    marginTop:      8,
+                    background:     "linear-gradient(135deg, #0F2236, #2E86AB)",
+                    color:          "white",
+                    borderRadius:   8,
+                    padding:        "10px 0",
+                    fontSize:       14,
+                    fontWeight:     600,
+                    textDecoration: "none",
+                    textAlign:      "center",
+                    fontFamily:     "'Plus Jakarta Sans', sans-serif",
+                  }}
+                >
+                  Comenzar ahora →
+                </a>
               </div>
             ))}
           </div>
-          <p style={{
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
-            fontSize: 12, color: "#A0B0BC", marginTop: 16,
-          }}>
-            * Disponible para usuarios con suscripción activa.
-          </p>
+        </div>
+
+        {/* Planes mensuales — van después */}
+        <p style={{
+          fontFamily:    "'Plus Jakarta Sans', sans-serif",
+          fontSize:      13, fontWeight: 700, color: "#2E86AB",
+          textTransform: "uppercase", letterSpacing: 1,
+          textAlign:     "center", marginBottom: 8,
+        }}>
+          Planes mensuales
+        </p>
+        <p style={{
+          fontFamily:  "'Plus Jakarta Sans', sans-serif",
+          fontSize:    16, color: "#4A5568",
+          textAlign:   "center", marginBottom: 32,
+        }}>
+          Acceso mensual con renovación manual. Incluye ARs, usuarios y soporte.
+        </p>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))", gap: 24, alignItems: "start" }}>
+          {PLANS.map((plan, i) => (
+            <PricingCard key={plan.name} plan={plan} delay={i * 120} visible={visible} />
+          ))}
         </div>
 
       </div>
