@@ -39,28 +39,6 @@ interface ARResponse {
   es_prueba: boolean;
 }
 
-interface ATSPeligroItem {
-  Peligro:      string;
-  Consecuencia: string;
-  Controles:    string;
-}
-
-interface ATSPasoItem {
-  Paso:     string;
-  Peligros: ATSPeligroItem[];
-}
-
-interface ATSResponse {
-  message:            string;
-  registro_id:        string;
-  titulo_actividad:   string;
-  creditos_usados:    number;
-  creditos_restantes: number;
-  fecha:              string;
-  analisis_ats:       ATSPasoItem[];
-  es_prueba:          boolean;
-}
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function today() { return new Date().toISOString().split("T")[0]; }
 function addDays(d: string, n: number) {
@@ -323,8 +301,7 @@ function Nav({ onBack }: { onBack: () => void }) {
 }
 
 // ─── PASO 1: Formulario mínimo ────────────────────────────────────────────────
-function Step1({ onResult }: { onResult: (r: ARResponse | ATSResponse, equipo: string, tipo: "AR" | "ATS") => void }) {
-  const [tipoDoc, setTipoDoc] = useState<"AR" | "ATS">("AR");
+function Step1({ onResult }: { onResult: (r: ARResponse, equipo: string) => void }) {
   const [titulo,   setTitulo]   = useState("");
   const [equipo,   setEquipo]   = useState("");
   const [pasos,    setPasos]    = useState(["", "", ""]);
@@ -378,17 +355,13 @@ function Step1({ onResult }: { onResult: (r: ARResponse | ATSResponse, equipo: s
       }
       if (fotosBase64.length > 0) body.fotos = fotosBase64;
 
-      const endpoint = tipoDoc === "AR"
-        ? `${API}/ar/generate`
-        : `${API}/ats/generate`;
-
-      const res  = await apiFetch(endpoint, {
+      const res  = await apiFetch(`${API}/ar/generate`, {
         method: "POST",
         body: JSON.stringify(body),
       });
       const data = await res.json();
       if (res.ok) {
-        onResult(data, equipo.trim(), tipoDoc);
+        onResult(data, equipo.trim());
       } else {
         setApiError(data?.detail || "Error al generar el análisis.");
       }
@@ -399,40 +372,6 @@ function Step1({ onResult }: { onResult: (r: ARResponse | ATSResponse, equipo: s
   return (
     <form onSubmit={handleSubmit} noValidate style={{ animation: "fadeUp 0.5s ease both" }}>
       {apiError && <ErrorBanner msg={apiError} onClose={() => setApiError("")} />}
-
-      {/* Selector tipo de documento */}
-      <div style={{ display: "flex", gap: 10, marginBottom: 18 }}>
-        {(["AR", "ATS"] as const).map(tipo => (
-          <button
-            key={tipo}
-            type="button"
-            onClick={() => setTipoDoc(tipo)}
-            style={{
-              flex: 1, padding: "14px 12px", borderRadius: 12,
-              border: tipoDoc === tipo
-                ? "2px solid #2E86AB"
-                : "1.5px solid rgba(27,58,92,0.15)",
-              background: tipoDoc === tipo ? "rgba(46,134,171,0.07)" : "#fff",
-              cursor: "pointer", fontFamily: "'Plus Jakarta Sans', sans-serif",
-              fontWeight: 700, fontSize: 14,
-              color: tipoDoc === tipo ? "#1B3A5C" : "#7A8EA0",
-              transition: "all 0.18s ease", textAlign: "left",
-            }}
-          >
-            <div>
-              {tipo === "AR" ? "⚡ Análisis de Riesgos" : "🔍 Análisis de Trabajo Seguro"}
-            </div>
-            <div style={{
-              fontSize: 11, fontWeight: 400, marginTop: 3,
-              color: tipoDoc === tipo ? "#2E86AB" : "#A0B0BC",
-            }}>
-              {tipo === "AR"
-                ? "Evaluación de riesgos por peligro — formato Ecopetrol"
-                : "Análisis paso a paso de la tarea — formato estándar"}
-            </div>
-          </button>
-        ))}
-      </div>
 
       {/* Nombre y Equipo */}
       <div style={{
@@ -731,7 +670,7 @@ function Step1({ onResult }: { onResult: (r: ARResponse | ATSResponse, equipo: s
             Generando análisis con IA...
           </>
         ) : (
-          <><span style={{ fontSize: 18 }}>{tipoDoc === "AR" ? "⚡" : "🔍"}</span> {tipoDoc === "AR" ? "Generar Análisis de Riesgos" : "Generar ATS"}</>
+          <><span style={{ fontSize: 18 }}>⚡</span> Generar Análisis de Riesgos</>
         )}
       </button>
     </form>
@@ -1463,391 +1402,19 @@ function Step2({ result, equipoInicial, onReset }: {
   );
 }
 
-// ─── Step2ATS ─────────────────────────────────────────────────────────────────
-function Step2ATS({ result, equipoInicial, onReset }: {
-  result:        ATSResponse;
-  equipoInicial: string;
-  onReset:       () => void;
-}) {
-  const [pasosEditados, setPasosEditados] = useState<ATSPasoItem[]>(result.analisis_ats);
-  const [excelLoading, setExcelLoading]  = useState(false);
-  const [pdfLoading,   setPdfLoading]    = useState(false);
-  const [excelError,   setExcelError]    = useState("");
-  const [pdfError,     setPdfError]      = useState("");
-
-  // Auto-resize textareas
-  useEffect(() => {
-    const tas = document.querySelectorAll<HTMLTextAreaElement>("textarea[data-ats-resize]");
-    tas.forEach(el => { el.style.height = "auto"; el.style.height = el.scrollHeight + "px"; });
-  }, [pasosEditados]);
-
-  const updatePeligro = (pasoIdx: number, pelIdx: number, field: keyof ATSPeligroItem, value: string) => {
-    setPasosEditados(prev => {
-      const copy = structuredClone(prev);
-      copy[pasoIdx].Peligros[pelIdx][field] = value;
-      return copy;
-    });
-  };
-
-  const updatePaso = (pasoIdx: number, value: string) => {
-    setPasosEditados(prev => {
-      const copy = structuredClone(prev);
-      copy[pasoIdx].Paso = value;
-      return copy;
-    });
-  };
-
-  const addPeligro = (pasoIdx: number) => {
-    setPasosEditados(prev => {
-      const copy = structuredClone(prev);
-      copy[pasoIdx].Peligros.push({ Peligro: "", Consecuencia: "", Controles: "" });
-      return copy;
-    });
-  };
-
-  const removePeligro = (pasoIdx: number, pelIdx: number) => {
-    setPasosEditados(prev => {
-      const copy = structuredClone(prev);
-      if (copy[pasoIdx].Peligros.length > 1) copy[pasoIdx].Peligros.splice(pelIdx, 1);
-      return copy;
-    });
-  };
-
-  const downloadATSExcel = async () => {
-    setExcelLoading(true); setExcelError("");
-    try {
-      const res  = await apiFetch(`${API}/ats/export/excel`, {
-        method: "POST",
-        body: JSON.stringify({
-          registro_id:      result.registro_id,
-          analisis_ats:     pasosEditados,
-          titulo_actividad: result.titulo_actividad,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.detail || "Error al generar Excel");
-      triggerDownload(
-        data.excel_base64,
-        `ATS_${result.titulo_actividad.replace(/\s+/g, "_")}.xlsx`,
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-      );
-    } catch (e: any) { setExcelError(e.message); }
-    finally { setExcelLoading(false); }
-  };
-
-  const downloadATSPDF = async () => {
-    setPdfLoading(true); setPdfError("");
-    try {
-      const res  = await apiFetch(`${API}/ats/export/pdf`, {
-        method: "POST",
-        body: JSON.stringify({
-          registro_id:      result.registro_id,
-          analisis_ats:     pasosEditados,
-          titulo_actividad: result.titulo_actividad,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.detail || "Error al generar PDF");
-      triggerDownload(
-        data.pdf_base64,
-        `ATS_${result.titulo_actividad.replace(/\s+/g, "_")}.pdf`,
-        "application/pdf"
-      );
-    } catch (e: any) { setPdfError(e.message); }
-    finally { setPdfLoading(false); }
-  };
-
-  const taStyle: React.CSSProperties = {
-    width: "100%", fontSize: 12,
-    border: "1px solid #CBD5E0", borderRadius: 4,
-    padding: "6px 8px", resize: "none",
-    fontFamily: "'Plus Jakarta Sans', sans-serif", lineHeight: 1.4,
-    background: "#FAFBFC", color: "#1A202C",
-    height: "auto", minHeight: 40, overflow: "hidden",
-  };
-
-  return (
-    <div style={{ animation: "fadeUp 0.5s ease both" }}>
-
-      {/* Banner AR de prueba */}
-      {result.es_prueba && (
-        <div style={{
-          background: "linear-gradient(135deg,rgba(244,162,97,0.12),rgba(27,58,92,0.07))",
-          border: "1.5px solid rgba(244,162,97,0.35)", borderRadius: 12,
-          padding: "14px 18px", marginBottom: 20,
-          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap",
-        }}>
-          <div>
-            <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 700, color: "#92600A" }}>
-              🎁 ATS de prueba gratuito
-            </p>
-            <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 12, color: "#7A6030", marginTop: 2 }}>
-              Las descargas requieren un plan activo.
-            </p>
-          </div>
-          <a href="/pricing" style={{
-            background: "linear-gradient(135deg,#1B3A5C,#2E86AB)", color: "#fff",
-            borderRadius: 8, padding: "9px 16px", fontSize: 13, fontWeight: 700,
-            textDecoration: "none", fontFamily: "'Plus Jakarta Sans', sans-serif",
-          }}>Ver planes →</a>
-        </div>
-      )}
-
-      {/* Header resultado */}
-      <div style={{
-        background: "#fff", borderRadius: 16,
-        border: "1.5px solid rgba(27,58,92,0.08)",
-        boxShadow: "0 2px 16px rgba(27,58,92,0.05)",
-        padding: "22px 26px", marginBottom: 20,
-        display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 14,
-      }}>
-        <div>
-          <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 11, fontWeight: 700, color: "#2E86AB", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4 }}>
-            🔍 ATS generado
-          </p>
-          <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, color: "#1B3A5C", fontWeight: 400 }}>
-            {result.titulo_actividad}
-          </h2>
-          <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 12, color: "#7A8EA0", marginTop: 4 }}>
-            {result.fecha} · {pasosEditados.length} paso{pasosEditados.length !== 1 ? "s" : ""}
-          </p>
-        </div>
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          {!result.es_prueba && (<>
-            <button
-              onClick={downloadATSExcel}
-              disabled={excelLoading}
-              style={{
-                display: "flex", alignItems: "center", gap: 6,
-                padding: "10px 16px", borderRadius: 8, border: "none", cursor: "pointer",
-                background: "linear-gradient(135deg,#217346,#2a9d5c)", color: "#fff",
-                fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 700,
-              }}
-            >
-              {excelLoading ? "⏳" : "📊"} Excel ATS
-            </button>
-            <button
-              onClick={downloadATSPDF}
-              disabled={pdfLoading}
-              style={{
-                display: "flex", alignItems: "center", gap: 6,
-                padding: "10px 16px", borderRadius: 8, border: "none", cursor: "pointer",
-                background: "linear-gradient(135deg,#C04040,#E05252)", color: "#fff",
-                fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 700,
-              }}
-            >
-              {pdfLoading ? "⏳" : "📄"} PDF ATS
-            </button>
-          </>)}
-          <button
-            onClick={onReset}
-            style={{
-              padding: "10px 16px", borderRadius: 8, cursor: "pointer",
-              border: "1.5px solid rgba(27,58,92,0.15)", background: "#F7FAFC",
-              fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 600, color: "#1B3A5C",
-            }}
-          >
-            + Generar otro
-          </button>
-        </div>
-      </div>
-
-      {excelError && <ErrorBanner msg={excelError} onClose={() => setExcelError("")} />}
-      {pdfError   && <ErrorBanner msg={pdfError}   onClose={() => setPdfError("")} />}
-
-      {/* Créditos restantes */}
-      {!result.es_prueba && (
-        <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 12, color: "#7A8EA0", marginBottom: 16, textAlign: "right" }}>
-          Créditos restantes: <strong style={{ color: "#1B3A5C" }}>{result.creditos_restantes}</strong>
-        </p>
-      )}
-
-      {/* Tabla ATS editable */}
-      <div style={{
-        background: "#fff", borderRadius: 16,
-        border: "1.5px solid rgba(27,58,92,0.08)",
-        boxShadow: "0 2px 16px rgba(27,58,92,0.05)",
-        overflow: "hidden", marginBottom: 24,
-      }}>
-        <div style={{ padding: "18px 22px 10px", borderBottom: "1px solid rgba(27,58,92,0.07)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <h3 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 17, color: "#1B3A5C", fontWeight: 400 }}>
-            Pasos identificados
-          </h3>
-          <span style={{
-            background: "linear-gradient(135deg,rgba(27,58,92,0.08),rgba(46,134,171,0.12))",
-            border: "1px solid rgba(46,134,171,0.2)", borderRadius: 20,
-            padding: "4px 12px", fontFamily: "'Plus Jakarta Sans', sans-serif",
-            fontSize: 12, fontWeight: 700, color: "#1B3A5C",
-          }}>
-            {pasosEditados.reduce((acc, p) => acc + p.Peligros.length, 0)} peligros
-          </span>
-        </div>
-
-        <div style={{ overflowX: "auto", width: "100%" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 900 }}>
-            <thead>
-              <tr style={{ background: "#F8FAFC" }}>
-                {[
-                  { col: "N°",          w: 44  },
-                  { col: "Paso",        w: 200 },
-                  { col: "Peligro",     w: 150 },
-                  { col: "Consecuencia",w: 180 },
-                  { col: "Controles",   w: 260 },
-                  { col: "",            w: 40  },
-                ].map(({ col, w }) => (
-                  <th key={col} style={{
-                    padding: "11px 13px", textAlign: "left", width: w,
-                    fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 10, fontWeight: 700,
-                    color: "#7A8EA0", letterSpacing: "0.08em", textTransform: "uppercase",
-                    borderBottom: "1px solid rgba(27,58,92,0.07)", whiteSpace: "nowrap",
-                  }}>{col}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {pasosEditados.map((paso, pasoIdx) => (
-                paso.Peligros.map((pel, pelIdx) => (
-                  <tr key={`${pasoIdx}-${pelIdx}`} style={{ borderBottom: "1px solid rgba(27,58,92,0.05)" }}>
-
-                    {/* N° — rowSpan por paso */}
-                    {pelIdx === 0 && (
-                      <td rowSpan={paso.Peligros.length} style={{
-                        padding: "10px 8px", textAlign: "center", verticalAlign: "top",
-                        width: 44, background: "rgba(46,134,171,0.06)",
-                        borderRight: "1px solid rgba(27,58,92,0.07)",
-                      }}>
-                        <div style={{
-                          width: 28, height: 28, borderRadius: "50%", margin: "0 auto",
-                          background: "linear-gradient(135deg,#1B3A5C,#2E86AB)",
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 12, fontWeight: 800, color: "#fff",
-                        }}>{pasoIdx + 1}</div>
-                      </td>
-                    )}
-
-                    {/* Paso — rowSpan, editable */}
-                    {pelIdx === 0 && (
-                      <td rowSpan={paso.Peligros.length} style={{
-                        padding: "10px 13px", verticalAlign: "top", width: 200,
-                        borderRight: "1px solid rgba(27,58,92,0.07)",
-                      }}>
-                        <textarea
-                          data-ats-resize
-                          value={paso.Paso}
-                          onChange={e => updatePaso(pasoIdx, e.target.value)}
-                          style={{ ...taStyle, fontWeight: 600, color: "#1B3A5C" }}
-                          onInput={(e) => {
-                            const el = e.target as HTMLTextAreaElement;
-                            el.style.height = "auto"; el.style.height = el.scrollHeight + "px";
-                          }}
-                        />
-                        {/* Botón + Peligro al final del paso */}
-                        {pelIdx === 0 && (
-                          <button
-                            type="button"
-                            onClick={() => addPeligro(pasoIdx)}
-                            style={{
-                              marginTop: 8, fontSize: 11, fontWeight: 700, color: "#2E86AB",
-                              background: "rgba(46,134,171,0.07)", border: "1.5px dashed rgba(46,134,171,0.35)",
-                              borderRadius: 6, padding: "4px 10px", cursor: "pointer",
-                              fontFamily: "'Plus Jakarta Sans', sans-serif",
-                            }}
-                          >+ Peligro</button>
-                        )}
-                      </td>
-                    )}
-
-                    {/* Peligro */}
-                    <td style={{ padding: "10px 13px", verticalAlign: "top", width: 150 }}>
-                      <textarea
-                        data-ats-resize
-                        value={pel.Peligro}
-                        onChange={e => updatePeligro(pasoIdx, pelIdx, "Peligro", e.target.value)}
-                        style={{ ...taStyle, fontWeight: 700 }}
-                        onInput={(e) => {
-                          const el = e.target as HTMLTextAreaElement;
-                          el.style.height = "auto"; el.style.height = el.scrollHeight + "px";
-                        }}
-                      />
-                    </td>
-
-                    {/* Consecuencia */}
-                    <td style={{ padding: "10px 13px", verticalAlign: "top", width: 180 }}>
-                      <textarea
-                        data-ats-resize
-                        value={pel.Consecuencia}
-                        onChange={e => updatePeligro(pasoIdx, pelIdx, "Consecuencia", e.target.value)}
-                        style={taStyle}
-                        onInput={(e) => {
-                          const el = e.target as HTMLTextAreaElement;
-                          el.style.height = "auto"; el.style.height = el.scrollHeight + "px";
-                        }}
-                      />
-                    </td>
-
-                    {/* Controles */}
-                    <td style={{ padding: "10px 13px", verticalAlign: "top", width: 260 }}>
-                      <textarea
-                        data-ats-resize
-                        value={pel.Controles}
-                        onChange={e => updatePeligro(pasoIdx, pelIdx, "Controles", e.target.value)}
-                        style={taStyle}
-                        onInput={(e) => {
-                          const el = e.target as HTMLTextAreaElement;
-                          el.style.height = "auto"; el.style.height = el.scrollHeight + "px";
-                        }}
-                      />
-                    </td>
-
-                    {/* Botón eliminar peligro */}
-                    <td style={{ textAlign: "center", padding: "4px", verticalAlign: "middle", width: 40 }}>
-                      {paso.Peligros.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removePeligro(pasoIdx, pelIdx)}
-                          style={{
-                            background: "rgba(224,82,82,0.08)", border: "none", borderRadius: 6,
-                            width: 28, height: 28, cursor: "pointer", fontSize: 13,
-                            color: "#E05252", display: "flex", alignItems: "center", justifyContent: "center",
-                          }}
-                        >✕</button>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function GeneratePage() {
   const router  = useRouter();
   const ready   = useAuthGuard();
 
   const [result,        setResult]        = useState<ARResponse | null>(null);
-  const [resultATS,     setResultATS]     = useState<ATSResponse | null>(null);
-  const [tipoDocActivo, setTipoDocActivo] = useState<"AR" | "ATS">("AR");
   const [equipoInicial, setEquipoInicial] = useState("");
   const resultRef = useRef<HTMLDivElement>(null);
 
-  const handleResult = (r: ARResponse | ATSResponse, eq: string, tipo: "AR" | "ATS") => {
-    setTipoDocActivo(tipo);
-    if (tipo === "AR") {
-      setResult(r as ARResponse);
-      setResultATS(null);
-    } else {
-      setResultATS(r as ATSResponse);
-      setResult(null);
-    }
+  const handleResult = (r: ARResponse, eq: string) => {
+    setResult(r);
     setEquipoInicial(eq);
-    setTimeout(() => {
-      resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 100);
+    setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
   };
 
   if (!ready) return null;
@@ -1877,35 +1444,22 @@ export default function GeneratePage() {
             fontSize: "clamp(22px, 4vw, 30px)", fontWeight: 400, color: "#1B3A5C",
             letterSpacing: "-0.02em", marginBottom: 5,
           }}>
-            {(result || resultATS)
-              ? (tipoDocActivo === "AR" ? "Análisis de Riesgos generado" : "ATS generado")
-              : "Nuevo análisis HSE"}
+            {result ? "Análisis generado" : "Nuevo análisis de riesgos HSE"}
           </h1>
           <p style={{ fontSize: 14, color: "#7A8EA0" }}>
-            {(result || resultATS)
+            {result
               ? "Descarga el análisis en el formato que necesites."
               : "Describe la actividad y la IA generará el análisis completo."}
           </p>
         </div>
 
-        {!result && !resultATS && <Step1 onResult={handleResult} />}
-
+        {!result && <Step1 onResult={handleResult} />}
         {result && (
           <div ref={resultRef}>
             <Step2
               result={result}
               equipoInicial={equipoInicial}
               onReset={() => { setResult(null); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-            />
-          </div>
-        )}
-
-        {resultATS && (
-          <div ref={resultRef}>
-            <Step2ATS
-              result={resultATS}
-              equipoInicial={equipoInicial}
-              onReset={() => { setResultATS(null); window.scrollTo({ top: 0, behavior: "smooth" }); }}
             />
           </div>
         )}
