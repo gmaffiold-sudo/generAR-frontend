@@ -20,6 +20,7 @@ interface RegistroAR {
   titulo_actividad:      string;
   tiene_datos_ecopetrol: boolean;
   creado_por?:           string;
+  tipo:                  "AR" | "ATS";  // campo nuevo
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -394,6 +395,8 @@ function TableRow({ registro, isLast }: { registro: RegistroAR; isLast: boolean 
   const [dlXls,         setDlXls]         = useState(false);
   const [dlEco,         setDlEco]         = useState(false);
   const [dlPdf,         setDlPdf]         = useState(false);
+  const [dlAtsXls,      setDlAtsXls]      = useState(false);
+  const [dlAtsPdf,      setDlAtsPdf]      = useState(false);
   const [errorMsg,      setErrorMsg]      = useState("");
 
   const slugTitle = registro.titulo_actividad.replace(/\s+/g, "_").slice(0, 40);
@@ -484,6 +487,58 @@ function TableRow({ registro, isLast }: { registro: RegistroAR; isLast: boolean 
     finally { setDlPdf(false); }
   };
 
+  const handleATSExcel = async () => {
+    setDlAtsXls(true);
+    setErrorMsg("");
+    try {
+      const res  = await apiFetch(`${API}/ats/${registro.id}/download`, {
+        method: "POST",
+        body:   JSON.stringify({}),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.detail || "Error al generar Excel ATS");
+      triggerXlsxDownload(
+        data.excel_base64,
+        `ATS_${registro.titulo_actividad.replace(/\s+/g, "_")}.xlsx`
+      );
+    } catch (e: any) {
+      setErrorMsg(e.message || "Error al descargar Excel ATS");
+    } finally {
+      setDlAtsXls(false);
+    }
+  };
+
+  const handleATSPdf = async () => {
+    setDlAtsPdf(true);
+    setErrorMsg("");
+    try {
+      // Paso 1: obtener el análisis desde BD
+      const resAnalisis = await apiFetch(`${API}/ats/${registro.id}/analisis`);
+      if (!resAnalisis.ok) throw new Error("No se pudo obtener el análisis ATS");
+      const dataAnalisis = await resAnalisis.json();
+
+      // Paso 2: generar PDF
+      const resPdf = await apiFetch(`${API}/ats/export/pdf`, {
+        method: "POST",
+        body: JSON.stringify({
+          registro_id:      registro.id,
+          analisis_ats:     dataAnalisis.analisis_ats,
+          titulo_actividad: registro.titulo_actividad,
+        }),
+      });
+      const dataPdf = await resPdf.json();
+      if (!resPdf.ok) throw new Error(dataPdf?.detail || "Error al generar PDF ATS");
+      triggerPdfDownload(
+        dataPdf.pdf_base64,
+        `ATS_${registro.titulo_actividad.replace(/\s+/g, "_")}.pdf`
+      );
+    } catch (e: any) {
+      setErrorMsg(e.message || "Error al descargar PDF ATS");
+    } finally {
+      setDlAtsPdf(false);
+    }
+  };
+
   return (
     <>
       <div
@@ -514,6 +569,18 @@ function TableRow({ registro, isLast }: { registro: RegistroAR; isLast: boolean 
           fontSize: 14, color: "#1B3A5C", fontWeight: 600, lineHeight: 1.4,
         }}>
           {registro.titulo_actividad}
+          <span style={{
+            display:      "inline-block",
+            fontSize:     10,
+            fontWeight:   700,
+            padding:      "2px 8px",
+            borderRadius: 20,
+            marginLeft:   8,
+            background:   registro.tipo === "ATS" ? "#E1F5EE" : "#E6F1FB",
+            color:        registro.tipo === "ATS" ? "#0F6E56"  : "#185FA5",
+          }}>
+            {registro.tipo ?? "AR"}
+          </span>
         </span>
 
         {/* Creado por */}
@@ -526,36 +593,58 @@ function TableRow({ registro, isLast }: { registro: RegistroAR; isLast: boolean 
           {registro.creado_por ?? "Tú"}
         </span>
 
-        {/* Botones de descarga */}
+        {/* Botones de descarga — bifurcados por tipo */}
         <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-          {/* 📊 Excel básico — siempre visible */}
-          <DlIconButton title="Descargar Excel básico" color="#217346" loading={dlXls} onClick={handleXls}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <rect width="24" height="24" rx="4" fill="#217346"/>
-              <path d="M7 8h10M7 12h10M7 16h6" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>
-              <path d="M14 2v6h6M14 2H8C6.9 2 6 2.9 6 4v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z" stroke="#fff" strokeWidth="1.5" fill="none"/>
-            </svg>
-          </DlIconButton>
-
-          {/* 🏭 Ecopetrol — solo si tiene datos Ecopetrol */}
-          {registro.tiene_datos_ecopetrol && (
-            <DlIconButton title="Descargar formato Ecopetrol" color="#1B3A5C" loading={dlEco} onClick={handleEco}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <rect width="24" height="24" rx="4" fill="#1B3A5C"/>
-                <text x="4" y="16" fontSize="10" fontWeight="bold" fill="#fff">HSE</text>
-              </svg>
-            </DlIconButton>
+          {registro.tipo === "ATS" ? (
+            <>
+              {/* 📊 Excel ATS */}
+              <DlIconButton title="Descargar Excel ATS" color="#217346" loading={dlAtsXls} onClick={handleATSExcel}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <rect width="24" height="24" rx="4" fill="#217346"/>
+                  <path d="M7 8h10M7 12h10M7 16h6" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>
+                  <path d="M14 2v6h6M14 2H8C6.9 2 6 2.9 6 4v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z" stroke="#fff" strokeWidth="1.5" fill="none"/>
+                </svg>
+              </DlIconButton>
+              {/* 📄 PDF ATS */}
+              <DlIconButton title="Descargar PDF ATS" color="#C04040" loading={dlAtsPdf} onClick={handleATSPdf}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <rect width="24" height="24" rx="4" fill="#C04040"/>
+                  <path d="M14 2H8C6.9 2 6 2.9 6 4v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z" fill="#fff" opacity="0.15"/>
+                  <path d="M14 2v6h6" stroke="#fff" strokeWidth="1.5" fill="none"/>
+                  <text x="6" y="17" fontSize="8" fontWeight="bold" fill="#fff">PDF</text>
+                </svg>
+              </DlIconButton>
+            </>
+          ) : (
+            <>
+              {/* 📊 Excel básico — siempre visible */}
+              <DlIconButton title="Descargar Excel básico" color="#217346" loading={dlXls} onClick={handleXls}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <rect width="24" height="24" rx="4" fill="#217346"/>
+                  <path d="M7 8h10M7 12h10M7 16h6" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>
+                  <path d="M14 2v6h6M14 2H8C6.9 2 6 2.9 6 4v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z" stroke="#fff" strokeWidth="1.5" fill="none"/>
+                </svg>
+              </DlIconButton>
+              {/* 🏭 Ecopetrol — solo si tiene datos Ecopetrol */}
+              {registro.tiene_datos_ecopetrol && (
+                <DlIconButton title="Descargar formato Ecopetrol" color="#1B3A5C" loading={dlEco} onClick={handleEco}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <rect width="24" height="24" rx="4" fill="#1B3A5C"/>
+                    <text x="4" y="16" fontSize="10" fontWeight="bold" fill="#fff">HSE</text>
+                  </svg>
+                </DlIconButton>
+              )}
+              {/* 📄 PDF — siempre visible */}
+              <DlIconButton title="Descargar PDF" color="#C04040" loading={dlPdf} onClick={handlePdf}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <rect width="24" height="24" rx="4" fill="#C04040"/>
+                  <path d="M14 2H8C6.9 2 6 2.9 6 4v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z" fill="#fff" opacity="0.15"/>
+                  <path d="M14 2v6h6" stroke="#fff" strokeWidth="1.5" fill="none"/>
+                  <text x="6" y="17" fontSize="8" fontWeight="bold" fill="#fff">PDF</text>
+                </svg>
+              </DlIconButton>
+            </>
           )}
-
-          {/* 📄 PDF — siempre visible */}
-          <DlIconButton title="Descargar PDF" color="#C04040" loading={dlPdf} onClick={handlePdf}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <rect width="24" height="24" rx="4" fill="#C04040"/>
-              <path d="M14 2H8C6.9 2 6 2.9 6 4v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z" fill="#fff" opacity="0.15"/>
-              <path d="M14 2v6h6" stroke="#fff" strokeWidth="1.5" fill="none"/>
-              <text x="6" y="17" fontSize="8" fontWeight="bold" fill="#fff">PDF</text>
-            </svg>
-          </DlIconButton>
         </div>
       </div>
 
@@ -730,6 +819,7 @@ export default function DashboardPage() {
               .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())
               .map(r => ({
                 ...r,
+                tipo: r.tipo ?? "AR",
                 tiene_datos_ecopetrol: Boolean(r.datos_formulario?.lugar),
               }))
           : [];
