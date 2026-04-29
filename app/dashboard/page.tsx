@@ -820,7 +820,7 @@ export default function DashboardPage() {
               .map(r => ({
                 ...r,
                 tipo: r.tipo ?? "AR",
-                tiene_datos_ecopetrol: Boolean(r.datos_formulario?.lugar),
+                tiene_datos_ecopetrol: r.tiene_datos_ecopetrol ?? false,
               }))
           : [];
         setRegistros(sorted);
