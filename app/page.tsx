@@ -17,8 +17,8 @@ const NAV_LINKS: NavLink[] = [
 const BENEFITS: Benefit[] = [
   {
     icon: "⚡",
-    title: "De 4 horas a 2 minutos",
-    desc:  "Genera análisis de riesgos completos al instante. Nuestra IA procesa cada actividad y entrega resultados profesionales listos para presentar.",
+    title: "AR y ATS en menos de un minuto",
+    desc:  "Genera Análisis de Riesgos y Análisis de Trabajo Seguro completos al instante. Nuestra IA procesa cada actividad y entrega resultados profesionales listos para presentar.",
   },
   {
     icon: "📋",
@@ -27,13 +27,18 @@ const BENEFITS: Benefit[] = [
   },
   {
     icon: "📊",
-    title: "Exporta a Excel",
-    desc:  "Descarga tu AR en segundos, formateado y listo para firmar. Compatible con los formatos mas conocidos.",
+    title: "Múltiples formatos de exportación",
+    desc:  "Descarga tu AR o ATS en Excel y PDF, listos para firmar. El AR también disponible en formato HSE-F-160.",
   },
   {
     icon: "📸",
     title: "Análisis visual con IA",
     desc:  "Adjunta hasta 3 fotos del sitio de trabajo. La IA identifica riesgos adicionales visibles que pueden pasarse por alto en el procedimiento escrito.",
+  },
+  {
+    icon: "🔍",
+    title: "Análisis de Trabajo Seguro (ATS)",
+    desc:  "Genera el ATS paso a paso antes de ejecutar una tarea crítica. La IA identifica todos los peligros por cada paso y propone controles según la jerarquía GTC 45.",
   },
 ];
 
@@ -269,7 +274,7 @@ function Hero() {
         }}>
           <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#2E86AB", display: "inline-block" }} />
           <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 600, color: "#2E86AB", letterSpacing: "0.02em" }}>
-            IA para profesionales HSE
+            IA para profesionales HSE · AR y ATS
           </span>
         </div>
 
@@ -286,13 +291,13 @@ function Hero() {
           transform:   loaded ? "translateY(0)" : "translateY(16px)",
           transition:  "all 0.7s ease 0.1s",
         }}>
-          Genera Análisis de Riesgos{" "}
+          Genera AR y ATS profesionales{" "}
           <span style={{
             background:          "linear-gradient(135deg, #1B3A5C 0%, #2E86AB 100%)",
             WebkitBackgroundClip:"text",
             WebkitTextFillColor: "transparent",
             backgroundClip:      "text",
-          }}>HSE en segundos</span>{" "}
+          }}>en segundos</span>{" "}
           con Inteligencia Artificial
         </h1>
 
@@ -309,8 +314,7 @@ function Hero() {
           transform:    loaded ? "translateY(0)" : "translateY(16px)",
           transition:   "all 0.7s ease 0.2s",
         }}>
-          Deja de perder horas creando AR manualmente. GenerAR usa IA para crear análisis
-          completos y profesionales en <strong style={{ color: "#1B3A5C" }}>menos de un minuto</strong>.
+          Deja de perder horas creando documentos HSE manualmente. GenerAR usa IA para generar Análisis de Riesgos (AR) y Análisis de Trabajo Seguro (ATS) completos y profesionales en <strong style={{ color: "#1B3A5C" }}>menos de un minuto</strong>.
         </p>
 
         {/* Industrias soportadas */}
@@ -531,7 +535,7 @@ function Benefits() {
             fontFamily: "'DM Serif Display', Georgia, serif",
             fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 400,
             color: "#1B3A5C", marginTop: 12, letterSpacing: "-0.02em",
-          }}>Todo lo que necesitas para un AR profesional</h2>
+          }}>Todo lo que necesitas para documentar el trabajo seguro</h2>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))", gap: 28 }}>
