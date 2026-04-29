@@ -231,7 +231,7 @@ function GenerateButton({ onClick, disabled }: { onClick: () => void; disabled: 
       }}
     >
       <span style={{ fontSize: 18 }}>⚡</span>
-      Generar nuevo AR
+      Generar nuevo AR/ATS
     </button>
   );
 }
@@ -305,7 +305,7 @@ function HistoryTable({ registros, loading }: { registros: RegistroAR[]; loading
             fontFamily: "'Plus Jakarta Sans', sans-serif",
             fontSize: 14, color: "#7A8EA0", lineHeight: 1.6,
           }}>
-            Haz clic en <strong style={{ color: "#1B3A5C" }}>Generar nuevo AR</strong> para crear tu primer análisis de riesgos HSE.
+            Haz clic en <strong style={{ color: "#1B3A5C" }}>Generar nuevo AR/ATS</strong> para crear tu primer análisis de riesgos HSE.
           </p>
         </div>
       ) : (
