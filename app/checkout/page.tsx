@@ -341,7 +341,7 @@ function CheckoutForm() {
     public_key:   string;
     redirect_url: string;
   } | null>(null);
-  const [loading,         setLoading]         = useState(true);
+  const [loading,         setLoading]         = useState(false);
   const [error,           setError]           = useState("");
   const [scriptOk,        setScriptOk]        = useState(false);
   const [facturaCompleta, setFacturaCompleta] = useState(false);
