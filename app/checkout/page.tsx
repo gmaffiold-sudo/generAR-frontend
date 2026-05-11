@@ -512,7 +512,7 @@ function CheckoutForm() {
                     localStorage.removeItem("factura_datos");
                     setFacturaCompleta(false);
                     setSessionData(null);
-                    setError(null);
+                    setError("");
                   }}
                   style={{
                     background: "none", border: "none", cursor: "pointer",
@@ -559,7 +559,7 @@ function CheckoutForm() {
                     {error}
                   </p>
                   <button
-                    onClick={() => { setError(null); }}
+                    onClick={() => { setError(""); }}
                     style={{
                       marginTop: 8, background: "none", border: "none",
                       color: "#C04040", fontWeight: 700, cursor: "pointer",
