@@ -366,7 +366,7 @@ function CheckoutForm() {
 
   // Fetch session from backend
   useEffect(() => {
-    if (!ready || !plan) return;
+    if (!ready || !plan || !facturaCompleta) return;
     (async () => {
       setLoading(true);
       try {
@@ -396,7 +396,7 @@ function CheckoutForm() {
         setLoading(false);
       }
     })();
-  }, [ready, planId, plan]);
+  }, [ready, planId, plan, facturaCompleta]);
 
   if (!ready || !plan) return null;
 
