@@ -152,6 +152,13 @@ export default function RevisarPage() {
   const [dragOver,  setDragOver]  = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const f = e.dataTransfer.files[0];
+    if (f) handleFile(f);
+  }, []);
+
   if (!ready) return null;
 
   // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -169,13 +176,6 @@ export default function RevisarPage() {
     setArchivo(f);
     setError("");
   };
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setDragOver(false);
-    const f = e.dataTransfer.files[0];
-    if (f) handleFile(f);
-  }, []);
 
   const toggle = (id: string) => setAceptadas(prev => {
     const next = new Set(prev);
