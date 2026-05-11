@@ -633,17 +633,7 @@ function CheckoutForm() {
                   >Recargar página</button>
                 </div>
               </div>
-            ) : loading ? (
-              <div style={{
-                display: "flex", flexDirection: "column", alignItems: "center", gap: 16,
-                padding: "40px 0",
-              }}>
-                <Spinner size={36} />
-                <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, color: "#7A8EA0" }}>
-                  Preparando tu sesión de pago...
-                </p>
-              </div>
-            ) : sessionData && (
+            ) : (
               <div>
                 {/* Payment summary line */}
                 <div style={{
