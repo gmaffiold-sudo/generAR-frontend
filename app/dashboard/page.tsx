@@ -55,11 +55,12 @@ function Skeleton({ w = "100%", h = 20, radius = 8 }: { w?: string | number; h?:
 
 // ─── Credits Card ─────────────────────────────────────────────────────────────
 function CreditsCard({
-  credits, loading, onGenerate, isSubUser,
+  credits, loading, onGenerate, onRevisar, isSubUser,
 }: {
   credits:    Credits | null;
   loading:    boolean;
   onGenerate: () => void;
+  onRevisar:  () => void;
   isSubUser:  boolean;
 }) {
   const pct = credits
@@ -193,6 +194,7 @@ function CreditsCard({
             ⚙️ Configuración
           </a>
           )}
+          <RevisarButton onClick={onRevisar} />
           <GenerateButton onClick={onGenerate} disabled={loading || !credits || credits.creditos_restantes <= 0} />
         </div>
       </div>
@@ -232,6 +234,37 @@ function GenerateButton({ onClick, disabled }: { onClick: () => void; disabled: 
     >
       <span style={{ fontSize: 18 }}>⚡</span>
       Generar nuevo AR/ATS
+    </button>
+  );
+}
+
+function RevisarButton({ onClick }: { onClick: () => void }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        padding:       "16px 28px",
+        borderRadius:  12,
+        border:        "1.5px solid rgba(255,255,255,0.35)",
+        cursor:        "pointer",
+        background:    hovered ? "rgba(255,255,255,0.15)" : "transparent",
+        color:         "#fff",
+        fontFamily:    "'Plus Jakarta Sans', sans-serif",
+        fontSize:      15,
+        fontWeight:    700,
+        letterSpacing: "-0.01em",
+        transition:    "all 0.22s ease",
+        whiteSpace:    "nowrap",
+        display:       "flex",
+        alignItems:    "center",
+        gap:           8,
+      }}
+    >
+      <span style={{ fontSize: 18 }}>🔍</span>
+      Revisar AR/ATS
     </button>
   );
 }
@@ -880,6 +913,10 @@ export default function DashboardPage() {
     router.push("/generate");
   };
 
+  const handleRevisar = () => {
+    router.push("/revisar");
+  };
+
   if (!ready) return null;
 
   return (
@@ -998,6 +1035,7 @@ export default function DashboardPage() {
             credits={credits}
             loading={loadingCredits}
             onGenerate={handleGenerate}
+            onRevisar={handleRevisar}
             isSubUser={rol === "usuario"}
           />
         </div>
