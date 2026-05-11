@@ -365,38 +365,35 @@ function CheckoutForm() {
   }, []);
 
   // Fetch session from backend
-  useEffect(() => {
-    if (!ready || !plan || !facturaCompleta) return;
-    (async () => {
-      setLoading(true);
-      try {
-        const res = await apiFetch(`${API}/payments/create-session`, {
-          method: "POST",
-          body: JSON.stringify({
-            plan_id:            planId,
-            ...(() => {
-              try {
-                const fd = JSON.parse(localStorage.getItem("factura_datos") || "{}");
-                return {
-                  factura_tipo_doc:   fd.tipo_doc   || null,
-                  factura_numero_doc: fd.numero_doc || null,
-                  factura_nombre:     fd.nombre     || null,
-                  factura_email:      fd.email      || null,
-                };
-              } catch { return {}; }
-            })(),
-          }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data?.detail || "Error al crear sesión de pago.");
-        setSessionData(data);
-      } catch (e: any) {
-        setError(e.message || "No se pudo iniciar el pago. Intenta de nuevo.");
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [ready, planId, plan, facturaCompleta]);
+  async function handlePagar() {
+    setLoading(true);
+    try {
+      const res = await apiFetch(`${API}/payments/create-session`, {
+        method: "POST",
+        body: JSON.stringify({
+          plan_id:            planId,
+          ...(() => {
+            try {
+              const fd = JSON.parse(localStorage.getItem("factura_datos") || "{}");
+              return {
+                factura_tipo_doc:   fd.tipo_doc   || null,
+                factura_numero_doc: fd.numero_doc || null,
+                factura_nombre:     fd.nombre     || null,
+                factura_email:      fd.email      || null,
+              };
+            } catch { return {}; }
+          })(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.detail || "Error al crear sesión de pago.");
+      setSessionData(data);
+    } catch (e: any) {
+      setError(e.message || "No se pudo iniciar el pago. Intenta de nuevo.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   if (!ready || !plan) return null;
 
@@ -514,6 +511,8 @@ function CheckoutForm() {
                   onClick={() => {
                     localStorage.removeItem("factura_datos");
                     setFacturaCompleta(false);
+                    setSessionData(null);
+                    setError(null);
                   }}
                   style={{
                     background: "none", border: "none", cursor: "pointer",
@@ -529,9 +528,71 @@ function CheckoutForm() {
           })()
         )}
 
-        {/* ── Widget de pago Wompi (solo si factura completa) ── */}
-        {facturaCompleta && (
-          // FIX: padding adaptativo con clamp para móvil
+        {/* ── Botón continuar al pago (solo si factura completa y sin sesión aún) ── */}
+        {facturaCompleta && !sessionData && (
+          <div style={{
+            background: "#fff", borderRadius: 18,
+            border: "1.5px solid rgba(27,58,92,0.08)",
+            boxShadow: "0 4px 24px rgba(27,58,92,0.07)",
+            padding: "clamp(24px, 5vw, 36px)",
+            flex: 1,
+            animation: "fadeUp 0.35s ease both",
+          }}>
+            <h3 style={{
+              fontFamily: "'DM Serif Display', serif",
+              fontSize: 22, fontWeight: 400, color: "#1B3A5C",
+              letterSpacing: "-0.02em", marginBottom: 6,
+            }}>Completa tu pago</h3>
+            <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, color: "#7A8EA0", marginBottom: 28, lineHeight: 1.5 }}>
+              Serás redirigido a la plataforma de pago segura de Wompi para completar la transacción.
+            </p>
+            {error ? (
+              <div style={{
+                background: "rgba(224,82,82,0.06)",
+                border: "1.5px solid rgba(224,82,82,0.25)",
+                borderRadius: 12, padding: "16px 18px",
+                display: "flex", alignItems: "flex-start", gap: 10,
+              }}>
+                <span style={{ fontSize: 16, flexShrink: 0 }}>⚠️</span>
+                <div>
+                  <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, color: "#C04040", lineHeight: 1.5 }}>
+                    {error}
+                  </p>
+                  <button
+                    onClick={() => { setError(null); }}
+                    style={{
+                      marginTop: 8, background: "none", border: "none",
+                      color: "#C04040", fontWeight: 700, cursor: "pointer",
+                      fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13,
+                      textDecoration: "underline", padding: 0,
+                    }}
+                  >Reintentar</button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={handlePagar}
+                disabled={loading}
+                style={{
+                  width: "100%", padding: "15px",
+                  borderRadius: 11, border: "none", cursor: loading ? "not-allowed" : "pointer",
+                  background: "linear-gradient(135deg,#1B3A5C,#2E86AB)",
+                  color: "#fff", fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  fontSize: 16, fontWeight: 800, letterSpacing: "-0.01em",
+                  boxShadow: "0 3px 14px rgba(46,134,171,0.30)",
+                  opacity: loading ? 0.7 : 1,
+                  transition: "all 0.22s ease",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                }}
+              >
+                {loading ? <><Spinner size={18} /> Preparando sesión...</> : "🔒 Continuar al pago →"}
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* ── Widget de pago Wompi (solo si ya hay sesión creada) ── */}
+        {facturaCompleta && sessionData && (
           <div style={{
             background: "#fff", borderRadius: 18,
             border: "1.5px solid rgba(27,58,92,0.08)",
