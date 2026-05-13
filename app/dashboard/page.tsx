@@ -809,8 +809,11 @@ export default function DashboardPage() {
   const [registros,      setRegistros]     = useState<RegistroAR[]>([]);
   const [rol,            setRol]           = useState<"admin" | "usuario" | null>(null);
   const [creditoPruebaUsado, setCreditoPruebaUsado] = useState<boolean | null>(null);
-  const [loadingCredits, setLoadingCredits]= useState(true);
-  const [loadingHistory, setLoadingHistory]= useState(true);
+  const [loadingCredits,  setLoadingCredits] = useState(true);
+  const [loadingHistory,  setLoadingHistory] = useState(true);
+  const [historyPage,     setHistoryPage]    = useState(1);
+  const [historyTotal,    setHistoryTotal]   = useState(0);
+  const [loadingMore,     setLoadingMore]    = useState(false);
 
   // ── Leer email del flag de sesión (no del JWT) ──
   useEffect(() => {
@@ -833,28 +836,28 @@ export default function DashboardPage() {
   }, []);
 
   // ── Fetch history ──
-  const fetchHistory = useCallback(async () => {
-    setLoadingHistory(true);
+  const fetchHistory = useCallback(async (page = 1) => {
+    page === 1 ? setLoadingHistory(true) : setLoadingMore(true);
     try {
-      const res = await apiFetch(`${API}/registro_ar`);
+      const res = await apiFetch(`${API}/registro_ar?page=${page}&limit=20`);
       if (res.ok) {
-        const data = await res.json();
-        // Sort newest first; derive tiene_datos_ecopetrol from presence of "lugar" in datos_formulario
-        const sorted = Array.isArray(data)
-          ? [...data]
-              .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())
-              .map(r => ({
-                ...r,
-                tipo: r.tipo ?? "AR",
-                tiene_datos_ecopetrol: r.tiene_datos_ecopetrol ?? false,
-              }))
+        const total = parseInt(res.headers.get("X-Total-Count") ?? "0", 10);
+        const data  = await res.json();
+        const mapped = Array.isArray(data)
+          ? data.map(r => ({
+              ...r,
+              tipo: r.tipo ?? "AR",
+              tiene_datos_ecopetrol: r.tiene_datos_ecopetrol ?? false,
+            }))
           : [];
-        setRegistros(sorted);
+        setRegistros(prev => page === 1 ? mapped : [...prev, ...mapped]);
+        setHistoryTotal(total);
+        setHistoryPage(page);
       }
     } catch {
       console.error("Error fetching history");
     } finally {
-      setLoadingHistory(false);
+      page === 1 ? setLoadingHistory(false) : setLoadingMore(false);
     }
   }, []);
 
@@ -1036,6 +1039,22 @@ export default function DashboardPage() {
         {/* History */}
         <div style={{ animation: "fadeUp 0.5s ease 0.2s both" }}>
           <HistoryTable registros={registros} loading={loadingHistory} />
+          {registros.length < historyTotal && (
+            <div style={{ textAlign: "center", marginTop: 16 }}>
+              <button
+                onClick={() => fetchHistory(historyPage + 1)}
+                disabled={loadingMore}
+                style={{
+                  padding: "10px 28px", borderRadius: 8, border: "1.5px solid #2E86AB",
+                  background: "#fff", color: "#2E86AB", fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  fontSize: 14, fontWeight: 600, cursor: loadingMore ? "not-allowed" : "pointer",
+                  opacity: loadingMore ? 0.6 : 1, transition: "all 0.2s",
+                }}
+              >
+                {loadingMore ? "Cargando..." : `Ver más (${historyTotal - registros.length} restantes)`}
+              </button>
+            </div>
+          )}
         </div>
 
       </main>
