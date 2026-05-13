@@ -45,16 +45,16 @@ const STEPS = [
     subtitle: "Tu panel central de control: todo lo que necesitas en un solo lugar.",
     items: [
       { icon: "📊", text: "Visualiza tus créditos disponibles en tiempo real." },
-      { icon: "📋", text: "Consulta el historial completo de Análisis de Riesgos generados." },
-      { icon: "⬇️", text: "Descarga AR anteriores directamente desde el historial en 3 formatos: Excel básico, Formato Ecopetrol HSE-F-160 o PDF." },
-      { icon: "⚡", text: "Accede al generador con un solo clic desde el panel principal." },
+      { icon: "📋", text: "Consulta el historial completo de Análisis de Riesgos (AR) y Análisis de Trabajo Seguro (ATS) generados." },
+      { icon: "⬇️", text: "Descarga documentos anteriores directamente desde el historial en múltiples formatos." },
+      { icon: "⚡", text: "Accede al generador de AR, ATS o al Revisor de documentos con un solo clic desde el panel principal." },
       { icon: "⚙️", text: <>Usa el botón <strong style={{ color: C.navy }}>Configuración</strong> para gestionar tu perfil, equipo, suscripción e historial de pagos.</> },
     ],
   },
   {
     num: "03",
     emoji: "⚙️",
-    title: "Generar un Análisis de Riesgos",
+    title: "Generar un Análisis de Riesgos (AR)",
     subtitle: "Completa el formulario mínimo y deja que la IA haga el trabajo pesado.",
     items: [
       { icon: "1.", text: <>Haz clic en <strong style={{ color: C.navy }}>«Generar nuevo AR»</strong> en el dashboard.</> },
@@ -63,7 +63,7 @@ const STEPS = [
       { icon: "4.", text: <>Opcionalmente adjunta un <strong style={{ color: C.navy }}>PDF del procedimiento</strong> para que la IA lo use como referencia.</> },
       { icon: "5.", text: <>Lista las <strong style={{ color: C.navy }}>herramientas y equipos</strong> a utilizar (taladro, andamio, montacargas, arnés, etc.). GenerAR los analizará para identificar peligros asociados con su uso.</> },
       { icon: "6.", text: <>Selecciona las <strong style={{ color: C.navy }}>condiciones ambientales</strong> del sitio: horario (diurno/nocturno), clima (lluvia, sol intenso, niebla), tipo de espacio (confinado, altura, área clasificada).</> },
-      { icon: "7.", text: <>🆕 Adjunta hasta <strong style={{ color: C.navy }}>3 fotografías del sitio</strong>. La IA las analiza e identifica riesgos adicionales visibles en menos de un minuto. Formatos: JPG, PNG, WebP.</> },
+      { icon: "7.", text: <>Adjunta hasta <strong style={{ color: C.navy }}>3 fotografías del sitio</strong>. La IA las analiza e identifica riesgos adicionales visibles en menos de un minuto. Formatos: JPG, PNG, WebP.</> },
       { icon: "8.", text: "Ingresa los pasos de la actividad (mínimo 3 si no hay PDF)." },
       { icon: "9.", text: <>Haz clic en <strong style={{ color: C.navy }}>«Generar Análisis de Riesgos»</strong> y espera unos segundos.</> },
       { icon: "10.", text: "La IA analiza la actividad y genera la tabla de riesgos en segundos." },
@@ -84,6 +84,37 @@ const STEPS = [
   },
   {
     num: "05",
+    emoji: "🦺",
+    title: "Generar un Análisis de Trabajo Seguro (ATS)",
+    subtitle: "Documenta cada paso de una tarea con sus peligros y controles específicos.",
+    items: [
+      { icon: "1.", text: <>Haz clic en <strong style={{ color: C.navy }}>«Generar ATS»</strong> en el dashboard.</> },
+      { icon: "2.", text: "Ingresa el nombre de la actividad y el equipo de trabajo." },
+      { icon: "3.", text: <>Describe los <strong style={{ color: C.navy }}>pasos de la actividad</strong> en orden secuencial. El ATS se estructura paso a paso, por lo que mientras más detallados sean los pasos, más preciso será el análisis.</> },
+      { icon: "4.", text: <>Opcionalmente agrega <strong style={{ color: C.navy }}>herramientas y equipos</strong>, condiciones ambientales y hasta 3 fotografías del sitio.</> },
+      { icon: "5.", text: <>Haz clic en <strong style={{ color: C.navy }}>«Generar ATS»</strong>. La IA identifica peligros, consecuencias y controles para cada paso.</> },
+      { icon: "6.", text: <>Descarga el resultado en <strong style={{ color: C.navy }}>Excel o PDF</strong> directamente desde la pantalla de resultados o desde el historial.</> },
+      { icon: "💡", text: <>El ATS consume <strong style={{ color: C.navy }}>1 crédito</strong>, igual que un AR.</> },
+    ],
+  },
+  {
+    num: "06",
+    emoji: "🔍",
+    title: "Revisar un análisis existente",
+    subtitle: "Sube un AR o ATS ya elaborado y la IA lo audita, identifica observaciones y propone correcciones.",
+    items: [
+      { icon: "1.", text: <>Haz clic en <strong style={{ color: C.navy }}>«Revisar documento»</strong> en el dashboard.</> },
+      { icon: "2.", text: <>Sube tu documento existente en formato <strong style={{ color: C.navy }}>Excel (.xlsx) o PDF</strong>. El sistema extrae automáticamente el contenido.</> },
+      { icon: "3.", text: <>Selecciona el <strong style={{ color: C.navy }}>tipo de documento</strong>: Análisis de Riesgos (AR) o Análisis de Trabajo Seguro (ATS).</> },
+      { icon: "4.", text: <>Haz clic en <strong style={{ color: C.navy }}>«Analizar»</strong>. La IA lo revisa contra los estándares GTC 45, ISO 45001 y el Anexo 1 HSE Ecopetrol.</> },
+      { icon: "5.", text: "Recibe una lista de observaciones clasificadas por campo: peligros faltantes, controles incompletos, consecuencias subestimadas, responsables incorrectos, etc." },
+      { icon: "6.", text: <>Aplica las correcciones sugeridas directamente en pantalla con un clic en <strong style={{ color: C.navy }}>«Aplicar corrección»</strong>, o descarta las que no apliquen.</> },
+      { icon: "7.", text: <>Descarga el documento corregido en <strong style={{ color: C.navy }}>Excel</strong> con los cambios aplicados, listo para presentar.</> },
+      { icon: "💡", text: <>La revisión consume <strong style={{ color: C.navy }}>1 crédito</strong> y queda guardada en tu historial.</> },
+    ],
+  },
+  {
+    num: "07",
     emoji: "🛠️",
     title: "Configuración de cuenta",
     subtitle: <>Gestiona todos los aspectos de tu cuenta desde <strong style={{ color: C.navy }}>generar.co/settings</strong>.</>,
@@ -96,13 +127,13 @@ const STEPS = [
     ],
   },
   {
-    num: "06",
+    num: "08",
     emoji: "💳",
     title: "Gestionar tu suscripción",
     subtitle: "Controla tu plan y créditos sin complicaciones.",
     items: [
       { icon: "📦", text: <>Explora los planes disponibles en <strong style={{ color: C.navy }}>generar.co/pricing</strong>.</> },
-      { icon: "➕", text: "Compra un Top-up de créditos si necesitas generar más AR sin cambiar de plan." },
+      { icon: "➕", text: "Compra un Top-up de créditos si necesitas generar más documentos sin cambiar de plan." },
       { icon: "🔄", text: "Actualiza o cambia tu plan directamente desde el dashboard en cualquier momento." },
     ],
   },
@@ -110,8 +141,20 @@ const STEPS = [
 
 const FAQS = [
   {
-    q: "¿Cuánto tarda en generarse un AR?",
+    q: "¿Cuánto tarda en generarse un AR o ATS?",
     a: "Entre 10 y 30 segundos, dependiendo de la complejidad de la actividad y la cantidad de pasos ingresados.",
+  },
+  {
+    q: "¿Cuál es la diferencia entre un AR y un ATS?",
+    a: "El AR (Análisis de Riesgos) identifica todos los peligros asociados a una actividad de forma global. El ATS (Análisis de Trabajo Seguro) va paso a paso: para cada etapa del trabajo identifica sus peligros y controles específicos. Ambos consumen 1 crédito.",
+  },
+  {
+    q: "¿Qué formatos acepta el Revisor de documentos?",
+    a: "Acepta archivos Excel (.xlsx) y PDF. El sistema extrae el contenido automáticamente y lo analiza contra los estándares GTC 45, ISO 45001 y el Anexo 1 HSE Ecopetrol.",
+  },
+  {
+    q: "¿Puedo rechazar alguna observación del Revisor?",
+    a: "Sí. Cada observación puede aplicarse o descartarse individualmente. Solo se incorporan al documento final las correcciones que tú apruebas.",
   },
   {
     q: "¿El formato cumple con los estándares de Ecopetrol?",
@@ -204,7 +247,7 @@ export default function GuiaDeUso() {
             fontWeight: 300, maxWidth: 520, margin: "0 auto",
             lineHeight: 1.7,
           }}>
-            Todo lo que necesitas para generar Análisis de Riesgos HSE con Inteligencia Artificial en minutos.
+            Todo lo que necesitas para generar Análisis de Riesgos (AR), Análisis de Trabajo Seguro (ATS) y revisar documentos HSE existentes con Inteligencia Artificial.
           </p>
 
           {/* Progress pills */}
@@ -240,8 +283,8 @@ export default function GuiaDeUso() {
           }}>
             <span style={{ fontSize: 18, flexShrink: 0 }}>✅</span>
             <span>
-              <strong style={{ fontWeight: 600 }}>Proceso completo en 5 pasos.</strong>{" "}
-              Desde el registro hasta la descarga de tu primer Análisis de Riesgos listo para presentar.
+              <strong style={{ fontWeight: 600 }}>Proceso completo en 8 pasos.</strong>{" "}
+              Desde el registro hasta la descarga de tu AR, ATS o revisión de documentos existentes, listos para presentar.
             </span>
           </div>
 
