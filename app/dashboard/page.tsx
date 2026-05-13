@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { API, apiFetch, useAuthGuard, clearSession } from "@/lib/api";
+import { API, apiFetch, useAuthGuard, clearSession, getSessionEmail, logout } from "@/lib/api";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Credits {
@@ -32,13 +32,6 @@ function formatDate(iso: string): string {
       day: "2-digit", month: "short", year: "numeric",
     });
   } catch { return iso; }
-}
-
-function decodeEmail(token: string): string {
-  try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    return payload.email || "";
-  } catch { return ""; }
 }
 
 // ─── Skeleton loader ──────────────────────────────────────────────────────────
@@ -819,11 +812,11 @@ export default function DashboardPage() {
   const [loadingCredits, setLoadingCredits]= useState(true);
   const [loadingHistory, setLoadingHistory]= useState(true);
 
-  // ── Decode email from JWT once auth is confirmed ──
+  // ── Leer email del flag de sesión (no del JWT) ──
   useEffect(() => {
     if (!ready) return;
-    const token = localStorage.getItem("generar_token");
-    if (token) setEmail(decodeEmail(token));
+    const savedEmail = getSessionEmail();
+    if (savedEmail) setEmail(savedEmail);
   }, [ready]);
 
   // ── Fetch credits ──
@@ -903,8 +896,8 @@ export default function DashboardPage() {
     
 
   // ── Logout ──
-  const handleLogout = () => {
-    clearSession();
+  const handleLogout = async () => {
+    await logout();
     router.push("/login");
   };
 

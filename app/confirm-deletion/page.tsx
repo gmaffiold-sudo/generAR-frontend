@@ -2,8 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-
-const API = "https://hse-risk-analyzer-production.up.railway.app";
+import { API, clearSession } from "@/lib/api";
 
 // ─── Navbar ───────────────────────────────────────────────────────────────────
 function Nav() {
@@ -84,12 +83,8 @@ function ConfirmContent() {
         const data = await res.json();
 
         if (res.ok) {
-          // Clear session — account is gone
-          if (typeof window !== "undefined") {
-            localStorage.removeItem("generar_token");
-            localStorage.removeItem("access_token");
-            localStorage.removeItem("refresh_token");
-          }
+          // Limpiar sesión local — la cuenta ya no existe
+          clearSession();
           setState("success");
         } else {
           setMessage(data?.detail || "El enlace de eliminación no es válido o ha expirado.");

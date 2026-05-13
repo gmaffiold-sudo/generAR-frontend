@@ -132,17 +132,19 @@ function LoginForm() {
 
     try {
       const res = await fetch(`${API}/auth/login`, {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ email: email.trim().toLowerCase(), password }),
+        method:      "POST",
+        credentials: "include",
+        headers:     { "Content-Type": "application/json" },
+        body:        JSON.stringify({ email: email.trim().toLowerCase(), password }),
       });
 
       const data = await res.json();
 
       if (res.ok && data.access_token) {
-        // Save tokens — localStorage for access, sessionStorage-safe approach
-        localStorage.setItem("generar_token", data.access_token);
-        localStorage.setItem("refresh_token", data.refresh_token);
+        // El JWT llega como cookie HttpOnly seteada por el backend.
+        // Solo guardamos indicadores no-sensibles en localStorage.
+        localStorage.setItem("generar_session", "1");
+        localStorage.setItem("generar_email", email.trim().toLowerCase());
         router.push("/dashboard");
       } else {
         const msg = data?.detail || "Credenciales incorrectas. Verifica tu email y contraseña.";
