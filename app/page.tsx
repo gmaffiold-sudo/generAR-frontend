@@ -941,6 +941,70 @@ function Footer() {
   );
 }
 
+// ─── WhatsApp Button ──────────────────────────────────────────────────────────
+function WhatsAppButton() {
+  const [hovered, setHovered] = useState(false);
+  const WA_URL =
+    "https://wa.me/573124260628?text=Hola%2C%20quiero%20saber%20m%C3%A1s%20sobre%20Gener%C3%81R%20%F0%9F%91%8B";
+
+  return (
+    <a
+      href={WA_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Chatea con nosotros por WhatsApp"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        position:      "fixed",
+        bottom:        28,
+        right:         28,
+        zIndex:        1000,
+        display:       "flex",
+        alignItems:    "center",
+        gap:           10,
+        background:    "#25D366",
+        borderRadius:  hovered ? 28 : "50%",
+        width:         hovered ? "auto" : 56,
+        height:        56,
+        padding:       hovered ? "0 20px 0 14px" : 0,
+        justifyContent:"center",
+        boxShadow:     hovered
+          ? "0 6px 24px rgba(37,211,102,0.55)"
+          : "0 4px 16px rgba(37,211,102,0.40)",
+        textDecoration: "none",
+        overflow:      "hidden",
+        whiteSpace:    "nowrap",
+        transition:    "all 0.25s ease",
+      }}
+    >
+      {/* WhatsApp icon */}
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 32 32"
+        width={28}
+        height={28}
+        fill="#fff"
+        style={{ flexShrink: 0 }}
+      >
+        <path d="M16 3C8.82 3 3 8.82 3 16c0 2.32.63 4.5 1.72 6.38L3 29l6.82-1.68A13 13 0 0 0 16 29c7.18 0 13-5.82 13-13S23.18 3 16 3zm0 23.85a10.82 10.82 0 0 1-5.53-1.52l-.4-.23-4.05 1 1.02-3.93-.26-.41A10.85 10.85 0 1 1 16 26.85zm5.96-8.1c-.33-.16-1.93-.95-2.23-1.06-.3-.1-.52-.16-.73.16-.22.33-.84 1.06-1.03 1.27-.19.22-.38.24-.7.08-.33-.16-1.38-.51-2.63-1.62-.97-.87-1.63-1.94-1.82-2.27-.19-.33-.02-.5.14-.67.15-.14.33-.38.5-.57.16-.19.22-.33.33-.55.1-.22.05-.41-.03-.57-.08-.16-.73-1.76-1-2.41-.26-.63-.53-.54-.73-.55h-.62c-.22 0-.57.08-.86.41-.3.33-1.13 1.1-1.13 2.69s1.16 3.12 1.32 3.33c.16.22 2.28 3.48 5.52 4.88.77.33 1.37.53 1.84.68.77.24 1.48.21 2.03.13.62-.09 1.93-.79 2.2-1.55.27-.76.27-1.42.19-1.55-.08-.13-.3-.22-.63-.38z" />
+      </svg>
+
+      {/* Label — solo visible al hover */}
+      {hovered && (
+        <span style={{
+          color:      "#fff",
+          fontFamily: "'Plus Jakarta Sans', sans-serif",
+          fontSize:   14,
+          fontWeight: 600,
+        }}>
+          ¿Tienes dudas?
+        </span>
+      )}
+    </a>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function LandingPage() {
   return (
@@ -966,6 +1030,7 @@ export default function LandingPage() {
         <Pricing />
       </main>
       <Footer />
+      <WhatsAppButton />
     </>
   );
 }
