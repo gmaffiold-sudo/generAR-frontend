@@ -176,7 +176,7 @@ function Navbar() {
             // FIX: padding vertical mínimo 12px
             padding:         "12px 20px",
             borderRadius:    8,
-            background:      "linear-gradient(135deg, #1B3A5C 0%, #2E86AB 100%)",
+            background:      "linear-gradient(135deg, #1B3A5C 0%, #237396 100%)",
             boxShadow:       "0 2px 12px rgba(46,134,171,0.35)",
             transition:      "all 0.2s",
           }}
@@ -213,7 +213,7 @@ function Navbar() {
           ))}
           <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 10 }}>
             <a href="/login"    style={{ textAlign: "center", padding: "11px", borderRadius: 8, border: "1.5px solid #1B3A5C", color: "#1B3A5C", fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600, fontSize: 14, textDecoration: "none" }}>Iniciar sesión</a>
-            <a href="/register" style={{ textAlign: "center", padding: "11px", borderRadius: 8, background: "linear-gradient(135deg, #1B3A5C, #2E86AB)", color: "#fff", fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600, fontSize: 14, textDecoration: "none" }}>Registrarse gratis</a>
+            <a href="/register" style={{ textAlign: "center", padding: "11px", borderRadius: 8, background: "linear-gradient(135deg, #1B3A5C, #237396)", color: "#fff", fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600, fontSize: 14, textDecoration: "none" }}>Registrarse gratis</a>
           </div>
         </div>
       )}
@@ -273,7 +273,7 @@ function Hero() {
           transition:     "all 0.6s ease",
         }}>
           <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#2E86AB", display: "inline-block" }} />
-          <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 600, color: "#2E86AB", letterSpacing: "0.02em" }}>
+          <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 600, color: "#1F6E8F", letterSpacing: "0.02em" }}>
             IA para profesionales HSE · AR y ATS
           </span>
         </div>
@@ -321,7 +321,7 @@ function Hero() {
         <p style={{
           fontFamily:  "'Plus Jakarta Sans', sans-serif",
           fontSize:    13,
-          color:       "#718096",
+          color:       "#5A6B7D",
           textAlign:   "center",
           marginTop:   0,
           marginBottom: 32,
@@ -335,7 +335,7 @@ function Hero() {
         <p style={{
           fontFamily:  "'Plus Jakarta Sans', sans-serif",
           fontSize:    12,
-          color:       "#A0AEC0",
+          color:       "#66788A",
           textAlign:   "center",
           marginTop:   6,
           marginBottom: 32,
@@ -367,7 +367,7 @@ function Hero() {
               <span key={i} style={{ color: "#F4A261", fontSize: 16 }}>★</span>
             ))}
           </div>
-          <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, color: "#7A8EA0", fontWeight: 500 }}>
+          <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, color: "#66788A", fontWeight: 500 }}>
             Unete <strong style={{ color: "#1B3A5C" }}>a los profesionales</strong> HSE que ya usan GenerAR
           </span>
         </div>
@@ -394,7 +394,7 @@ function CTAButton({ href, primary, children }: { href: string; primary: boolean
   };
   const primaryStyle: React.CSSProperties = {
     ...base,
-    background:  hovered ? "linear-gradient(135deg, #16304d, #2677a0)" : "linear-gradient(135deg, #1B3A5C, #2E86AB)",
+    background:  hovered ? "linear-gradient(135deg, #16304d, #2677a0)" : "linear-gradient(135deg, #1B3A5C, #237396)",
     color:       "#fff",
     boxShadow:   hovered ? "0 6px 28px rgba(46,134,171,0.50)" : "0 3px 16px rgba(46,134,171,0.35)",
     transform:   hovered ? "translateY(-2px)" : "translateY(0)",
@@ -476,7 +476,8 @@ function Demo() {
               position:     "relative",
             }}>
               <iframe
-                src="https://www.youtube.com/embed/YOyxznJ81Yk"
+                src="https://www.youtube-nocookie.com/embed/YOyxznJ81Yk"
+                loading="lazy"
                 title="Demo GenerAR"
                 style={{
                   width:   "100%",
@@ -499,7 +500,7 @@ function Demo() {
           padding:        "16px 32px",
           borderRadius:   12,
           textDecoration: "none",
-          background:     "linear-gradient(135deg, #1B3A5C, #2E86AB)",
+          background:     "linear-gradient(135deg, #1B3A5C, #237396)",
           color:          "#fff",
           fontFamily:     "'Plus Jakarta Sans', sans-serif",
           fontSize:       16,
@@ -529,7 +530,7 @@ function Benefits() {
         }}>
           <span style={{
             fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 700,
-            color: "#2E86AB", letterSpacing: "0.12em", textTransform: "uppercase",
+            color: "#1F6E8F", letterSpacing: "0.12em", textTransform: "uppercase",
           }}>Por qué GenerAR</span>
           <h2 style={{
             fontFamily: "'DM Serif Display', Georgia, serif",
@@ -601,7 +602,7 @@ function Pricing() {
         }}>
           <span style={{
             fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 700,
-            color: "#2E86AB", letterSpacing: "0.12em", textTransform: "uppercase",
+            color: "#1F6E8F", letterSpacing: "0.12em", textTransform: "uppercase",
           }}>Planes y precios</span>
           <h2 style={{
             fontFamily: "'DM Serif Display', Georgia, serif",
@@ -623,7 +624,7 @@ function Pricing() {
         }}>
           <p style={{
             fontFamily: "'Plus Jakarta Sans', sans-serif",
-            fontSize: 13, fontWeight: 700, color: "#2E86AB",
+            fontSize: 13, fontWeight: 700, color: "#1F6E8F",
             letterSpacing: "0.08em", textTransform: "uppercase",
             marginBottom: 8, textAlign: "center",
           }}>Paquetes de ARs</p>
@@ -669,14 +670,14 @@ function Pricing() {
               }}>
                 <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 15, fontWeight: 700, color: "#0F2236" }}>{t.label}</p>
                 <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28, fontWeight: 800, color: "#2E86AB" }}>{t.price}</p>
-                <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, color: "#2E86AB", fontWeight: 600 }}>{t.ars}</p>
-                <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "#718096", lineHeight: 1.5 }}>{t.desc}</p>
+                <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, color: "#1F6E8F", fontWeight: 600 }}>{t.ars}</p>
+                <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "#5A6B7D", lineHeight: 1.5 }}>{t.desc}</p>
                 <a
                   href="/register"
                   style={{
                     display:        "block",
                     marginTop:      8,
-                    background:     "linear-gradient(135deg, #0F2236, #2E86AB)",
+                    background:     "linear-gradient(135deg, #0F2236, #237396)",
                     color:          "white",
                     borderRadius:   8,
                     padding:        "10px 0",
@@ -697,7 +698,7 @@ function Pricing() {
         {/* Planes mensuales — van después */}
         <p style={{
           fontFamily:    "'Plus Jakarta Sans', sans-serif",
-          fontSize:      13, fontWeight: 700, color: "#2E86AB",
+          fontSize:      13, fontWeight: 700, color: "#1F6E8F",
           textTransform: "uppercase", letterSpacing: 1,
           textAlign:     "center", marginBottom: 8,
         }}>
@@ -733,7 +734,7 @@ function PricingCard({ plan, delay, visible }: { plan: Plan; delay: number; visi
         borderRadius:    18,
         padding:         plan.highlight ? "44px 36px" : "36px 32px",
         background:      plan.highlight
-          ? "linear-gradient(160deg, #1B3A5C 0%, #1e4d74 50%, #2E86AB 100%)"
+          ? "linear-gradient(160deg, #1B3A5C 0%, #1e4d74 50%, #237396 100%)"
           : "#fff",
         border:          plan.highlight
           ? "none"
@@ -769,7 +770,7 @@ function PricingCard({ plan, delay, visible }: { plan: Plan; delay: number; visi
         <span style={{
           fontFamily: "'Plus Jakarta Sans', sans-serif",
           fontSize: 13, fontWeight: 700,
-          color: plan.highlight ? "rgba(255,255,255,0.65)" : "#2E86AB",
+          color: plan.highlight ? "rgba(255,255,255,0.90)" : "#1F6E8F",
           letterSpacing: "0.08em", textTransform: "uppercase",
         }}>{plan.name}</span>
       </div>
@@ -784,7 +785,7 @@ function PricingCard({ plan, delay, visible }: { plan: Plan; delay: number; visi
         }}>{plan.price}</span>
         <span style={{
           fontFamily: "'Plus Jakarta Sans', sans-serif",
-          fontSize: 14, color: plan.highlight ? "rgba(255,255,255,0.55)" : "#7A8EA0",
+          fontSize: 14, color: plan.highlight ? "rgba(255,255,255,0.85)" : "#66788A",
           marginLeft: 4,
         }}>/mes</span>
       </div>
@@ -798,7 +799,7 @@ function PricingCard({ plan, delay, visible }: { plan: Plan; delay: number; visi
         <span style={{
           fontFamily: "'Plus Jakarta Sans', sans-serif",
           fontSize: 13, fontWeight: 600,
-          color: plan.highlight ? "rgba(255,255,255,0.85)" : "#2E86AB",
+          color: plan.highlight ? "rgba(255,255,255,0.95)" : "#1F6E8F",
         }}>{plan.ars}</span>
       </div>
 
@@ -813,7 +814,7 @@ function PricingCard({ plan, delay, visible }: { plan: Plan; delay: number; visi
             }}>✓</span>
             <span style={{
               fontFamily: "'Plus Jakarta Sans', sans-serif",
-              fontSize: 14, color: plan.highlight ? "rgba(255,255,255,0.80)" : "#4A6070",
+              fontSize: 14, color: plan.highlight ? "rgba(255,255,255,0.92)" : "#4A6070",
               lineHeight: 1.5,
             }}>{f}</span>
           </div>
@@ -842,7 +843,7 @@ function PlanButton({ highlight }: { highlight: boolean }) {
         transition:     "all 0.22s ease",
         background:     highlight
           ? hovered ? "rgba(255,255,255,1)"  : "rgba(255,255,255,0.92)"
-          : hovered ? "linear-gradient(135deg, #1B3A5C, #2E86AB)" : "#fff",
+          : hovered ? "linear-gradient(135deg, #1B3A5C, #237396)" : "#fff",
         color:          highlight
           ? "#1B3A5C"
           : hovered ? "#fff" : "#1B3A5C",
@@ -879,14 +880,14 @@ function Footer() {
                 Gener<span style={{ color: "#2E86AB" }}>AR</span>
               </span>
             </div>
-            <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, lineHeight: 1.7, color: "rgba(255,255,255,0.45)" }}>
+            <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, lineHeight: 1.7, color: "rgba(255,255,255,0.60)" }}>
               Plataforma de Inteligencia Artificial para la generación de Análisis de Riesgos HSE profesionales y completos.
             </p>
           </div>
 
           {/* Legal */}
           <div>
-            <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.35)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 16 }}>Legal</p>
+            <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.60)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 16 }}>Legal</p>
             {[
               { label: "Términos de servicio", href: "/terminos-de-servicio" },
               { label: "Política de datos personales", href: "/politica-de-datos" },
@@ -904,7 +905,7 @@ function Footer() {
 
           {/* Product */}
           <div>
-            <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.35)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 16 }}>Producto</p>
+            <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.60)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 16 }}>Producto</p>
             {[
               { label: "Características", href: "#beneficios" },
               { label: "Precios", href: "#precios" },
@@ -922,16 +923,16 @@ function Footer() {
         </div>
 
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.07)", paddingTop: 28 }}>
-          <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 11, color: "rgba(255,255,255,0.20)", lineHeight: 1.8, marginBottom: 16, textAlign: "center" }}>
+          <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 11, color: "rgba(255,255,255,0.55)", lineHeight: 1.8, marginBottom: 16, textAlign: "center" }}>
             GenerAR no está afiliado ni es producto oficial de Ecopetrol S.A.{" "}
             El formato HSE-F-160 es un requisito de Ecopetrol para sus contratistas.{" "}
             GenerAR es una herramienta independiente que facilita su elaboración.
           </p>
           <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-          <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "rgba(255,255,255,0.30)" }}>
+          <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "rgba(255,255,255,0.55)" }}>
             © 2026 GenerAR. Todos los derechos reservados.{" "}
           </span>
-          <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "rgba(255,255,255,0.25)" }}>
+          <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "rgba(255,255,255,0.55)" }}>
             Hecho con IA para profesionales HSE 🛡️
           </span>
           </div>

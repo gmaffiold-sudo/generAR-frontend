@@ -425,7 +425,7 @@ export default function GuiaDeUso() {
             {" · "}
             <a href="/terminos-de-servicio" style={{ color: "rgba(255,255,255,0.35)", textDecoration: "underline" }}>Términos</a>
             {" · "}
-            <a href="/privacidad" style={{ color: "rgba(255,255,255,0.35)", textDecoration: "underline" }}>Privacidad</a>
+            <a href="/politica-de-datos" style={{ color: "rgba(255,255,255,0.35)", textDecoration: "underline" }}>Privacidad</a>
           </p>
         </footer>
       </div>

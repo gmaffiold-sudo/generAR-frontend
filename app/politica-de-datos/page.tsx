@@ -1,5 +1,5 @@
 export const metadata = {
-  title: "Política de Tratamiento de Datos Personales — GenerAR",
+  title: "Política de Tratamiento de Datos Personales",
   description:
     "Política de Tratamiento de Datos Personales de GenerAR, en cumplimiento de la Ley 1581 de 2012 y el Decreto 1377 de 2013.",
 };
@@ -176,7 +176,7 @@ function InfoCard({ label, value }: { label: string; value: string }) {
 export default function PoliticaDatosPage() {
   const tocItems: [string, string][] = [
     ["1", "Responsable"], ["2", "Definiciones"], ["3", "Principios"], ["4", "Datos"], ["5", "Finalidad"],
-    ["6", "Terceros"],    ["7", "Derechos"],     ["8", "Procedimiento"], ["9", "Seguridad"], ["10", "Vigencia"],
+    ["6", "Terceros"],    ["7", "Derechos"],     ["8", "Procedimiento"], ["9", "Seguridad"], ["10", "Vigencia"], ["11", "Cookies"],
   ];
 
   return (
@@ -266,7 +266,7 @@ export default function PoliticaDatosPage() {
             <img
               src="/images/responsable_tratamiento.png"
               alt="Datos del responsable"
-              style={{ maxWidth: 400, borderRadius: 12, margin: "16px 0" }}
+              style={{ maxWidth: 400, width: "100%", height: "auto", borderRadius: 12, margin: "16px 0" }}
             />
 
             {/* Info cards */}
@@ -561,6 +561,31 @@ export default function PoliticaDatosPage() {
               datos. Cualquier modificación será notificada a los Titulares a través del sitio web{" "}
               <a href="https://generar.co" style={{ color: C.accent, textDecoration: "none" }}>https://generar.co</a>{" "}
               con antelación razonable.
+            </Body>
+          </section>
+
+          <Divider />
+
+          {/* ── 11. Cookies ── */}
+          <section id="seccion-11">
+            <SectionTitle number="11">Cookies y Tecnologías Similares</SectionTitle>
+            <Body>
+              La plataforma utiliza cookies y almacenamiento local del navegador necesarios para su funcionamiento:
+              cookies de sesión que mantienen al usuario autenticado y un indicador local de sesión y de lectura de
+              este aviso.
+            </Body>
+            <Body>
+              Algunos servicios de terceros integrados pueden instalar sus propias cookies al ser utilizados: el
+              servicio de verificación anti-spam del formulario de registro, la pasarela de pagos durante la compra y
+              el reproductor del video de demostración cuando el usuario lo reproduce.
+            </Body>
+            <Body>
+              Las estadísticas de visitas se obtienen de forma agregada, sin cookies y sin identificar individualmente
+              al visitante. GenerAR no utiliza cookies publicitarias ni de seguimiento entre sitios.
+            </Body>
+            <Body>
+              El usuario puede eliminar o bloquear las cookies desde la configuración de su navegador. El bloqueo de
+              las cookies esenciales puede impedir el inicio de sesión.
             </Body>
           </section>
 

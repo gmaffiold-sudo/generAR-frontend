@@ -1,5 +1,9 @@
 import React from "react";
 
+export const metadata = {
+  title: "Términos de Servicio",
+};
+
 export default function TerminosDeServicio() {
   // ─── Design tokens ───────────────────────────────────────────────
   const C = {
@@ -221,7 +225,7 @@ export default function TerminosDeServicio() {
             <img
               src="/images/responsable_tratamiento.png"
               alt="Datos del responsable"
-              style={{ maxWidth: 400, borderRadius: 12, margin: "16px 0" }}
+              style={{ maxWidth: 400, width: "100%", height: "auto", borderRadius: 12, margin: "16px 0" }}
             />
             <p style={prose}>
               Al acceder a la Plataforma, crear una cuenta, o utilizar cualquiera de sus funcionalidades, usted (en adelante, "el Usuario") declara haber leído, comprendido y aceptado íntegramente los presentes Términos, así como la Política de Datos Personales de GenerAR. Esta aceptación tiene carácter vinculante y constituye un acuerdo legalmente válido entre el Usuario y el Operador.
@@ -279,7 +283,7 @@ export default function TerminosDeServicio() {
             </p>
 
             {/* Plans grid */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16, margin: "20px 0 24px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 16, margin: "20px 0 24px" }}>
               {[
                 { name: "Starter", price: "$79.900", featured: false },
                 { name: "Professional", price: "$179.900", featured: true },

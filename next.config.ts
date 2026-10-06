@@ -31,11 +31,11 @@ const securityHeaders = [
     value: [
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.google.com https://www.gstatic.com https://cdn.sheetjs.com https://checkout.wompi.co https://cdnjs.cloudflare.com",
-      "style-src 'self' 'unsafe-inline'",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "img-src 'self' data: blob: https:",
-      "font-src 'self'",
+      "font-src 'self' https://fonts.gstatic.com",
       "connect-src 'self' https://hse-risk-analyzer-production.up.railway.app https://production.wompi.co https://www.google.com",
-      "frame-src https://checkout.wompi.co https://www.youtube.com https://www.google.com",
+      "frame-src https://checkout.wompi.co https://www.youtube-nocookie.com https://www.google.com",
       "object-src 'none'",
       "base-uri 'self'",
     ].join("; "),
@@ -44,6 +44,11 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   /* config options here */
+  async redirects() {
+    return [
+      { source: "/privacidad", destination: "/politica-de-datos", permanent: true },
+    ];
+  },
   async headers() {
     return [
       {
